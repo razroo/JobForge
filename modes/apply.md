@@ -12,7 +12,7 @@ Modo interactivo para cuando el candidato está rellenando un formulario de apli
 ```
 1. DETECTAR    → Leer Chrome tab activa (screenshot/URL/título)
 2. IDENTIFICAR → Extraer empresa + rol de la página
-3. BUSCAR      → Match contra reports existentes en career-ops/reports/
+3. BUSCAR      → Match contra reports existentes en reports/
 4. CARGAR      → Leer report completo + Section G (si existe)
 5. COMPARAR    → ¿El rol en pantalla coincide con el evaluado? Si cambió → avisar
 6. ANALIZAR    → Identificar TODAS las preguntas del formulario visibles
@@ -32,7 +32,7 @@ Modo interactivo para cuando el candidato está rellenando un formulario de apli
 ## Paso 2 — Identificar y buscar contexto
 
 1. Extraer nombre de empresa y título del rol de la página
-2. Buscar en `career-ops/reports/` por nombre de empresa (Grep case-insensitive)
+2. Buscar en `reports/` por nombre de empresa (Grep case-insensitive)
 3. Si hay match → cargar el report completo
 4. Si hay Section G → cargar los draft answers previos como base
 5. Si NO hay match → avisar y ofrecer ejecutar auto-pipeline rápido

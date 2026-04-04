@@ -16,7 +16,7 @@ Agent(
 
 ## Configuración
 
-Leer `career-ops/portals.yml` que contiene:
+Leer `portals.yml` que contiene:
 - `search_queries`: Lista de queries WebSearch con `site:` filters por portal (descubrimiento amplio)
 - `tracked_companies`: Empresas específicas con `careers_url` para navegación directa
 - `title_filter`: Keywords positive/negative/seniority_boost para filtrado de títulos
@@ -50,9 +50,9 @@ Los niveles son aditivos — se ejecutan todos, los resultados se mezclan y dedu
 
 ## Workflow
 
-1. **Leer configuración**: `career-ops/portals.yml`
-2. **Leer historial**: `career-ops/scan-history.tsv` → URLs ya vistas
-3. **Leer dedup sources**: `career-ops/applications.md` + `career-ops/pipeline.md`
+1. **Leer configuración**: `portals.yml`
+2. **Leer historial**: `data/scan-history.tsv` → URLs ya vistas
+3. **Leer dedup sources**: `data/applications.md` + `data/pipeline.md`
 
 4. **Nivel 1 — Playwright scan** (paralelo en batches de 3-5):
    Para cada empresa en `tracked_companies` con `enabled: true` y `careers_url` definida:
@@ -110,12 +110,12 @@ Regex genérico: `(.+?)(?:\s*[@|—–-]\s*|\s+at\s+)(.+?)$`
 ## URLs privadas
 
 Si se encuentra una URL no accesible públicamente:
-1. Guardar el JD en `career-ops/jds/{company}-{role-slug}.md`
+1. Guardar el JD en `jds/{company}-{role-slug}.md`
 2. Añadir a pipeline.md como: `- [ ] local:jds/{company}-{role-slug}.md | {company} | {title}`
 
 ## Scan History
 
-`career-ops/scan-history.tsv` trackea TODAS las URLs vistas:
+`data/scan-history.tsv` trackea TODAS las URLs vistas:
 
 ```
 url	first_seen	portal	title	company	status

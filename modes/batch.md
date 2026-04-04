@@ -24,7 +24,7 @@ Cada worker es un `claude -p` hijo con contexto limpio de 200K tokens. El conduc
 ## Archivos
 
 ```
-career-ops/batch/
+batch/
   batch-input.tsv               # URLs (por conductor o manual)
   batch-state.tsv               # Progreso (auto-generado, gitignored)
   batch-runner.sh               # Script orquestador standalone
@@ -35,7 +35,7 @@ career-ops/batch/
 
 ## Modo A: Conductor --chrome
 
-1. **Leer estado**: `career-ops/batch/batch-state.tsv` → saber qué ya se procesó
+1. **Leer estado**: `batch/batch-state.tsv` → saber qué ya se procesó
 2. **Navegar portal**: Chrome → URL de búsqueda
 3. **Extraer URLs**: Leer DOM de resultados → extraer lista de URLs → append a `batch-input.tsv`
 4. **Para cada URL pendiente**:
@@ -45,7 +45,7 @@ career-ops/batch/
    d. Ejecutar via Bash:
       ```bash
       claude -p --dangerously-skip-permissions \
-        --append-system-prompt-file career-ops/batch/batch-prompt.md \
+        --append-system-prompt-file batch/batch-prompt.md \
         "Procesa esta oferta. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}"
       ```
    e. Actualizar `batch-state.tsv` (completed/failed + score + report_num)
@@ -57,7 +57,7 @@ career-ops/batch/
 ## Modo B: Script standalone
 
 ```bash
-career-ops/batch/batch-runner.sh [OPTIONS]
+batch/batch-runner.sh [OPTIONS]
 ```
 
 Opciones:
@@ -87,8 +87,8 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 Cada worker recibe `batch-prompt.md` como system prompt. Es self-contained.
 
 El worker produce:
-1. Report `.md` en `career-ops/reports/`
-2. PDF en `career-ops/output/`
+1. Report `.md` en `reports/`
+2. PDF en `output/`
 3. Línea de tracker en `batch/tracker-additions/{id}.tsv`
 4. JSON de resultado por stdout
 

@@ -89,7 +89,7 @@ Incluir también:
 
 ### 1. Guardar report .md
 
-Guardar evaluación completa en `career-ops/reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
+Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 - `{###}` = siguiente número secuencial (3 dígitos, zero-padded)
 - `{company-slug}` = nombre de empresa en lowercase, sin espacios (usar guiones)
@@ -136,7 +136,7 @@ Guardar evaluación completa en `career-ops/reports/{###}-{company-slug}-{YYYY-M
 
 ### 2. Registrar en tracker
 
-**SIEMPRE** registrar en `career-ops/applications.md`:
+**SIEMPRE** registrar en `data/applications.md`:
 - Siguiente número secuencial
 - Fecha actual
 - Empresa

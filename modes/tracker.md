@@ -1,6 +1,6 @@
 # Modo: tracker — Tracker de Aplicaciones
 
-Lee y muestra `career-ops/applications.md`.
+Lee y muestra `data/applications.md`.
 
 **Formato del tracker:**
 ```markdown
