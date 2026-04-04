@@ -176,6 +176,10 @@ function parseTsvContent(content, filename) {
 // ---- Main ----
 
 // Read applications.md
+if (!existsSync(APPS_FILE)) {
+  console.log('No applications.md found. Nothing to merge into.');
+  process.exit(0);
+}
 const appContent = readFileSync(APPS_FILE, 'utf-8');
 const appLines = appContent.split('\n');
 const existingApps = [];

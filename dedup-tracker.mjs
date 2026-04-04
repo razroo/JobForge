@@ -80,6 +80,10 @@ function parseAppLine(line) {
 }
 
 // Read
+if (!existsSync(APPS_FILE)) {
+  console.log('No applications.md found. Nothing to dedup.');
+  process.exit(0);
+}
 const content = readFileSync(APPS_FILE, 'utf-8');
 const lines = content.split('\n');
 

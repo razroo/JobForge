@@ -48,6 +48,11 @@ function warn(msg) { console.log(`⚠️  ${msg}`); warnings++; }
 function ok(msg) { console.log(`✅ ${msg}`); }
 
 // --- Read applications.md ---
+if (!existsSync(APPS_FILE)) {
+  console.log('\n📊 No applications.md found. This is normal for a fresh setup.');
+  console.log('   The file will be created when you evaluate your first offer.\n');
+  process.exit(0);
+}
 const content = readFileSync(APPS_FILE, 'utf-8');
 const lines = content.split('\n');
 
