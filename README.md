@@ -12,6 +12,10 @@
 
 ---
 
+<p align="center">
+  <img src="docs/demo.gif" alt="Career-Ops Demo" width="800">
+</p>
+
 ## What Is This
 
 Career-Ops turns Claude Code into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
