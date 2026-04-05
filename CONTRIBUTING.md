@@ -16,7 +16,7 @@ Thanks for your interest in contributing! JobForge is built with Claude Code, an
 **Good first contributions:**
 - Add companies to `templates/portals.example.yml`
 - Improve documentation
-- Add example CVs for different roles (in `examples/`)
+- Add example CVs for different roles (in `examples/` — see `examples/README.md`)
 - Report bugs via [Issues](https://github.com/CharlieGreenman/JobForge/issues)
 
 **Bigger contributions:**
