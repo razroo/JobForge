@@ -25,6 +25,14 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 
 **(Optional) Create `article-digest.md`** with proof points from your portfolio articles/projects.
 
+**First evaluation:** If `data/applications.md` doesn't exist, create it with the tracker header before writing the first TSV:
+```markdown
+# Applications Tracker
+
+| # | Fecha | Empresa | Rol | Score | Estado | PDF | Report | Notas |
+|---|-------|---------|-----|-------|--------|-----|--------|-------|
+```
+
 ### Skill Modes
 
 | If the user... | Mode |
@@ -70,6 +78,27 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 - Report numbering: sequential 3-digit zero-padded, max existing + 1
 - **RULE: After each batch of evaluations, run `node merge-tracker.mjs`** to merge tracker additions and avoid duplications.
 - **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
+
+### TSV Format for Tracker Additions
+
+Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slug}.tsv`. Single line, 9 tab-separated columns:
+
+```
+{num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
+```
+
+**Column order (IMPORTANT -- status BEFORE score):**
+1. `num` -- sequential number (integer)
+2. `date` -- YYYY-MM-DD
+3. `company` -- short company name
+4. `role` -- job title
+5. `status` -- canonical status (e.g., `Evaluada`)
+6. `score` -- format `X.X/5` (e.g., `4.2/5`)
+7. `pdf` -- `✅` or `❌`
+8. `report` -- markdown link `[num](reports/...)`
+9. `notes` -- one-line summary
+
+**Note:** In applications.md, score comes BEFORE status. The merge script handles this column swap automatically.
 
 ### Pipeline Integrity
 
