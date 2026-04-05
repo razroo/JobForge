@@ -57,6 +57,27 @@ claude   # Open Claude Code, then paste a job URL
 
 See [docs/SETUP.md](docs/SETUP.md) for the full setup guide.
 
+## Usage
+
+Career-ops is a single slash command with multiple modes:
+
+```
+/career-ops                → Show all available commands
+/career-ops {paste a JD}   → Full auto-pipeline (evaluate + PDF + tracker)
+/career-ops scan           → Scan portals for new offers
+/career-ops pdf            → Generate ATS-optimized CV
+/career-ops batch          → Batch evaluate multiple offers
+/career-ops tracker        → View application status
+/career-ops apply          → Fill application forms with AI
+/career-ops pipeline       → Process pending URLs
+/career-ops contacto       → LinkedIn outreach message
+/career-ops deep           → Deep company research
+/career-ops training       → Evaluate a course/cert
+/career-ops project        → Evaluate a portfolio project
+```
+
+Or just paste a job URL or description directly -- career-ops auto-detects it and runs the full pipeline.
+
 ## How It Works
 
 ```
@@ -176,6 +197,25 @@ claude   # Abrir Claude Code y pegar una URL de oferta
 ```
 
 Guia completa en [docs/SETUP.md](docs/SETUP.md).
+
+## Uso
+
+Career-ops es un unico slash command con multiples modos:
+
+```
+/career-ops                → Mostrar todos los comandos
+/career-ops {pega un JD}   → Pipeline completo (evaluar + PDF + tracker)
+/career-ops scan           → Escanear portales
+/career-ops pdf            → Generar CV ATS-optimizado
+/career-ops batch          → Evaluar ofertas en batch
+/career-ops tracker        → Ver estado de aplicaciones
+/career-ops apply          → Rellenar formularios con IA
+/career-ops pipeline       → Procesar URLs pendientes
+/career-ops contacto       → Mensaje LinkedIn outreach
+/career-ops deep           → Research profundo de empresa
+```
+
+O simplemente pega una URL o descripcion de oferta -- career-ops la detecta y ejecuta el pipeline completo.
 
 ## Documentacion
 
