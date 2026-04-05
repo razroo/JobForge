@@ -33,12 +33,22 @@ Thanks for your interest in contributing! JobForge is built with Claude Code, an
 
 ## Development
 
-```bash
-# Scripts
-node verify-pipeline.mjs     # Health check
-node cv-sync-check.mjs        # Config check
+Before opening a PR, from the repo root:
 
-# Dashboard
+```bash
+npm run verify
+(cd dashboard && go build .)
+```
+
+`npm run verify` runs `verify-pipeline.mjs`. It exits successfully when `data/applications.md` is missing (fresh clone). Optional local setup checks:
+
+```bash
+npm run sync-check   # node cv-sync-check.mjs — expects cv.md and config/profile.yml
+```
+
+Dashboard (optional TUI):
+
+```bash
 cd dashboard && go build -o job-forge-dashboard .
 ./job-forge-dashboard --path .
 ```

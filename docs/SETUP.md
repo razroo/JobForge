@@ -67,8 +67,8 @@ Then paste a job offer URL or description. JobForge will automatically evaluate 
 ## Verify Setup
 
 ```bash
-node cv-sync-check.mjs      # Check configuration
-node verify-pipeline.mjs     # Check pipeline integrity
+npm run verify               # Pipeline integrity (same as verify-pipeline.mjs; OK if tracker not created yet)
+node cv-sync-check.mjs       # Configuration check (requires cv.md and config/profile.yml)
 ```
 
 ## Build Dashboard (Optional)
