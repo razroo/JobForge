@@ -190,6 +190,10 @@ career-ops/
 - **Dashboard**: Go + Bubble Tea + Lipgloss (Catppuccin Mocha theme)
 - **Data**: Markdown tables + YAML config + TSV batch files
 
+## Also Open Source
+
+- **[cv-santiago](https://github.com/santifer/cv-santiago)** -- The portfolio website (santifer.io) with AI chatbot, LLMOps dashboard, and case studies. Built with React 19, Claude API, Langfuse. If you need a portfolio to showcase alongside your job search, check it out.
+
 ## License
 
 MIT
@@ -274,6 +278,10 @@ Career-ops es un unico slash command con multiples modos:
 ```
 
 O simplemente pega una URL o descripcion de oferta -- career-ops la detecta y ejecuta el pipeline completo.
+
+## Tambien Open Source
+
+- **[cv-santiago](https://github.com/santifer/cv-santiago)** -- El portfolio (santifer.io) con chatbot IA, dashboard LLMOps y case studies. Si necesitas un portfolio para acompañar tu busqueda de empleo, echale un vistazo.
 
 ## Documentacion
 
