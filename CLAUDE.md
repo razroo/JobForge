@@ -21,6 +21,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `templates/cv-template.html` | HTML template for CVs |
 | `generate-pdf.mjs` | Puppeteer: HTML to PDF |
 | `article-digest.md` | Compact proof points from portfolio (optional) |
+| `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`) |
 
 ### First Run — Onboarding (IMPORTANT)

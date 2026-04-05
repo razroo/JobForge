@@ -64,10 +64,14 @@ Top 5 cambios al CV + Top 5 cambios a LinkedIn para maximizar match.
 
 ## Bloque F — Plan de Entrevistas
 
-6-10 historias STAR mapeadas a requisitos del JD:
+6-10 historias STAR+R mapeadas a requisitos del JD (STAR + **Reflection**):
 
-| # | Requisito del JD | Historia STAR | S | T | A | R |
-|---|-----------------|---------------|---|---|---|---|
+| # | Requisito del JD | Historia STAR+R | S | T | A | R | Reflection |
+|---|-----------------|-----------------|---|---|---|---|------------|
+
+The **Reflection** column captures what was learned or what would be done differently. This signals seniority — junior candidates describe what happened, senior candidates extract lessons.
+
+**Story Bank:** If `interview-prep/story-bank.md` exists, check if any of these stories are already there. If not, append new ones. Over time this builds a reusable bank of 5-10 master stories that can be adapted to any interview question.
 
 **Seleccionadas y enmarcadas según el arquetipo:**
 - FDE → enfatizar velocidad de entrega y client-facing
