@@ -1,6 +1,6 @@
-# Contributing to Career-Ops
+# Contributing to JobForge
 
-Thanks for your interest in contributing! Career-Ops is built with Claude Code, and you can use it for development too.
+Thanks for your interest in contributing! JobForge is built with Claude Code, and you can use it for development too.
 
 ## Quick Start
 
@@ -15,10 +15,9 @@ Thanks for your interest in contributing! Career-Ops is built with Claude Code, 
 
 **Good first contributions:**
 - Add companies to `templates/portals.example.yml`
-- Translate modes to other languages
 - Improve documentation
 - Add example CVs for different roles (in `examples/`)
-- Report bugs via [Issues](https://github.com/santifer/career-ops/issues)
+- Report bugs via [Issues](https://github.com/CharlieGreenman/JobForge/issues)
 
 **Bigger contributions:**
 - New evaluation dimensions or scoring logic
@@ -28,7 +27,6 @@ Thanks for your interest in contributing! Career-Ops is built with Claude Code, 
 
 ## Guidelines
 
-- Keep modes language-agnostic when possible (Claude handles both EN and ES)
 - Scripts should handle missing files gracefully (check `existsSync` before `readFileSync`)
 - Dashboard changes require `go build` — test with real data before submitting
 - Don't commit personal data (cv.md, profile.yml, applications.md, reports/)
@@ -41,12 +39,11 @@ node verify-pipeline.mjs     # Health check
 node cv-sync-check.mjs        # Config check
 
 # Dashboard
-cd dashboard && go build -o career-dashboard .
-./career-dashboard --path .
+cd dashboard && go build -o job-forge-dashboard .
+./job-forge-dashboard --path .
 ```
 
 ## Need Help?
 
-- [Open an issue](https://github.com/santifer/career-ops/issues)
+- [Open an issue](https://github.com/CharlieGreenman/JobForge/issues)
 - [Read the architecture docs](docs/ARCHITECTURE.md)
-- Built by [santifer](https://santifer.io)

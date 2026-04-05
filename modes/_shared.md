@@ -1,10 +1,10 @@
-# Shared Context -- career-ops
+# Shared Context -- job-forge
 
 <!-- ============================================================
      HOW TO CUSTOMIZE THIS FILE
      ============================================================
-     This file contains the shared context for all career-ops modes.
-     Before using career-ops, you MUST:
+     This file contains the shared context for all job-forge modes.
+     Before using job-forge, you MUST:
      1. Fill in config/profile.yml with your personal data
      2. Create your cv.md in the project root
      3. (Optional) Create article-digest.md with your proof points
@@ -139,7 +139,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 ## Canonical Scoring Model (SINGLE SOURCE OF TRUTH)
 
-**ALL evaluation modes MUST use this exact model.** Whether the offer is evaluated via `oferta`, `auto-pipeline`, `batch`, or compared via `ofertas`, the score is computed the same way. This ensures scores are comparable across the entire pipeline.
+**ALL evaluation modes MUST use this exact model.** Whether the offer is evaluated via `offer`, `auto-pipeline`, `batch`, or compared via `compare`, the score is computed the same way. This ensures scores are comparable across the entire pipeline.
 
 | # | Dimension | Weight | 1 | 3 | 5 |
 |---|-----------|--------|---|---|---|

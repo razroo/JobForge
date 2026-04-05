@@ -11,18 +11,18 @@
  * If duplicate with higher score → update in-place, update report link
  * Validates status against states.yml (rejects non-canonical, logs warning)
  *
- * Run: node career-ops/merge-tracker.mjs [--dry-run] [--verify]
+ * Run: node job-forge/merge-tracker.mjs [--dry-run] [--verify]
  */
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';
 import { join, basename } from 'path';
 
-const CAREER_OPS = new URL('.', import.meta.url).pathname;
+const PROJECT_DIR = new URL('.', import.meta.url).pathname;
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
-const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
-  ? join(CAREER_OPS, 'data/applications.md')
-  : join(CAREER_OPS, 'applications.md');
-const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
+const APPS_FILE = existsSync(join(PROJECT_DIR, 'data/applications.md'))
+  ? join(PROJECT_DIR, 'data/applications.md')
+  : join(PROJECT_DIR, 'applications.md');
+const ADDITIONS_DIR = join(PROJECT_DIR, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
@@ -38,27 +38,20 @@ function validateStatus(status) {
     if (valid.toLowerCase() === lower) return valid;
   }
 
-  // Aliases (maps legacy Spanish + variations → canonical English)
+  // Aliases
   const aliases = {
-    'evaluada': 'Evaluated', 'condicional': 'Evaluated', 'hold': 'Evaluated', 'evaluar': 'Evaluated', 'verificar': 'Evaluated',
-    'enviada': 'Applied', 'aplicada': 'Applied', 'aplicado': 'Applied', 'applied': 'Applied', 'sent': 'Applied',
-    'contacto': 'Contacted', 'contactado': 'Contacted',
-    'respondido': 'Responded',
-    'entrevista': 'Interview',
-    'oferta': 'Offer',
-    'cerrada': 'Discarded', 'descartada': 'Discarded', 'descartado': 'Discarded', 'cancelada': 'Discarded',
-    'rechazada': 'Rejected', 'rechazado': 'Rejected',
-    'no aplicar': 'SKIP', 'no_aplicar': 'SKIP', 'skip': 'SKIP', 'monitor': 'SKIP',
-    'geo blocker': 'SKIP',
+    'hold': 'Evaluated',
+    'applied': 'Applied', 'sent': 'Applied',
+    'skip': 'SKIP',
   };
 
   if (aliases[lower]) return aliases[lower];
 
-  // DUPLICADO/Repost → Descartado
-  if (/^(duplicado|dup|repost)/i.test(lower)) return 'Descartado';
+  // Duplicate/Repost → Discarded
+  if (/^(dup(licate)?|repost)/i.test(lower)) return 'Discarded';
 
-  console.warn(`⚠️  Non-canonical status "${status}" → defaulting to "Evaluada"`);
-  return 'Evaluada';
+  console.warn(`⚠️  Non-canonical status "${status}" → defaulting to "Evaluated"`);
+  return 'Evaluated';
 }
 
 function normalizeCompany(name) {
@@ -138,8 +131,8 @@ function parseTsvContent(content, filename) {
     const col5 = parts[5].trim();
     const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
     const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
-    const col4LooksLikeStatus = /^(evaluated|applied|contacted|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|contacto|contactado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
-    const col5LooksLikeStatus = /^(evaluated|applied|contacted|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|contacto|contactado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
+    const col4LooksLikeStatus = /^(evaluated|applied|contacted|responded|interview|offer|rejected|discarded|skip|duplicate|repost|hold)/i.test(col4);
+    const col5LooksLikeStatus = /^(evaluated|applied|contacted|responded|interview|offer|rejected|discarded|skip|duplicate|repost|hold)/i.test(col5);
 
     let statusCol, scoreCol;
     if (col4LooksLikeStatus && !col4LooksLikeScore) {
@@ -190,7 +183,7 @@ const existingApps = [];
 let maxNum = 0;
 
 for (const line of appLines) {
-  if (line.startsWith('|') && !line.includes('---') && !line.includes('Empresa')) {
+  if (line.startsWith('|') && !line.includes('---') && !line.includes('Company')) {
     const app = parseAppLine(line);
     if (app) {
       existingApps.push(app);
@@ -323,7 +316,7 @@ if (VERIFY && !DRY_RUN) {
   console.log('\n--- Running verification ---');
   const { execSync } = await import('child_process');
   try {
-    execSync(`node ${join(CAREER_OPS, 'verify-pipeline.mjs')}`, { stdio: 'inherit' });
+    execSync(`node ${join(PROJECT_DIR, 'verify-pipeline.mjs')}`, { stdio: 'inherit' });
   } catch (e) {
     process.exit(1);
   }

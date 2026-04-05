@@ -1,6 +1,6 @@
-# Modo: ofertas — Comparación Multi-Oferta
+# Mode: compare — Multi-Offer Comparison
 
-**Uses the Canonical Scoring Model from `modes/_shared.md`** — the same 10 weighted dimensions used in `oferta`, `auto-pipeline`, and `batch` evaluations. This means scores from prior evaluations are directly comparable. No need to re-score unless the user explicitly requests it.
+**Uses the Canonical Scoring Model from `modes/_shared.md`** — the same 10 weighted dimensions used in `offer`, `auto-pipeline`, and `batch` evaluations. This means scores from prior evaluations are directly comparable. No need to re-score unless the user explicitly requests it.
 
 ## Workflow
 

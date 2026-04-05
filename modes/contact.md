@@ -1,4 +1,4 @@
-# Modo: contacto — LinkedIn Power Move
+# Mode: contact — LinkedIn Power Move
 
 ## Step 0 — Load evaluation context
 
@@ -53,7 +53,6 @@ Framework (3 sentences, max 300 characters for LinkedIn connection request):
 
 Generate:
 - EN (default)
-- ES (if the company or target is Spanish-speaking)
 - **Follow-up variant**: A longer version (2-3 sentences) for LinkedIn InMail or email, where the 300-char limit doesn't apply. This version can include a second proof point and a link to the relevant case study from Block F.
 
 ## Step 5 — Alternative targets

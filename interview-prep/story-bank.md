@@ -4,7 +4,7 @@ This file accumulates your best interview stories over time. Each evaluation (Bl
 
 ## How it works
 
-1. Every time `/career-ops oferta` generates Block F (Interview Plan), new STAR+R stories get appended here
+1. Every time `/job-forge offer` generates Block F (Interview Plan), new STAR+R stories get appended here
 2. Before your next interview, review this file — your stories are already organized by theme
 3. The "Big Three" questions can be answered with stories from this bank:
    - "Tell me about yourself" → combine 2-3 stories into a narrative
@@ -27,7 +27,7 @@ This file accumulates your best interview stories over time. Each evaluation (Bl
 **Best for questions about:** [list of question types this story answers]
 -->
 
-<!-- Management rules (enforced by oferta mode Block F):
+<!-- Management rules (enforced by offer mode Block F):
 - Before adding: check if an existing story covers the same theme
 - If overlap: keep the stronger story, update its match count, remove the weaker
 - If new theme: append

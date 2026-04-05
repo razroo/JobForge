@@ -6,31 +6,31 @@
  * Keeps entry with highest score. If discarded entry had more advanced status,
  * preserves that status. Merges notes.
  *
- * Run: node career-ops/dedup-tracker.mjs [--dry-run]
+ * Run: node job-forge/dedup-tracker.mjs [--dry-run]
  */
 
 import { readFileSync, writeFileSync, copyFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-const CAREER_OPS = new URL('.', import.meta.url).pathname;
+const PROJECT_DIR = new URL('.', import.meta.url).pathname;
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
-const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
-  ? join(CAREER_OPS, 'data/applications.md')
-  : join(CAREER_OPS, 'applications.md');
+const APPS_FILE = existsSync(join(PROJECT_DIR, 'data/applications.md'))
+  ? join(PROJECT_DIR, 'data/applications.md')
+  : join(PROJECT_DIR, 'applications.md');
 const DRY_RUN = process.argv.includes('--dry-run');
 
 // Status advancement order (higher = more advanced in pipeline)
-// Aplicado > Rechazado because active application > terminal state
+// Applied > Rejected because active application > terminal state
 const STATUS_RANK = {
-  'skip': 0, 'no aplicar': 0,
-  'discarded': 0, 'descartado': 0,
-  'rejected': 1, 'rechazado': 1,  // Terminal — below active states
-  'evaluated': 2, 'evaluada': 2,
-  'applied': 3, 'aplicado': 3,
-  'contacted': 3.5, 'contacto': 3.5, 'contactado': 3.5,
-  'responded': 4, 'respondido': 4,
-  'interview': 5, 'entrevista': 5,
-  'offer': 6, 'oferta': 6,
+  'skip': 0,
+  'discarded': 0,
+  'rejected': 1,  // Terminal — below active states
+  'evaluated': 2,
+  'applied': 3,
+  'contacted': 3.5,
+  'responded': 4,
+  'interview': 5,
+  'offer': 6,
 };
 
 function normalizeCompany(name) {

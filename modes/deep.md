@@ -1,4 +1,4 @@
-# Modo: deep — Deep Company Research
+# Mode: deep — Deep Company Research
 
 Structured company research that feeds directly into evaluations and interview prep.
 
@@ -61,7 +61,7 @@ After completing the 6 axes, update the evaluation if one exists:
 
 3. **Update Block F (Interview Plan)**: The "likely challenges" (axis 4) directly inform STAR story selection — pick stories that address the company's actual problems, not generic ones.
 
-4. **Update contacto targeting**: The "recent moves" (axis 2) often reveal who to reach out to (new hires, team leads mentioned in blog posts).
+4. **Update contact targeting**: The "recent moves" (axis 2) often reveal who to reach out to (new hires, team leads mentioned in blog posts).
 
 If NO evaluation exists yet, save the research to `reports/deep-{company-slug}-{date}.md` so it's available when the user evaluates later. The evaluation mode should check for existing deep research before starting Block D (Comp & Demand).
 

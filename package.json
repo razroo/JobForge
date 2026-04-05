@@ -1,5 +1,5 @@
 {
-  "name": "career-ops",
+  "name": "job-forge",
   "version": "1.0.0",
   "description": "AI-powered job search pipeline built on Claude Code",
   "scripts": {
@@ -11,11 +11,10 @@
     "sync-check": "node cv-sync-check.mjs"
   },
   "keywords": ["ai", "job-search", "claude-code", "career", "automation"],
-  "author": "Santiago Fernández de Valderrama <hi@santifer.io> (https://santifer.io)",
-  "homepage": "https://santifer.io",
+  "author": "Charlie Greenman",
   "repository": {
     "type": "git",
-    "url": "https://github.com/santifer/career-ops"
+    "url": "https://github.com/CharlieGreenman/JobForge"
   },
   "license": "MIT",
   "dependencies": {

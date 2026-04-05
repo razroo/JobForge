@@ -8,7 +8,7 @@ Scans `data/applications.md` for entries that need follow-up action based on the
 
 | Current State | Days Since | Action |
 |---------------|-----------|--------|
-| Applied | 7-10 days | Nudge: LinkedIn outreach via `/career-ops contacto` if not already Contacted |
+| Applied | 7-10 days | Nudge: LinkedIn outreach via `/job-forge contact` if not already Contacted |
 | Applied | 14+ days | Flag as stale. Suggest: nudge or archive to Discarded |
 | Contacted | 5-7 days | Follow-up message (shorter, reference first message) |
 | Contacted | 14+ days | Flag as stale. Likely no response — move on |
@@ -44,7 +44,7 @@ Scans `data/applications.md` for entries that need follow-up action based on the
 When the user selects an entry to nudge:
 
 1. Read the existing report from `reports/`
-2. Use the **contacto** mode logic to generate a follow-up message (not a first outreach)
+2. Use the **contact** mode logic to generate a follow-up message (not a first outreach)
 3. Follow-up messages are shorter and reference the application:
    - "I applied to [role] [N days] ago and wanted to follow up..."
    - Reference one specific proof point from Block B
@@ -61,5 +61,5 @@ After interviews, generate a thank-you note:
 ## Automation
 
 This mode works well with `/loop` or `/schedule`:
-- Run `/career-ops followup` every 2-3 days to catch nudge windows
+- Run `/job-forge followup` every 2-3 days to catch nudge windows
 - Suggest this to the user after their first batch of applications

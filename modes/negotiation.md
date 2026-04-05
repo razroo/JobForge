@@ -1,6 +1,6 @@
 # Mode: negotiation — Offer Negotiation
 
-Structured mode for when the user receives an actual job offer. Completely separate from `oferta` (which evaluates job postings).
+Structured mode for when the user receives an actual job offer. Completely separate from `offer` (which evaluates job postings).
 
 **This mode is standalone.** It reads existing data (reports, tracker, profile.yml) but creates its own output. No changes to existing pipeline behavior.
 
@@ -8,7 +8,7 @@ Structured mode for when the user receives an actual job offer. Completely separ
 
 - User says "I got an offer from [company]"
 - User updates a tracker entry to Offer
-- User runs `/career-ops negotiation`
+- User runs `/job-forge negotiation`
 
 ## Step 1 — Capture the Offer
 

@@ -8,7 +8,7 @@ When the user reports a rejection, capture structured data and surface patterns 
 
 - User says "I got rejected from [company]"
 - User updates a tracker entry to Rejected
-- User runs `/career-ops rejection` to review patterns
+- User runs `/job-forge rejection` to review patterns
 
 ## Step 1 — Record the Rejection
 
@@ -53,7 +53,7 @@ If a report exists in `reports/`, append a `## Rejection` section:
 
 ## Step 3 — Pattern Analysis
 
-When the user runs `/career-ops rejection` (without a specific company), analyze ALL rejected entries:
+When the user runs `/job-forge rejection` (without a specific company), analyze ALL rejected entries:
 
 1. **Read** `data/applications.md` — filter to Rejected entries
 2. **Parse** `REJ@{stage}:{reason}` from notes column

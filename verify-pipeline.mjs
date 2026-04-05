@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * verify-pipeline.mjs — Health check for career-ops pipeline integrity
+ * verify-pipeline.mjs — Health check for job-forge pipeline integrity
  *
  * Checks:
  * 1. All statuses are canonical (per states.yml)
@@ -11,41 +11,30 @@
  * 6. No pending TSVs in tracker-additions/ (only in merged/ or archived/)
  * 7. states.yml canonical IDs for cross-system consistency
  *
- * Run: node career-ops/verify-pipeline.mjs
+ * Run: node job-forge/verify-pipeline.mjs
  */
 
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
 
-const CAREER_OPS = new URL('.', import.meta.url).pathname;
+const PROJECT_DIR = new URL('.', import.meta.url).pathname;
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
-const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
-  ? join(CAREER_OPS, 'data/applications.md')
-  : join(CAREER_OPS, 'applications.md');
-const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
-const REPORTS_DIR = join(CAREER_OPS, 'reports');
-const STATES_FILE = existsSync(join(CAREER_OPS, 'templates/states.yml'))
-  ? join(CAREER_OPS, 'templates/states.yml')
-  : join(CAREER_OPS, 'states.yml');
+const APPS_FILE = existsSync(join(PROJECT_DIR, 'data/applications.md'))
+  ? join(PROJECT_DIR, 'data/applications.md')
+  : join(PROJECT_DIR, 'applications.md');
+const ADDITIONS_DIR = join(PROJECT_DIR, 'batch/tracker-additions');
+const REPORTS_DIR = join(PROJECT_DIR, 'reports');
+const STATES_FILE = existsSync(join(PROJECT_DIR, 'templates/states.yml'))
+  ? join(PROJECT_DIR, 'templates/states.yml')
+  : join(PROJECT_DIR, 'states.yml');
 
 const CANONICAL_STATUSES = [
   'evaluated', 'applied', 'contacted', 'responded', 'interview',
   'offer', 'rejected', 'discarded', 'skip',
-  // Legacy Spanish aliases (still accepted)
-  'evaluada', 'aplicado', 'contacto', 'contactado', 'respondido', 'entrevista',
-  'oferta', 'rechazado', 'descartado', 'no aplicar',
 ];
 
 const ALIASES = {
-  'enviada': 'applied', 'aplicada': 'applied', 'aplicado': 'applied', 'sent': 'applied',
-  'contacto': 'contacted', 'contactado': 'contacted',
-  'respondido': 'responded',
-  'evaluada': 'evaluated',
-  'entrevista': 'interview',
-  'oferta': 'offer',
-  'cerrada': 'discarded', 'descartada': 'discarded', 'descartado': 'discarded', 'cancelada': 'discarded',
-  'rechazada': 'rejected', 'rechazado': 'rejected',
-  'no_aplicar': 'skip', 'no aplicar': 'skip', 'monitor': 'skip',
+  'sent': 'applied',
 };
 
 let errors = 0;
@@ -128,7 +117,7 @@ let brokenReports = 0;
 for (const e of entries) {
   const match = e.report.match(/\]\(([^)]+)\)/);
   if (!match) continue;
-  const reportPath = join(CAREER_OPS, match[1]);
+  const reportPath = join(PROJECT_DIR, match[1]);
   if (!existsSync(reportPath)) {
     error(`#${e.num}: Report not found: ${match[1]}`);
     brokenReports++;
@@ -151,7 +140,7 @@ if (badScores === 0) ok('All scores valid');
 let badRows = 0;
 for (const line of lines) {
   if (!line.startsWith('|')) continue;
-  if (line.includes('---') || line.includes('Empresa')) continue;
+  if (line.includes('---') || line.includes('Company')) continue;
   const parts = line.split('|');
   if (parts.length < 9) {
     error(`Row with <9 columns: ${line.substring(0, 80)}...`);
