@@ -7,6 +7,12 @@
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
+<p align="center">
+  <img src="demo/demo.gif" alt="JobForge Demo" width="800">
+</p>
+
+<p align="center"><em>Paste a job URL. Get a scored evaluation, tailored CV, and tracked application — in seconds.</em></p>
+
 ---
 
 ## What Is This
