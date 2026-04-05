@@ -163,6 +163,7 @@ The goal is to never waste time on closed offers, but also never silently assume
 - Report numbering: sequential 3-digit zero-padded, max existing + 1
 - **RULE: After each batch of evaluations, run `node merge-tracker.mjs`** to merge tracker additions and avoid duplications.
 - **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
+- **RULE: NEVER attribute commits to Claude (no `Co-Authored-By: Claude` or similar).** All commits must be attributed solely to the person making the commit (e.g., CharlieGreenman).
 
 ### TSV Format for Tracker Additions
 
