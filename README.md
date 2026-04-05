@@ -6,6 +6,7 @@
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Made in USA](https://img.shields.io/badge/Made_in-USA_%F0%9F%87%BA%F0%9F%87%B8-red?style=flat)
 
 <p align="center">
   <img src="demo/demo.gif" alt="JobForge Demo" width="800">
