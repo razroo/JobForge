@@ -23,6 +23,68 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`) |
 
+### First Run — Onboarding (IMPORTANT)
+
+**Before doing ANYTHING else, check if the system is set up.** Run these checks silently every time a session starts:
+
+1. Does `cv.md` exist?
+2. Does `config/profile.yml` exist (not just profile.example.yml)?
+3. Does `portals.yml` exist (not just templates/portals.example.yml)?
+
+**If ANY of these is missing, enter onboarding mode.** Do NOT proceed with evaluations, scans, or any other mode until the basics are in place. Guide the user step by step:
+
+#### Step 1: CV (required)
+If `cv.md` is missing, ask:
+> "I don't have your CV yet. You can either:
+> 1. Paste your CV here and I'll convert it to markdown
+> 2. Paste your LinkedIn URL and I'll extract the key info
+> 3. Tell me about your experience and I'll draft a CV for you
+>
+> Which do you prefer?"
+
+Create `cv.md` from whatever they provide. Make it clean markdown with standard sections (Summary, Experience, Projects, Education, Skills).
+
+#### Step 2: Profile (required)
+If `config/profile.yml` is missing, copy from `config/profile.example.yml` and then ask:
+> "I need a few details to personalize the system:
+> - Your full name and email
+> - Your location and timezone
+> - What roles are you targeting? (e.g., 'Senior Backend Engineer', 'AI Product Manager')
+> - Your salary target range
+>
+> I'll set everything up for you."
+
+Fill in `config/profile.yml` with their answers. For archetypes, map their target roles to the closest matches and update `modes/_shared.md` if needed.
+
+#### Step 3: Portals (recommended)
+If `portals.yml` is missing:
+> "I'll set up the job scanner with 45+ pre-configured companies. Want me to customize the search keywords for your target roles?"
+
+Copy `templates/portals.example.yml` → `portals.yml`. If they gave target roles in Step 2, update `title_filter.positive` to match.
+
+#### Step 4: Tracker
+If `data/applications.md` doesn't exist, create it:
+```markdown
+# Applications Tracker
+
+| # | Fecha | Empresa | Rol | Score | Estado | PDF | Report | Notas |
+|---|-------|---------|-----|-------|--------|-----|--------|-------|
+```
+
+#### Step 5: Ready
+Once all files exist, confirm:
+> "You're all set! You can now:
+> - Paste a job URL to evaluate it
+> - Run `/career-ops scan` to search portals
+> - Run `/career-ops` to see all commands
+>
+> Everything is customizable — just ask me to change anything."
+
+Then suggest automation:
+> "Want me to scan for new offers automatically? I can set up a recurring scan every few days so you don't miss anything. Just say 'scan every 3 days' and I'll configure it."
+
+If the user accepts, use the `/loop` or `/schedule` skill (if available) to set up a recurring `/career-ops scan`. If those aren't available, suggest adding a cron job or remind them to run `/career-ops scan` periodically.
+
 ### Personalization
 
 This system is designed to be customized by YOU (Claude). When the user asks you to change archetypes, translate modes, adjust scoring, add companies, or modify negotiation scripts -- do it directly. You read the same files you use, so you know exactly what to edit.
@@ -34,22 +96,6 @@ This system is designed to be customized by YOU (Claude). When the user asks you
 - "Update my profile" → edit `config/profile.yml`
 - "Change the CV template design" → edit `templates/cv-template.html`
 - "Adjust the scoring weights" → edit `modes/_shared.md` and `batch/batch-prompt.md`
-
-**Setup files (fill before first use):**
-
-**`config/profile.yml`** -- Copy from `config/profile.example.yml` and add your details: name, email, location, target roles, narrative, proof points, comp targets.
-
-**`cv.md`** -- Create in project root with your CV in markdown format.
-
-**(Optional) `article-digest.md`** -- Proof points from portfolio articles/projects.
-
-**First evaluation:** If `data/applications.md` doesn't exist, create it with the tracker header before writing the first TSV:
-```markdown
-# Applications Tracker
-
-| # | Fecha | Empresa | Rol | Score | Estado | PDF | Report | Notas |
-|---|-------|---------|-----|-------|--------|-----|--------|-------|
-```
 
 ### Skill Modes
 
