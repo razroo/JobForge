@@ -19,5 +19,6 @@ Guides for installing JobForge, understanding how pieces fit together, and tailo
 - [examples/README.md](../examples/README.md) — fictional CV samples and illustrative report layout
 - [interview-prep/story-bank.md](../interview-prep/story-bank.md) — optional STAR+R story bank (grows as you run evaluations)
 - [batch/README.md](../batch/README.md) — batch TSV input, merge step, and runner prerequisites
+- [`data/pipeline.md`](../data/) — inbox of pending offer URLs / local JD paths (create when needed; see [`modes/pipeline.md`](../modes/pipeline.md)); saved JD text often lives under [`jds/`](../jds/) as `local:jds/{file}`
 
 Optional scripted agent iterations (same verify/build expectations as a manual PR) are described in [scripts/cursor-agent-loop.sh](../scripts/cursor-agent-loop.sh) and in CONTRIBUTING.

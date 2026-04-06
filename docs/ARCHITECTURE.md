@@ -105,10 +105,14 @@ cv.md                    →  Evaluation context
 article-digest.md        →  Proof points for matching
 config/profile.yml       →  Candidate identity
 portals.yml              →  Scanner configuration
+data/pipeline.md        →  Pending URLs and `local:jds/...` inbox (see modes/pipeline.md)
+jds/*.md                 →  Saved job descriptions referenced from the pipeline (`local:jds/{file}`)
 templates/states.yml     →  Canonical status values
 templates/cv-template.html → PDF generation template
 examples/*.md            →  Fictional layouts only (not read by scripts; see examples/README.md)
 ```
+
+Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeline`); format and `local:jds/...` lines are described in [`modes/pipeline.md`](../modes/pipeline.md).
 
 ## File Naming Conventions
 
