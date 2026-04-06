@@ -8,7 +8,7 @@
  * 3. All report links point to existing files
  * 4. Scores match format X.XX/5 or N/A or DUP
  * 5. All rows have proper pipe-delimited format
- * 6. No pending TSVs in tracker-additions/ (only in merged/ or archived/)
+ * 6. No pending TSVs in tracker-additions/ (runs even when tracker file is missing)
  * 7. No markdown bold in score column
  * 8. Drift warning if states.yml ids differ from the built-in fallback list
  *
@@ -31,7 +31,8 @@ Usage:
   npm run verify
 
 Exits successfully if neither data/applications.md nor applications.md exists
-(fresh clone). Exits with code 1 when any check fails.
+(fresh clone). Still warns when batch/tracker-additions/*.tsv are present
+(not merged). Exits with code 1 when any check fails.
 
 Run from the repository root.`);
   process.exit(0);
@@ -108,6 +109,19 @@ function error(msg) { console.log(`❌ ${msg}`); errors++; }
 function warn(msg) { console.log(`⚠️  ${msg}`); warnings++; }
 function ok(msg) { console.log(`✅ ${msg}`); }
 
+/** Check 6: unmerged batch TSVs (same logic whether or not tracker exists). */
+function checkPendingTrackerAdditions() {
+  let pendingTsvs = 0;
+  if (existsSync(ADDITIONS_DIR)) {
+    const files = readdirSync(ADDITIONS_DIR).filter(f => f.endsWith('.tsv'));
+    pendingTsvs = files.length;
+    if (pendingTsvs > 0) {
+      warn(`${pendingTsvs} pending TSVs in tracker-additions/ (not merged)`);
+    }
+  }
+  if (pendingTsvs === 0) ok('No pending TSVs');
+}
+
 /** Check 8: drift between states.yml and built-in fallback (warnings only). */
 function verifyStatesYamlDrift() {
   let stateDrift = 0;
@@ -148,6 +162,7 @@ function printPipelineSummaryAndExit() {
 if (!existsSync(APPS_FILE)) {
   console.log('\n📊 No tracker file yet (expected data/applications.md or applications.md).');
   console.log('   This is normal for a fresh setup; it is created when you evaluate your first offer.\n');
+  checkPendingTrackerAdditions();
   verifyStatesYamlDrift();
   printPipelineSummaryAndExit();
 }
@@ -251,15 +266,7 @@ for (const line of lines) {
 if (badRows === 0) ok('All rows properly formatted');
 
 // --- Check 6: Pending TSVs ---
-let pendingTsvs = 0;
-if (existsSync(ADDITIONS_DIR)) {
-  const files = readdirSync(ADDITIONS_DIR).filter(f => f.endsWith('.tsv'));
-  pendingTsvs = files.length;
-  if (pendingTsvs > 0) {
-    warn(`${pendingTsvs} pending TSVs in tracker-additions/ (not merged)`);
-  }
-}
-if (pendingTsvs === 0) ok('No pending TSVs');
+checkPendingTrackerAdditions();
 
 // --- Check 7: Bold in scores ---
 let boldScores = 0;
