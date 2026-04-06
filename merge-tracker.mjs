@@ -14,6 +14,9 @@
  * If pending TSVs exist but neither data/applications.md nor applications.md exists yet,
  * creates data/applications.md with the standard empty table header (unless --dry-run).
  *
+ * If batch/tracker-additions/ is missing (e.g. directory removed), exits 0 with the same
+ * message as when there are no .tsv files — nothing to merge.
+ *
  * Run: node merge-tracker.mjs [--dry-run] [--verify]   (from repo root)
  */
 
@@ -212,7 +215,7 @@ function parseTsvContent(content, filename) {
 
 // Read tracker additions first so we can bootstrap an empty tracker when needed
 if (!existsSync(ADDITIONS_DIR)) {
-  console.log('No batch/tracker-additions directory found.');
+  console.log('✅ No pending additions to merge.');
   process.exit(0);
 }
 
