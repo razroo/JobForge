@@ -13,7 +13,7 @@
  */
 
 import { resolve, dirname } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 
@@ -32,7 +32,8 @@ Usage:
 Requires: the playwright package (see package.json) and a local browser build,
   e.g. npx playwright install chromium
 
-Run from the repository root or any cwd; paths may be relative or absolute.`);
+Run from the repository root or any cwd; paths may be relative or absolute.
+Creates the output directory (e.g. output/) when it does not exist yet.`);
   process.exit(0);
 }
 
@@ -65,11 +66,17 @@ async function generatePDF() {
     process.exit(1);
   }
 
-  // Validate format
+  // Validate format before creating output directories
   const validFormats = ['a4', 'letter'];
   if (!validFormats.includes(format)) {
     console.error(`Invalid format "${format}". Use: ${validFormats.join(', ')}`);
     process.exit(1);
+  }
+
+  const outputDir = dirname(outputPath);
+  if (!existsSync(outputDir)) {
+    mkdirSync(outputDir, { recursive: true });
+    console.log(`📁 Created directory: ${outputDir}`);
   }
 
   console.log(`📄 Input:  ${inputPath}`);
