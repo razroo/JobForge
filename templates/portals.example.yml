@@ -233,6 +233,11 @@ tracked_companies:
     notes: "Data cloud; ML and data engineering at enterprise scale."
     enabled: true
 
+  - name: Confluent
+    careers_url: https://jobs.ashbyhq.com/confluent
+    notes: "Apache Kafka and data streaming; cloud platform, connectors, and stream processing."
+    enabled: true
+
   - name: Scale
     careers_url: https://jobs.ashbyhq.com/scale
     notes: "Data for foundation models, evals, and applied research."
