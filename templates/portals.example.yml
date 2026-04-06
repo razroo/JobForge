@@ -593,6 +593,11 @@ tracked_companies:
     notes: "Serverless Postgres; branching for dev and staging."
     enabled: true
 
+  - name: PlanetScale
+    careers_url: https://jobs.ashbyhq.com/planetscale
+    notes: "Serverless MySQL (Vitess); database platform and branching workflows."
+    enabled: true
+
   - name: Cursor
     careers_url: https://jobs.ashbyhq.com/cursor
     notes: "AI-native editor and agent tooling for developers."
