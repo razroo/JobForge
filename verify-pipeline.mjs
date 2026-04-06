@@ -16,9 +16,10 @@
  */
 
 import { readFileSync, readdirSync, existsSync } from 'fs';
-import { join, relative } from 'path';
+import { join, relative, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const PROJECT_DIR = new URL('.', import.meta.url).pathname;
+const PROJECT_DIR = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
 const APPS_FILE = existsSync(join(PROJECT_DIR, 'data/applications.md'))
   ? join(PROJECT_DIR, 'data/applications.md')
