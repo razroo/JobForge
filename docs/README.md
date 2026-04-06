@@ -8,6 +8,16 @@ Guides for installing JobForge, understanding how pieces fit together, and tailo
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Modes under `modes/`, single-offer flow, batch runner, tracker and scripts |
 | [CUSTOMIZATION.md](CUSTOMIZATION.md) | Profile, archetypes in `_shared.md`, `portals.yml`, CV template, canonical states |
 
+## Checks and automation
+
+Terminal workflows and PR-style gates are documented across a few files. Use this map when you need a command name versus what a script actually does:
+
+| What you need | Where to read |
+|---------------|---------------|
+| npm script names (`verify`, `merge`, `normalize`, `dedup`, `pdf`, `sync-check`, `build:dashboard`) | [CONTRIBUTING.md — Development](../CONTRIBUTING.md#development) |
+| What each repository-root `.mjs` utility is for | [ARCHITECTURE.md — Pipeline integrity](ARCHITECTURE.md#pipeline-integrity) |
+| Batch runner, TSV layout, and `batch/tracker-additions/` merge flow | [batch/README.md](../batch/README.md) |
+
 ## Related material (repository root)
 
 - [modes/](../modes/) — per-command prompts used with `CLAUDE.md` (archetypes and shared scoring live in `_shared.md`; see **Modes** in [ARCHITECTURE.md](ARCHITECTURE.md))
