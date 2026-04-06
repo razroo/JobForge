@@ -75,7 +75,7 @@ For customization (archetypes, weights, tone), start with `_shared.md` and [CUST
 5. **Score**: Weighted average across 10 dimensions (1-5)
 6. **Report**: Save as `reports/{num}-{company}-{date}.md`
 7. **PDF**: Generate ATS-optimized CV (`generate-pdf.mjs`)
-8. **Track**: Write TSV to `batch/tracker-additions/`, auto-merged
+8. **Track**: Write one TSV per evaluation under `batch/tracker-additions/` (see [CLAUDE.md](../CLAUDE.md) TSV layout); fold rows into `data/applications.md` with `npm run merge` / `merge-tracker.mjs` when you are ready (not automatic in every workflow)
 
 ## Batch Processing
 
