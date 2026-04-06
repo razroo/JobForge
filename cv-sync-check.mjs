@@ -8,6 +8,11 @@
  * 2. config/profile.yml exists and has required fields
  * 3. No hardcoded metrics in _shared.md or batch/batch-prompt.md
  * 4. article-digest.md freshness (if exists)
+ *
+ * Usage:
+ *   node cv-sync-check.mjs
+ *   npm run sync-check
+ *   npm run sync-check -- --help
  */
 
 import { readFileSync, existsSync, statSync } from 'fs';
@@ -16,6 +21,24 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = __dirname;
+
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log(`cv-sync-check.mjs — optional setup lint for a personalized clone
+
+Checks that cv.md and config/profile.yml exist, scans modes/_shared.md and
+batch/batch-prompt.md for lines that look like hardcoded metrics, and warns
+if article-digest.md is stale when present.
+
+Usage:
+  node cv-sync-check.mjs
+  npm run sync-check
+
+Exits with code 1 if cv.md or config/profile.yml is missing; exits 0 when
+those exist (warnings only). Not part of the default PR gate — see CONTRIBUTING.md.
+
+Run from the repository root.`);
+  process.exit(0);
+}
 
 const warnings = [];
 const errors = [];

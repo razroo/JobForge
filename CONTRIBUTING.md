@@ -55,7 +55,7 @@ Other npm scripts:
 | `npm run merge` | `merge-tracker.mjs` | Merges `batch/tracker-additions/*.tsv` into the tracker; no-op if the directory is missing or has no `.tsv` files; if TSVs exist but no tracker file yet, creates `data/applications.md` with an empty table (simulated only with `--dry-run`) |
 | `npm run pdf` | `generate-pdf.mjs` | Pass HTML and PDF paths after `--`, e.g. `npm run pdf -- output/cv.html output/cv.pdf` |
 
-Tracker scripts `verify`, `merge`, `normalize`, and `dedup` accept `--help` / `-h` (e.g. `npm run verify -- --help`).
+Utility scripts `verify`, `merge`, `normalize`, `dedup`, and `sync-check` accept `--help` / `-h` (e.g. `npm run verify -- --help`, `npm run sync-check -- --help`).
 
 You can run the same `.mjs` files with `node <script>.mjs` from the repo root if you prefer.
 
