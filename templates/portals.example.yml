@@ -227,6 +227,11 @@ tracked_companies:
     notes: "Open-source ML hub and inference platform."
     enabled: true
 
+  - name: Groq
+    careers_url: https://jobs.ashbyhq.com/groq
+    notes: "Inference hardware and hosted models (LPU)."
+    enabled: true
+
   # -- Voice AI & Conversational AI --
 
   - name: PolyAI
