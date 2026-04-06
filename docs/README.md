@@ -17,6 +17,7 @@ Terminal workflows and PR-style gates are documented across a few files. Use thi
 | npm script names (`verify`, `merge`, `normalize`, `dedup`, `pdf`, `sync-check`, `build:dashboard`) | [CONTRIBUTING.md — Development](../CONTRIBUTING.md#development) |
 | What each repository-root `.mjs` utility is for | [ARCHITECTURE.md — Pipeline integrity](ARCHITECTURE.md#pipeline-integrity) |
 | Batch runner, TSV layout, and `batch/tracker-additions/` merge flow | [batch/README.md](../batch/README.md) |
+| Optional scripted iterations (same verify + dashboard build gate as a manual PR) | [scripts/cursor-agent-loop.sh](../scripts/cursor-agent-loop.sh) — usage and env vars in the script header and [CONTRIBUTING.md — Optional: scripted agent iterations](../CONTRIBUTING.md#optional-scripted-agent-iterations); verbose JSON output is formatted by [cursor-agent-stream-format.py](../scripts/cursor-agent-stream-format.py) |
 
 ## Related material (repository root)
 
@@ -30,4 +31,4 @@ Terminal workflows and PR-style gates are documented across a few files. Use thi
 - [interview-prep/story-bank.md](../interview-prep/story-bank.md) — optional STAR+R story bank (grows as you run evaluations)
 - [batch/README.md](../batch/README.md) — batch TSV input, merge step, and runner prerequisites
 - [`data/pipeline.md`](../data/) — inbox of pending offer URLs / local JD paths (create when needed; see [`modes/pipeline.md`](../modes/pipeline.md)); saved JD text often lives under [`jds/`](../jds/) as `local:jds/{file}`
-- [scripts/cursor-agent-loop.sh](../scripts/cursor-agent-loop.sh) — optional driver for repeated non-interactive agent passes with the same verify and dashboard build gate as a manual PR; environment variables and prerequisites are documented in the script header (see **Optional: scripted agent iterations** in [CONTRIBUTING.md](../CONTRIBUTING.md); verbose JSON streaming uses `cursor-agent-stream-format.py` in the same folder)
+- [scripts/cursor-agent-loop.sh](../scripts/cursor-agent-loop.sh) — optional driver for repeated non-interactive passes; see the **Checks and automation** table above and [CONTRIBUTING.md — Optional: scripted agent iterations](../CONTRIBUTING.md#optional-scripted-agent-iterations)
