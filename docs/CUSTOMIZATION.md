@@ -46,6 +46,10 @@ To customize fonts/colors, edit the CSS in the template. Update font files in `f
 
 Fictional samples for structure and tone — not real candidates. See [`examples/README.md`](../examples/README.md) for markdown CVs, an optional article-digest example, and a sample report layout. Use them as templates, then replace every detail with your own before applying.
 
+## Interview prep (`interview-prep/story-bank.md`)
+
+Optional file that holds curated STAR+R stories across evaluations. Modes that produce interview prep (for example Block F in a single-offer evaluation) can append or reference stories here so you reuse the same narratives instead of starting from scratch before each interview. The shipped file is a scaffold with formatting comments; replace placeholders with your own content as the bank fills in. If you prefer a different path, keep the same structure and point your workflow at your copy.
+
 ## Negotiation Scripts (modes/_shared.md)
 
 The negotiation section provides frameworks for salary discussions. Replace the example scripts with your own:

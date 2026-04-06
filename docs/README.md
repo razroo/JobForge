@@ -13,6 +13,7 @@ Guides for installing JobForge, understanding how pieces fit together, and tailo
 - [CLAUDE.md](../CLAUDE.md) — default agent instructions for Claude Code in this repo
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — branch workflow, quality gate, contribution ideas
 - [examples/README.md](../examples/README.md) — fictional CV samples and illustrative report layout
+- [interview-prep/story-bank.md](../interview-prep/story-bank.md) — optional STAR+R story bank (grows as you run evaluations)
 - [batch/README.md](../batch/README.md) — batch TSV input, merge step, and runner prerequisites
 
 Optional scripted agent iterations (same verify/build expectations as a manual PR) are described in [scripts/cursor-agent-loop.sh](../scripts/cursor-agent-loop.sh) and in CONTRIBUTING.
