@@ -3,13 +3,14 @@
  * verify-pipeline.mjs — Health check for job-forge pipeline integrity
  *
  * Checks:
- * 1. All statuses are canonical (per states.yml)
+ * 1. All statuses are canonical (from templates/states.yml when present, else built-in list)
  * 2. No duplicate company+role entries
  * 3. All report links point to existing files
  * 4. Scores match format X.XX/5 or N/A or DUP
  * 5. All rows have proper pipe-delimited format
  * 6. No pending TSVs in tracker-additions/ (only in merged/ or archived/)
- * 7. states.yml canonical IDs for cross-system consistency
+ * 7. No markdown bold in score column
+ * 8. Drift warning if states.yml ids differ from the built-in fallback list
  *
  * Run: node job-forge/verify-pipeline.mjs
  */
@@ -23,7 +24,6 @@ const APPS_FILE = existsSync(join(PROJECT_DIR, 'data/applications.md'))
   ? join(PROJECT_DIR, 'data/applications.md')
   : join(PROJECT_DIR, 'applications.md');
 const ADDITIONS_DIR = join(PROJECT_DIR, 'batch/tracker-additions');
-const REPORTS_DIR = join(PROJECT_DIR, 'reports');
 const STATES_FILE = existsSync(join(PROJECT_DIR, 'templates/states.yml'))
   ? join(PROJECT_DIR, 'templates/states.yml')
   : join(PROJECT_DIR, 'states.yml');
@@ -37,6 +37,49 @@ const ALIASES = {
   'sent': 'applied',
 };
 
+/**
+ * Parse templates/states.yml enough to read state ids and alias → id (no YAML dependency).
+ * Returns null if the file is missing or no ids were found.
+ */
+function loadStatesFromYaml(filePath) {
+  if (!existsSync(filePath)) return null;
+  const text = readFileSync(filePath, 'utf-8');
+  const ids = new Set();
+  const aliasToId = new Map();
+  let currentId = null;
+  for (const line of text.split('\n')) {
+    const idLine = line.match(/^\s+- id:\s*(\S+)/);
+    if (idLine) {
+      currentId = idLine[1].toLowerCase();
+      ids.add(currentId);
+      continue;
+    }
+    const aliasLine = line.match(/^\s+aliases:\s*\[(.*)\]\s*$/);
+    if (aliasLine && currentId) {
+      const inner = aliasLine[1].trim();
+      if (inner) {
+        for (let raw of inner.split(',')) {
+          raw = raw.trim().replace(/^['"]|['"]$/g, '');
+          if (raw) aliasToId.set(raw.toLowerCase(), currentId);
+        }
+      }
+    }
+  }
+  if (ids.size === 0) return null;
+  return { ids, aliasToId };
+}
+
+const statesMeta = loadStatesFromYaml(STATES_FILE);
+
+function statusIsAllowed(statusOnlyLower) {
+  if (statesMeta) {
+    if (statesMeta.ids.has(statusOnlyLower)) return true;
+    if (statesMeta.aliasToId.has(statusOnlyLower)) return true;
+    return false;
+  }
+  return CANONICAL_STATUSES.includes(statusOnlyLower) || Boolean(ALIASES[statusOnlyLower]);
+}
+
 let errors = 0;
 let warnings = 0;
 
@@ -44,11 +87,48 @@ function error(msg) { console.log(`❌ ${msg}`); errors++; }
 function warn(msg) { console.log(`⚠️  ${msg}`); warnings++; }
 function ok(msg) { console.log(`✅ ${msg}`); }
 
+/** Check 8: drift between states.yml and built-in fallback (warnings only). */
+function verifyStatesYamlDrift() {
+  let stateDrift = 0;
+  if (statesMeta) {
+    const builtin = new Set(CANONICAL_STATUSES);
+    for (const id of statesMeta.ids) {
+      if (!builtin.has(id)) {
+        warn(`states.yml defines id "${id}" not in verify built-in list — extend CANONICAL_STATUSES if intentional`);
+        stateDrift++;
+      }
+    }
+    for (const id of builtin) {
+      if (!statesMeta.ids.has(id)) {
+        warn(`Built-in status "${id}" missing from ${STATES_FILE} — files may be out of sync`);
+        stateDrift++;
+      }
+    }
+    if (stateDrift === 0) ok('states.yml ids match verify built-in fallback list');
+  } else if (existsSync(STATES_FILE)) {
+    warn(`Could not parse state ids from ${STATES_FILE} — using built-in status list only`);
+  }
+}
+
+function printPipelineSummaryAndExit() {
+  console.log('\n' + '='.repeat(50));
+  console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);
+  if (errors === 0 && warnings === 0) {
+    console.log('🟢 Pipeline is clean!');
+  } else if (errors === 0) {
+    console.log('🟡 Pipeline OK with warnings');
+  } else {
+    console.log('🔴 Pipeline has errors — fix before proceeding');
+  }
+  process.exit(errors > 0 ? 1 : 0);
+}
+
 // --- Read applications.md ---
 if (!existsSync(APPS_FILE)) {
   console.log('\n📊 No applications.md found. This is normal for a fresh setup.');
   console.log('   The file will be created when you evaluate your first offer.\n');
-  process.exit(0);
+  verifyStatesYamlDrift();
+  printPipelineSummaryAndExit();
 }
 const content = readFileSync(APPS_FILE, 'utf-8');
 const lines = content.split('\n');
@@ -76,7 +156,7 @@ for (const e of entries) {
   // Strip trailing dates
   const statusOnly = clean.replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
 
-  if (!CANONICAL_STATUSES.includes(statusOnly) && !ALIASES[statusOnly]) {
+  if (!statusIsAllowed(statusOnly)) {
     error(`#${e.num}: Non-canonical status "${e.status}"`);
     badStatuses++;
   }
@@ -170,15 +250,5 @@ for (const e of entries) {
 }
 if (boldScores === 0) ok('No bold in scores');
 
-// --- Summary ---
-console.log('\n' + '='.repeat(50));
-console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);
-if (errors === 0 && warnings === 0) {
-  console.log('🟢 Pipeline is clean!');
-} else if (errors === 0) {
-  console.log('🟡 Pipeline OK with warnings');
-} else {
-  console.log('🔴 Pipeline has errors — fix before proceeding');
-}
-
-process.exit(errors > 0 ? 1 : 0);
+verifyStatesYamlDrift();
+printPipelineSummaryAndExit();
