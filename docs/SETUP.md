@@ -82,3 +82,7 @@ cd dashboard
 go build -o job-forge-dashboard .
 ./job-forge-dashboard            # Opens TUI pipeline viewer
 ```
+
+## Contributing
+
+Pull requests and issue reports are welcome. See [CONTRIBUTING.md](../CONTRIBUTING.md) for branch workflow, ideas (documentation, `examples/`, `templates/portals.example.yml`, dashboard features, utility scripts), and the checks maintainers expect before a PR (`npm run verify` and `cd dashboard && go build .`).
