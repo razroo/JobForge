@@ -4,7 +4,7 @@
 
 - [Claude Code](https://claude.ai/code) installed and configured
 - Node.js 18+ (for PDF generation and utility scripts)
-- (Optional) Go 1.21+ (for the dashboard TUI)
+- (Optional) Go (for the dashboard TUI) — use a toolchain that satisfies the `go` directive in [`dashboard/go.mod`](../dashboard/go.mod)
 
 ## Quick Start (5 steps)
 
@@ -140,7 +140,10 @@ From the repo root, run `npx playwright install chromium` after `npm install` so
 The `-path` argument must be the JobForge repository root (where `data/applications.md` or `applications.md` lives), not the `dashboard/` directory. From the repo root after `npm run build:dashboard`, use `./dashboard/dashboard -path .` (see [Build Dashboard](#build-dashboard-optional) above).
 
 **`go build` or `npm run build:dashboard` reports `go: command not found`**  
-Install Go 1.21+ and put it on your `PATH`, or omit the dashboard; everything else runs with Node.js.
+Install Go and put it on your `PATH`, or omit the dashboard; everything else runs with Node.js.
+
+**`go build` fails with a version error (toolchain too old)**  
+Upgrade Go so it meets the `go` line in [`dashboard/go.mod`](../dashboard/go.mod).
 
 **`npm run merge` says there is nothing to merge, but you have TSV files**  
 Only files directly under `batch/tracker-additions/` with a `.tsv` extension are picked up. After a successful merge, rows are merged into the tracker and those files move to `batch/tracker-additions/merged/`, so a second run correctly finds nothing left. If you created TSVs elsewhere or only have files under `merged/`, move or regenerate them in the top-level `tracker-additions` folder (see [batch/README.md](../batch/README.md)).
