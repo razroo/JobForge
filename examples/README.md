@@ -6,6 +6,7 @@ Fictional, generic samples you can copy or use as a structural template. Replace
 |------|---------|
 | [cv-example.md](cv-example.md) | Full CV in markdown — ML / platform engineer profile |
 | [cv-example-backend-engineer.md](cv-example-backend-engineer.md) | Full CV — backend / distributed systems profile |
+| [cv-example-fullstack-engineer.md](cv-example-fullstack-engineer.md) | Full CV — full-stack (web UI + APIs + data) profile |
 | [cv-example-data-engineer.md](cv-example-data-engineer.md) | Full CV — data / analytics engineering profile |
 | [cv-example-frontend-engineer.md](cv-example-frontend-engineer.md) | Full CV — frontend / UI engineering profile |
 | [cv-example-mobile-engineer.md](cv-example-mobile-engineer.md) | Full CV — native iOS / Android / mobile profile |
