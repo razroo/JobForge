@@ -21,7 +21,7 @@ Terminal workflows and PR-style gates are documented across a few files. Use thi
 
 ## Related material (repository root)
 
-- [modes/](../modes/) — per-command prompts used with `CLAUDE.md` (archetypes and shared scoring live in `_shared.md`; see **Modes** in [ARCHITECTURE.md](ARCHITECTURE.md))
+- [modes/README.md](../modes/README.md) — per-command prompts used with `CLAUDE.md` (archetypes and shared scoring live in `_shared.md`; see **Modes** in [ARCHITECTURE.md](ARCHITECTURE.md))
 - [CLAUDE.md](../CLAUDE.md) — default agent instructions for Claude Code in this repo
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — branch workflow, quality gate, contribution ideas
 - [templates/states.yml](../templates/states.yml) — canonical tracker status ids and labels (used by verify, merge, and normalize)
