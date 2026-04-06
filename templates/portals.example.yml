@@ -554,6 +554,21 @@ tracked_companies:
     notes: "Serverless Postgres; branching for dev and staging."
     enabled: true
 
+  - name: Cursor
+    careers_url: https://jobs.ashbyhq.com/cursor
+    notes: "AI-native editor and agent tooling for developers."
+    enabled: true
+
+  - name: Harvey
+    careers_url: https://jobs.ashbyhq.com/harvey
+    notes: "Legal AI assistants and workflow automation."
+    enabled: true
+
+  - name: Baseten
+    careers_url: https://jobs.ashbyhq.com/baseten
+    notes: "Model serving, inference, and ML infrastructure."
+    enabled: true
+
   # -- Lever-based (Playwright direct) --
 
   - name: Mistral AI
