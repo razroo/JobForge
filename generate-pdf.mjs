@@ -12,6 +12,7 @@
 
 import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
+import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 
@@ -40,6 +41,11 @@ async function generatePDF() {
 
   inputPath = resolve(inputPath);
   outputPath = resolve(outputPath);
+
+  if (!existsSync(inputPath)) {
+    console.error(`Input file not found: ${inputPath}`);
+    process.exit(1);
+  }
 
   // Validate format
   const validFormats = ['a4', 'letter'];
