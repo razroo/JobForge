@@ -12,7 +12,7 @@
  * 7. No markdown bold in score column
  * 8. Drift warning if states.yml ids differ from the built-in fallback list
  *
- * Run: node job-forge/verify-pipeline.mjs
+ * Run: node verify-pipeline.mjs   (from repo root; same as npm run verify)
  */
 
 import { readFileSync, readdirSync, existsSync } from 'fs';

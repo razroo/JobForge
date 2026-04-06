@@ -8,7 +8,7 @@
  * Also strips markdown bold (**) and dates from the status field,
  * moving DUPLICADO info to the notes column.
  *
- * Run: node job-forge/normalize-statuses.mjs [--dry-run]
+ * Run: node normalize-statuses.mjs [--dry-run]   (from repo root)
  */
 
 import { readFileSync, writeFileSync, copyFileSync, existsSync } from 'fs';

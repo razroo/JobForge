@@ -11,7 +11,7 @@
  * If duplicate with higher score → update in-place, update report link
  * Validates status against states.yml (rejects non-canonical, logs warning)
  *
- * Run: node job-forge/merge-tracker.mjs [--dry-run] [--verify]
+ * Run: node merge-tracker.mjs [--dry-run] [--verify]   (from repo root)
  */
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';

@@ -62,7 +62,7 @@ async function generatePDF() {
   // Read HTML to inject font paths as absolute file:// URLs
   let html = await readFile(inputPath, 'utf-8');
 
-  // Resolve font paths relative to job-forge/fonts/
+  // Resolve font paths relative to repo-root fonts/
   const fontsDir = resolve(__dirname, 'fonts');
   html = html.replace(
     /url\(['"]?\.\/fonts\//g,

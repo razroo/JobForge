@@ -6,7 +6,7 @@
  * Keeps entry with highest score. If discarded entry had more advanced status,
  * preserves that status. Merges notes.
  *
- * Run: node job-forge/dedup-tracker.mjs [--dry-run]
+ * Run: node dedup-tracker.mjs [--dry-run]   (from repo root)
  */
 
 import { readFileSync, writeFileSync, copyFileSync, existsSync } from 'fs';
