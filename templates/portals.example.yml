@@ -199,6 +199,27 @@ tracked_companies:
     scan_query: 'site:openai.com/careers "Solutions" OR "Forward Deployed" OR "AI Engineer"'
     enabled: true
 
+  - name: Meta
+    careers_url: https://www.metacareers.com/
+    scan_method: websearch
+    scan_query: 'site:metacareers.com "AI" OR "ML" OR "Research Scientist" OR "Generative" OR "Llama"'
+    notes: "FAIR, GenAI product, Reality Labs, and infra."
+    enabled: true
+
+  - name: Microsoft
+    careers_url: https://careers.microsoft.com/
+    scan_method: websearch
+    scan_query: 'site:careers.microsoft.com "AI" OR "Copilot" OR "Azure OpenAI" OR "Applied Scientist"'
+    notes: "Copilot, Azure AI platform, and research."
+    enabled: true
+
+  - name: NVIDIA
+    careers_url: https://www.nvidia.com/en-us/about-nvidia/careers/
+    scan_method: websearch
+    scan_query: 'site:nvidia.com/careers "AI" OR "ML" OR "Deep Learning" OR "Solutions Architect" OR "CUDA"'
+    notes: "GPUs, CUDA stack, enterprise AI, and research."
+    enabled: true
+
   - name: Databricks
     careers_url: https://job-boards.greenhouse.io/databricks
     api: https://boards-api.greenhouse.io/v1/boards/databricks/jobs
