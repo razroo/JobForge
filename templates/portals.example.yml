@@ -205,6 +205,13 @@ tracked_companies:
     notes: "Lakehouse, ML, and data engineering at scale."
     enabled: true
 
+  - name: Snowflake
+    careers_url: https://careers.snowflake.com
+    scan_method: websearch
+    scan_query: 'site:careers.snowflake.com "AI" OR "ML" OR "Solutions" OR "Data Engineer" OR "Platform"'
+    notes: "Data cloud; ML and data engineering at enterprise scale."
+    enabled: true
+
   - name: Scale
     careers_url: https://jobs.ashbyhq.com/scale
     notes: "Data for foundation models, evals, and applied research."
@@ -305,6 +312,12 @@ tracked_companies:
     careers_url: https://job-boards.greenhouse.io/vercel
     api: https://boards-api.greenhouse.io/v1/boards/vercel/jobs
     notes: "AI SDK, v0.dev. Frontend AI tooling."
+    enabled: true
+
+  - name: Cloudflare
+    careers_url: https://job-boards.greenhouse.io/cloudflare
+    api: https://boards-api.greenhouse.io/v1/boards/cloudflare/jobs
+    notes: "Edge network, Workers AI, developer platform."
     enabled: true
 
   - name: Linear
@@ -470,6 +483,16 @@ tracked_companies:
   - name: Cohere
     careers_url: https://jobs.ashbyhq.com/cohere
     notes: "AI/LLM provider. Toronto + remote."
+    enabled: true
+
+  - name: Together AI
+    careers_url: https://jobs.ashbyhq.com/togethercomputer
+    notes: "Inference and training stack; strong open-model focus."
+    enabled: true
+
+  - name: Anyscale
+    careers_url: https://jobs.ashbyhq.com/anyscale
+    notes: "Ray for distributed Python and ML workloads."
     enabled: true
 
   - name: LangChain
