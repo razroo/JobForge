@@ -20,5 +20,4 @@ Guides for installing JobForge, understanding how pieces fit together, and tailo
 - [interview-prep/story-bank.md](../interview-prep/story-bank.md) — optional STAR+R story bank (grows as you run evaluations)
 - [batch/README.md](../batch/README.md) — batch TSV input, merge step, and runner prerequisites
 - [`data/pipeline.md`](../data/) — inbox of pending offer URLs / local JD paths (create when needed; see [`modes/pipeline.md`](../modes/pipeline.md)); saved JD text often lives under [`jds/`](../jds/) as `local:jds/{file}`
-
-Optional scripted agent iterations (same verify/build expectations as a manual PR) are described in [scripts/cursor-agent-loop.sh](../scripts/cursor-agent-loop.sh) and in CONTRIBUTING.
+- [scripts/cursor-agent-loop.sh](../scripts/cursor-agent-loop.sh) — optional driver for repeated non-interactive agent passes with the same verify and dashboard build gate as a manual PR; environment variables and prerequisites are documented in the script header (see **Optional: scripted agent iterations** in [CONTRIBUTING.md](../CONTRIBUTING.md); verbose JSON streaming uses `cursor-agent-stream-format.py` in the same folder)
