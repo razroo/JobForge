@@ -140,6 +140,9 @@ The `-path` argument must be the JobForge repository root (where `data/applicati
 **`go build` or `npm run build:dashboard` reports `go: command not found`**  
 Install Go 1.21+ and put it on your `PATH`, or omit the dashboard; everything else runs with Node.js.
 
+**`npm run merge` says there is nothing to merge, but you have TSV files**  
+Only files directly under `batch/tracker-additions/` with a `.tsv` extension are picked up. After a successful merge, rows are merged into the tracker and those files move to `batch/tracker-additions/merged/`, so a second run correctly finds nothing left. If you created TSVs elsewhere or only have files under `merged/`, move or regenerate them in the top-level `tracker-additions` folder (see [batch/README.md](../batch/README.md)).
+
 ## Contributing
 
 Pull requests and issue reports are welcome. See [CONTRIBUTING.md](../CONTRIBUTING.md) for branch workflow, ideas (documentation, `examples/`, `templates/portals.example.yml`, dashboard features, utility scripts), and the checks maintainers expect before a PR (`npm run verify` and `npm run build:dashboard`).
