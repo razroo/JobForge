@@ -13,6 +13,9 @@ Guides for installing JobForge, understanding how pieces fit together, and tailo
 - [modes/](../modes/) — per-command prompts used with `CLAUDE.md` (archetypes and shared scoring live in `_shared.md`; see **Modes** in [ARCHITECTURE.md](ARCHITECTURE.md))
 - [CLAUDE.md](../CLAUDE.md) — default agent instructions for Claude Code in this repo
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — branch workflow, quality gate, contribution ideas
+- [templates/states.yml](../templates/states.yml) — canonical tracker status ids and labels (used by verify, merge, and normalize)
+- [templates/portals.example.yml](../templates/portals.example.yml) — starter portal and scanner config (copy to repo-root `portals.yml`)
+- [templates/cv-template.html](../templates/cv-template.html) — HTML layout for ATS-style PDFs from `generate-pdf.mjs`
 - [examples/README.md](../examples/README.md) — fictional CV samples and illustrative report layout
 - [interview-prep/story-bank.md](../interview-prep/story-bank.md) — optional STAR+R story bank (grows as you run evaluations)
 - [batch/README.md](../batch/README.md) — batch TSV input, merge step, and runner prerequisites
