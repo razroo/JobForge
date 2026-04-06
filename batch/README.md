@@ -48,6 +48,7 @@ Workers write one-line TSV rows under `batch/tracker-additions/`. Merge them int
 
 ```bash
 npm run merge
+npm run verify   # optional: pipeline health after merge (report links, statuses, pending TSVs)
 ```
 
 (`node merge-tracker.mjs` — same as `npm run merge`; see [CONTRIBUTING.md](../CONTRIBUTING.md#development).)

@@ -81,6 +81,7 @@ config/profile.yml       →  Candidate identity
 portals.yml              →  Scanner configuration
 templates/states.yml     →  Canonical status values
 templates/cv-template.html → PDF generation template
+examples/*.md            →  Fictional layouts only (not read by scripts; see examples/README.md)
 ```
 
 ## File Naming Conventions

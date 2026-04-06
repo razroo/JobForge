@@ -136,7 +136,7 @@ JobForge/
 ├── article-digest.md            # Your proof points (optional)
 ├── config/
 │   └── profile.example.yml      # Template for your profile
-├── modes/                       # 17 skill modes
+├── modes/                       # _shared.md + 16 skill modes
 │   ├── _shared.md               # Shared context + scoring model
 │   ├── offer.md                 # Single evaluation
 │   ├── pdf.md                   # PDF generation + anti-AI-detection
