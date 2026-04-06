@@ -6,18 +6,35 @@
  * Usage:
  *   node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]
  *   npm run pdf -- <input.html> <output.pdf> [--format=letter|a4]
+ *   node generate-pdf.mjs --help
  *
  * Requires: the `playwright` package (see repo `package.json`; run `npx playwright install chromium`).
  * Uses Chromium headless to render the HTML and produce a clean, ATS-parseable PDF.
  */
 
-import { chromium } from 'playwright';
 import { resolve, dirname } from 'path';
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+const argvEarly = process.argv.slice(2);
+if (argvEarly.includes('--help') || argvEarly.includes('-h')) {
+  console.log(`generate-pdf.mjs — HTML → PDF via Playwright (Chromium)
+
+Renders an HTML file to a print-style PDF (default paper size A4; optional Letter).
+
+Usage:
+  node generate-pdf.mjs <input.html> <output.pdf> [--format=letter|a4]
+  npm run pdf -- <input.html> <output.pdf> [--format=letter|a4]
+
+Requires: the playwright package (see package.json) and a local browser build,
+  e.g. npx playwright install chromium
+
+Run from the repository root or any cwd; paths may be relative or absolute.`);
+  process.exit(0);
+}
 
 async function generatePDF() {
   const args = process.argv.slice(2);
@@ -73,6 +90,19 @@ async function generatePDF() {
     /file:\/\/([^'")]+)\.woff2['"]\)/g,
     `file://$1.woff2')`
   );
+
+  let chromium;
+  try {
+    ({ chromium } = await import('playwright'));
+  } catch (e) {
+    if (e?.code === 'ERR_MODULE_NOT_FOUND') {
+      console.error(
+        'Missing dependency: run npm install in the repo root, then npx playwright install chromium'
+      );
+      process.exit(1);
+    }
+    throw e;
+  }
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
