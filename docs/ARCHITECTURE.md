@@ -124,6 +124,19 @@ Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeli
 
 From the repo root, `npm run verify` runs `verify-pipeline.mjs`. When a tracker file exists, it validates canonical statuses (using `templates/states.yml` when that file is present and parseable), warns on probable duplicate company/role rows, checks that report column markdown links resolve to files in the repo, validates score column format (`X.X/5`, `N/A`, or `DUP`), rejects table rows with too few columns, flags markdown bold inside the score column, and warns if any `batch/tracker-additions/*.tsv` files are still waiting to be merged. It also compares state ids from `templates/states.yml` to an internal fallback list and warns when the two sets drift. **Fresh clone:** the command exits successfully when neither `data/applications.md` nor root `applications.md` exists yet; pending-TSV and states-drift checks still run so contributors see unmerged batch output early. Optional setup validation after you add `cv.md` and `config/profile.yml`: `npm run sync-check` (`cv-sync-check.mjs`).
 
+**`verify-pipeline.mjs` checks (same order as the script header):**
+
+1. Status column uses canonical ids (from `templates/states.yml` when parseable, else built-in ids and aliases), with no markdown bold and no dates embedded in the status cell.
+2. Warn when multiple rows share the same normalized company + role (possible duplicates).
+3. Report column markdown links resolve to files under the repo root.
+4. Score column matches `X.X/5`, `N/A`, or `DUP`.
+5. Table data rows have enough pipe-delimited columns.
+6. No unmerged `batch/tracker-additions/*.tsv` files (warns if any remain).
+7. Score column has no markdown bold.
+8. Warn when state ids in `templates/states.yml` drift from the script’s built-in fallback list (or when the file exists but ids could not be parsed).
+
+When the tracker file is missing, checks 1–5 and 7 are skipped; checks 6 and 8 still run.
+
 **PR / maintainer gate:** Before opening a pull request, run `npm run verify` and `npm run build:dashboard` (or `(cd dashboard && go build .)`) from the repo root (same as [CONTRIBUTING.md](../CONTRIBUTING.md#development)). For optional scripted iterations that repeat that gate and commit one small change per pass, see [`scripts/cursor-agent-loop.sh`](../scripts/cursor-agent-loop.sh) (environment variables and usage in the script header; overview in [CONTRIBUTING.md](../CONTRIBUTING.md#optional-scripted-agent-iterations)).
 
 Scripts maintain data consistency:
