@@ -15,3 +15,9 @@ Fictional, generic samples you can copy or use as a structural template. Replace
 | [sample-report.md](sample-report.md) | Illustrative evaluation report layout |
 
 To start from a template: copy one of the CV files to the repo root as `cv.md`, then edit every section. See [docs/SETUP.md](../docs/SETUP.md) for the full setup flow.
+
+## For contributors
+
+Pull requests that add more **fictional** CV archetypes (same idea as the table above) are welcome. See [CONTRIBUTING.md](../CONTRIBUTING.md) for branch workflow and the `npm run verify` gate.
+
+Keep samples obviously synthetic: placeholder contact fields (`example.com`, generic company names), no real people or employers, and roughly the same markdown shape as the existing files (header contact block, Summary, Experience, Projects, Education, Skills — adjust section titles only if the role genuinely needs a different layout). Optional digests and `sample-report.md` should stay illustrative, not copies of real evaluations.
