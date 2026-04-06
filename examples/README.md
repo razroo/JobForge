@@ -15,6 +15,7 @@ Fictional, generic samples you can copy or use as a structural template. Replace
 | [cv-example-engineering-manager.md](cv-example-engineering-manager.md) | Full CV — engineering management / tech-lead-to-EM profile |
 | [cv-example-security-engineer.md](cv-example-security-engineer.md) | Full CV — application / cloud security engineering profile |
 | [cv-example-qa-engineer.md](cv-example-qa-engineer.md) | Full CV — QA / test automation engineering profile |
+| [cv-example-solutions-architect.md](cv-example-solutions-architect.md) | Full CV — solutions / enterprise architecture profile |
 | [article-digest-example.md](article-digest-example.md) | Optional proof points digest for evaluations |
 | [sample-report.md](sample-report.md) | Illustrative evaluation report layout |
 
