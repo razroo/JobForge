@@ -95,11 +95,13 @@ From the repository root, these commands maintain the application tracker and pi
 | Merge `batch/tracker-additions/*.tsv` into the tracker | `npm run merge` |
 | Map status column to canonical labels | `npm run normalize` (preview with `npm run normalize -- --dry-run`) |
 | Merge duplicate company/role rows | `npm run dedup` |
+| Build optional dashboard TUI (Go on `PATH`) | `npm run build:dashboard` — same as `(cd dashboard && go build .)`; run `./dashboard/dashboard -path .` from repo root (see [Build Dashboard](#build-dashboard-optional)) |
 
 ## Verify Setup
 
 ```bash
 npm run verify               # Pipeline integrity (verify-pipeline.mjs). OK if the tracker file does not exist yet; still warns on unmerged batch/tracker-additions/*.tsv — run npm run merge when you intend to fold those rows into the tracker (see [batch/README.md](../batch/README.md))
+npm run build:dashboard      # Optional: go build in dashboard/ — same PR gate as [CONTRIBUTING.md](../CONTRIBUTING.md#development); skip if Go is not installed
 npm run sync-check           # Same as node cv-sync-check.mjs — requires cv.md and config/profile.yml
 ```
 
