@@ -45,6 +45,28 @@ const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
 
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log(`merge-tracker.mjs — merge batch/tracker-additions/*.tsv into the tracker
+
+Supports 9-column TSV, 8-column TSV, and pipe-delimited markdown rows.
+Moves processed files to batch/tracker-additions/merged/.
+
+Usage:
+  node merge-tracker.mjs [--dry-run] [--verify]
+  npm run merge [-- --dry-run] [--verify]
+
+Options:
+  --dry-run    Show actions without writing the tracker or moving TSVs
+  --verify     After merge, run verify-pipeline.mjs (ignored with --dry-run)
+
+If the tracker file is missing but TSVs exist, creates data/applications.md
+with an empty table header. If batch/tracker-additions/ is missing or has
+no .tsv files, exits successfully with nothing to do.
+
+Run from the repository root.`);
+  process.exit(0);
+}
+
 const STATES_FILE = existsSync(join(PROJECT_DIR, 'templates/states.yml'))
   ? join(PROJECT_DIR, 'templates/states.yml')
   : join(PROJECT_DIR, 'states.yml');

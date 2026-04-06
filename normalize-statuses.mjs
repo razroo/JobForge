@@ -23,6 +23,24 @@ const APPS_FILE = existsSync(join(PROJECT_DIR, 'data/applications.md'))
 const appsDisplay = relative(PROJECT_DIR, APPS_FILE).replace(/\\/g, '/');
 const DRY_RUN = process.argv.includes('--dry-run');
 
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log(`normalize-statuses.mjs — map tracker status column to canonical labels
+
+Uses templates/states.yml display labels when present. Strips markdown bold
+and dates from the status field; moves duplicate/repost markers into notes
+where applicable.
+
+Usage:
+  node normalize-statuses.mjs [--dry-run]
+  npm run normalize [-- --dry-run]
+
+Exits successfully when the tracker file is missing (nothing to do).
+Creates a .bak copy next to the tracker before writing.
+
+Run from the repository root.`);
+  process.exit(0);
+}
+
 // Canonical status mapping
 function normalizeStatus(raw) {
   // Strip markdown bold

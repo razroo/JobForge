@@ -21,6 +21,23 @@ const APPS_FILE = existsSync(join(PROJECT_DIR, 'data/applications.md'))
 const appsDisplay = relative(PROJECT_DIR, APPS_FILE).replace(/\\/g, '/');
 const DRY_RUN = process.argv.includes('--dry-run');
 
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log(`dedup-tracker.mjs — remove duplicate tracker rows by company and role
+
+Keeps the highest-scoring row per cluster; may promote status when a removed
+row was further along in the pipeline. Merges notes where applicable.
+
+Usage:
+  node dedup-tracker.mjs [--dry-run]
+  npm run dedup [-- --dry-run]
+
+Exits successfully when the tracker file is missing (nothing to do).
+Creates a .bak copy next to the tracker before writing.
+
+Run from the repository root.`);
+  process.exit(0);
+}
+
 // Status advancement order (higher = more advanced in pipeline)
 // Applied > Rejected because active application > terminal state
 const STATUS_RANK = {

@@ -19,6 +19,24 @@ import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join, relative, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log(`verify-pipeline.mjs — application tracker and batch-folder health check
+
+Validates canonical statuses, duplicate company/role rows, report file links,
+score format, table columns, pending batch/tracker-additions/*.tsv files,
+markdown bold in scores, and optional alignment with templates/states.yml.
+
+Usage:
+  node verify-pipeline.mjs
+  npm run verify
+
+Exits successfully if neither data/applications.md nor applications.md exists
+(fresh clone). Exits with code 1 when any check fails.
+
+Run from the repository root.`);
+  process.exit(0);
+}
+
 const PROJECT_DIR = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
 const APPS_FILE = existsSync(join(PROJECT_DIR, 'data/applications.md'))
