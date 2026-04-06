@@ -307,6 +307,13 @@ tracked_companies:
     notes: "AI SDK, v0.dev. Frontend AI tooling."
     enabled: true
 
+  - name: Linear
+    careers_url: https://linear.app/careers
+    scan_method: websearch
+    scan_query: 'site:linear.app/careers "Engineer" OR "Product" OR "AI"'
+    notes: "Issue tracking; product-engineering and AI-facing roles."
+    enabled: true
+
   - name: Temporal
     careers_url: https://job-boards.greenhouse.io/temporal
     api: https://boards-api.greenhouse.io/v1/boards/temporal/jobs
@@ -473,6 +480,16 @@ tracked_companies:
   - name: Pinecone
     careers_url: https://jobs.ashbyhq.com/pinecone
     notes: "Vector database."
+    enabled: true
+
+  - name: Supabase
+    careers_url: https://jobs.ashbyhq.com/supabase
+    notes: "Postgres platform; AI and edge database features."
+    enabled: true
+
+  - name: Neon
+    careers_url: https://jobs.ashbyhq.com/neon
+    notes: "Serverless Postgres; branching for dev and staging."
     enabled: true
 
   # -- Lever-based (Playwright direct) --
