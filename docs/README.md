@@ -1,0 +1,18 @@
+# JobForge documentation
+
+Guides for installing JobForge, understanding how pieces fit together, and tailoring the system to your search. Use this file as the entry point when browsing the `docs/` folder on GitHub or locally.
+
+| Guide | What it covers |
+|-------|----------------|
+| [SETUP.md](SETUP.md) | Prerequisites, profile and CV, portals copy, `npm run verify`, optional Go dashboard |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Modes under `modes/`, single-offer flow, batch runner, tracker and scripts |
+| [CUSTOMIZATION.md](CUSTOMIZATION.md) | Profile, archetypes in `_shared.md`, `portals.yml`, CV template, canonical states |
+
+## Related material (repository root)
+
+- [CLAUDE.md](../CLAUDE.md) — default agent instructions for Claude Code in this repo
+- [CONTRIBUTING.md](../CONTRIBUTING.md) — branch workflow, quality gate, contribution ideas
+- [examples/README.md](../examples/README.md) — fictional CV samples and illustrative report layout
+- [batch/README.md](../batch/README.md) — batch TSV input, merge step, and runner prerequisites
+
+Optional scripted agent iterations (same verify/build expectations as a manual PR) are described in [scripts/cursor-agent-loop.sh](../scripts/cursor-agent-loop.sh) and in CONTRIBUTING.

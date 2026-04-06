@@ -156,7 +156,7 @@ JobForge/
 │   ├── batch-prompt.md          # Self-contained worker prompt
 │   └── batch-runner.sh          # Orchestrator script
 ├── dashboard/                   # Optional Go TUI for the tracker (`go build` in this dir)
-├── docs/                        # SETUP, ARCHITECTURE, CUSTOMIZATION
+├── docs/                        # Setup, architecture, customization + docs/README index
 ├── examples/                    # Fictional CV samples + sample report (see examples/README.md)
 ├── interview-prep/
 │   └── story-bank.md            # Curated STAR stories (max 12)
@@ -168,6 +168,8 @@ JobForge/
 ```
 
 ## Documentation
+
+Index and cross-links: [docs/README.md](docs/README.md).
 
 - [Setup](docs/SETUP.md) — install Node/Playwright, profile, CV, portals, `npm run verify`
 - [Architecture](docs/ARCHITECTURE.md) — modes, evaluation flow, batch runner, pipeline scripts
