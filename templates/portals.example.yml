@@ -2,7 +2,7 @@
 # Used by /job-forge scan to discover new offers automatically.
 #
 # Strategy (3 levels):
-#   1. Playwright → careers_url of each company (real-time, reliable)
+#   1. Geometra MCP → careers_url of each company (real-time, reliable)
 #   2. Greenhouse API → structured JSON (fast, Greenhouse-only)
 #   3. WebSearch with site: filters (broad discovery, may be stale)
 #
@@ -181,7 +181,7 @@ search_queries:
 
 # -- Tracked companies --
 # Companies whose career pages are checked directly.
-# scan_method: playwright (default), websearch, greenhouse_api
+# scan_method: geometra (default), websearch, greenhouse_api
 # For Greenhouse companies, add api: field for faster structured JSON access.
 
 tracked_companies:
@@ -571,7 +571,7 @@ tracked_companies:
     notes: "Celonis parent company. Automation platform."
     enabled: true
 
-  # -- Ashby-based (Playwright direct) --
+  # -- Ashby-based (Geometra direct) --
 
   - name: Cohere
     careers_url: https://jobs.ashbyhq.com/cohere
@@ -633,7 +633,7 @@ tracked_companies:
     notes: "Model serving, inference, and ML infrastructure."
     enabled: true
 
-  # -- Lever-based (Playwright direct) --
+  # -- Lever-based (Geometra direct) --
 
   - name: Mistral AI
     careers_url: https://jobs.lever.co/mistral

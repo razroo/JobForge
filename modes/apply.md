@@ -4,8 +4,8 @@ Interactive mode for when the candidate is filling out an application form in Ch
 
 ## Requirements
 
-- **Best with visible Playwright**: In visible mode, the candidate sees the browser and Claude can interact with the page.
-- **Without Playwright**: the candidate shares a screenshot or pastes the questions manually.
+- **Best with Geometra MCP**: In visible proxy mode, the candidate sees the browser and Claude can interact with the page via `geometra_connect`, `geometra_form_schema`, and `geometra_fill_form`.
+- **Without Geometra**: the candidate shares a screenshot or pastes the questions manually.
 
 ## Workflow
 
@@ -22,9 +22,9 @@ Interactive mode for when the candidate is filling out an application form in Ch
 
 ## Step 1 — Detect the offer
 
-**With Playwright:** Take a snapshot of the active page. Read the title, URL, and visible content.
+**With Geometra MCP:** `geometra_connect` to the active page, then `geometra_page_model` to read the title, URL, and visible content.
 
-**Without Playwright:** Ask the candidate to:
+**Without Geometra:** Ask the candidate to:
 - Share a screenshot of the form (Read tool reads images)
 - Or paste the form questions as text
 - Or provide company + role so we can look it up

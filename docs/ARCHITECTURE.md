@@ -24,7 +24,7 @@
      │                    Output Pipeline                      │
      │  ┌──────────┐  ┌────────────┐  ┌───────────────────┐  │
      │  │ Report.md│  │  PDF (HTML  │  │ Tracker TSV       │  │
-     │  │ (A-F eval)│  │ → Playwright │  │ (merge-tracker)  │  │
+     │  │ (A-F eval)│  │ → Geometra) │  │ (merge-tracker)  │  │
      │  └──────────┘  └────────────┘  └───────────────────┘  │
      └────────────────────────────────────────────────────────┘
                                │
@@ -63,7 +63,7 @@ For customization (archetypes, weights, tone), start with `_shared.md` and [CUST
 ## Evaluation Flow (Single Offer)
 
 1. **Input**: User pastes JD text or URL
-2. **Extract**: Playwright/WebFetch extracts JD from URL
+2. **Extract**: Geometra MCP/WebFetch extracts JD from URL
 3. **Classify**: Detect archetype (one row from the archetype table in `modes/_shared.md`)
 4. **Evaluate**: 6 blocks (A-F):
    - A: Role summary
@@ -151,7 +151,7 @@ Scripts maintain data consistency:
 | `verify-pipeline.mjs` | Health check — see the `npm run verify` paragraph above |
 | `dedup-tracker.mjs` | Removes duplicate entries by company+role |
 | `normalize-statuses.mjs` | Maps status aliases to canonical values |
-| `generate-pdf.mjs` | Renders HTML to PDF with Playwright/Chromium (`npm run pdf -- <input.html> <output.pdf>`); requires `npx playwright install chromium` |
+| `generate-pdf.mjs` | Renders HTML to PDF via Geometra MCP (`geometra_generate_pdf`) or standalone Playwright/Chromium (`npm run pdf -- <input.html> <output.pdf>`) |
 | `cv-sync-check.mjs` | Setup lint: `cv.md` + `config/profile.yml`, hardcoded-metric scan on `modes/_shared.md` and `batch/batch-prompt.md`, optional `article-digest.md` freshness |
 
 ## Dashboard TUI

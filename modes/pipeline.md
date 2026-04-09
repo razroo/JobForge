@@ -7,7 +7,7 @@ Processes accumulated job offer URLs from `data/pipeline.md`. The user adds URLs
 1. **Read** `data/pipeline.md` → find `- [ ]` items in the "Pending" section
 2. **For each pending URL**:
    a. Calculate the next sequential `REPORT_NUM` (read `reports/`, take the highest number + 1)
-   b. **Extract JD** using Playwright (browser_navigate + browser_snapshot) → WebFetch → WebSearch
+   b. **Extract JD** using Geometra MCP (geometra_connect + geometra_page_model) → WebFetch → WebSearch
    c. If the URL is not accessible → mark as `- [!]` with a note and continue
    d. **Run full auto-pipeline**: A-F Evaluation → Report .md → PDF (if score >= 3.0, per `_shared.md` thresholds) → Draft answers (if score >= 3.5) → Tracker
    e. **Move from "Pending" to "Processed"**: `- [x] #NNN | URL | Company | Role | Score/5 | PDF ✅/❌`
@@ -33,8 +33,8 @@ Processes accumulated job offer URLs from `data/pipeline.md`. The user adds URLs
 
 ## Smart JD Detection from URL
 
-1. **Playwright (preferred):** `browser_navigate` + `browser_snapshot`. Works with all SPAs.
-2. **WebFetch (fallback):** For static pages or when Playwright is not available.
+1. **Geometra MCP (preferred):** `geometra_connect` + `geometra_page_model`. Works with all SPAs, uses fewer tokens than raw DOM snapshots.
+2. **WebFetch (fallback):** For static pages or when Geometra is not available.
 3. **WebSearch (last resort):** Search on secondary portals that index the JD.
 
 **Special cases:**

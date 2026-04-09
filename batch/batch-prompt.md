@@ -43,7 +43,7 @@ You are a job offer evaluation worker for the candidate (read name from config/p
 
 ### Step 1 — Retrieve JD
 
-**Note: Batch workers do NOT have Playwright/browser access.** Use WebFetch only.
+**Note: Batch workers do NOT have Geometra MCP/browser access.** Use WebFetch only.
 
 1. Read the JD file at `{{JD_FILE}}`
 2. If the file is empty or does not exist, try to fetch the JD from `{{URL}}` with WebFetch

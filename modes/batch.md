@@ -1,14 +1,14 @@
 # Mode: batch — Bulk Offer Processing
 
-Two usage modes: **conductor --chrome** (navigates portals in real time) or **standalone** (script for already-collected URLs).
+Two usage modes: **conductor** (navigates portals in real time via Geometra MCP) or **standalone** (script for already-collected URLs).
 
 ## Architecture
 
 ```
-Claude Conductor (claude --chrome --dangerously-skip-permissions)
+Claude Conductor (claude --dangerously-skip-permissions)
   │
-  │  Chrome: navigates portals (logged-in sessions)
-  │  Reads DOM directly — the user sees everything in real time
+  │  Geometra MCP: navigates portals (logged-in sessions)
+  │  Reads structured page model — the user sees everything in real time
   │
   ├─ Offer 1: reads JD from DOM + URL
   │    └─► claude -p worker → report .md + PDF + tracker-line

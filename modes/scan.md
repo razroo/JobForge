@@ -23,9 +23,9 @@ Read `portals.yml` which contains:
 
 ## Discovery Strategy (3 levels)
 
-### Level 1 — Direct Playwright (PRIMARY)
+### Level 1 — Direct Geometra (PRIMARY)
 
-**For each company in `tracked_companies`:** Navigate to its `careers_url` with Playwright (`browser_navigate` + `browser_snapshot`), read ALL visible job listings, and extract the title + URL of each one. This is the most reliable method because:
+**For each company in `tracked_companies`:** Connect to its `careers_url` with Geometra MCP (`geometra_connect` + `geometra_page_model` / `geometra_list_items`), read ALL visible job listings, and extract the title + URL of each one. This is the most reliable method because:
 - It sees the page in real time (not cached Google results)
 - It works with SPAs (Ashby, Lever, Workday)
 - It detects new offers instantly
@@ -35,14 +35,14 @@ Read `portals.yml` which contains:
 
 ### Level 2 — Greenhouse API (COMPLEMENTARY)
 
-For companies using Greenhouse, the JSON API (`boards-api.greenhouse.io/v1/boards/{slug}/jobs`) returns clean structured data. Use as a quick complement to Level 1 — it's faster than Playwright but only works with Greenhouse.
+For companies using Greenhouse, the JSON API (`boards-api.greenhouse.io/v1/boards/{slug}/jobs`) returns clean structured data. Use as a quick complement to Level 1 — it's faster than Geometra but only works with Greenhouse.
 
 ### Level 3 — WebSearch queries (BROAD DISCOVERY)
 
 The `search_queries` with `site:` filters cover portals broadly (all Ashby, all Greenhouse, etc.). Useful for discovering NEW companies not yet in `tracked_companies`, but results may be outdated.
 
 **Execution priority:**
-1. Level 1: Playwright → all `tracked_companies` with `careers_url`
+1. Level 1: Geometra → all `tracked_companies` with `careers_url`
 2. Level 2: API → all `tracked_companies` with `api:`
 3. Level 3: WebSearch → all `search_queries` with `enabled: true`
 
@@ -54,10 +54,10 @@ The levels are additive — all are executed, results are merged and deduplicate
 2. **Read history**: `data/scan-history.tsv` → previously seen URLs
 3. **Read dedup sources**: `data/applications.md` + `data/pipeline.md`
 
-4. **Level 1 — Playwright scan** (parallel in batches of 3-5):
+4. **Level 1 — Geometra scan** (parallel in batches of 3-5):
    For each company in `tracked_companies` with `enabled: true` and `careers_url` defined:
-   a. `browser_navigate` to the `careers_url`
-   b. `browser_snapshot` to read all job listings
+   a. `geometra_connect` to the `careers_url`
+   b. `geometra_page_model` or `geometra_list_items` to read all job listings
    c. If the page has filters/departments, navigate the relevant sections
    d. For each job listing extract: `{title, url, company}`
    e. If the page paginates results, navigate additional pages
@@ -166,7 +166,7 @@ Each company in `tracked_companies` should have a `careers_url` — the direct U
 **If `careers_url` doesn't exist** for a company:
 1. Try the pattern for its known platform
 2. If that fails, do a quick WebSearch: `"{company}" careers jobs`
-3. Navigate with Playwright to confirm it works
+3. Navigate with Geometra (`geometra_connect`) to confirm it works
 4. **Save the found URL in portals.yml** for future scans
 
 **If `careers_url` returns 404 or redirect:**

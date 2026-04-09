@@ -14,7 +14,7 @@
 git clone https://github.com/CharlieGreenman/JobForge.git
 cd JobForge
 npm install
-npx playwright install chromium   # Required for PDF generation
+claude mcp add geometra -- npx -y @geometra/mcp   # Browser automation + PDF generation
 ```
 
 ### 2. Configure your profile
@@ -133,8 +133,8 @@ To install a named binary under `dashboard/` (optional), use `go build -o job-fo
 **`npm run verify` succeeds, but `npm run sync-check` fails**  
 `sync-check` requires `cv.md` and `config/profile.yml` with the fields checked in `cv-sync-check.mjs`. Until you finish the profile and CV steps in Quick Start, that is normal. Use `npm run verify` for pipeline health on a minimal checkout, then run `sync-check` once your personal files exist.
 
-**PDF generation fails with a browser or Chromium error**  
-From the repo root, run `npx playwright install chromium` after `npm install` so Playwright can launch the bundled browser. For usage only, `npm run pdf -- --help` works without a successful Chromium install (see [CONTRIBUTING.md](../CONTRIBUTING.md#development)).
+**PDF generation fails**  
+Ensure Geometra MCP is configured: `claude mcp add geometra -- npx -y @geometra/mcp`. The MCP server manages Chromium via its built-in proxy. For standalone CLI usage, `generate-pdf.mjs` still requires `npx playwright install chromium` (see [CONTRIBUTING.md](../CONTRIBUTING.md#development)).
 
 **Dashboard is empty or points at the wrong data**  
 The `-path` argument must be the JobForge repository root (where `data/applications.md` or `applications.md` lives), not the `dashboard/` directory. From the repo root after `npm run build:dashboard`, use `./dashboard/dashboard -path .` (see [Build Dashboard](#build-dashboard-optional) above).

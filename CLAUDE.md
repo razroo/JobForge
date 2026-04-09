@@ -15,7 +15,7 @@ AI-powered job search automation built on Claude Code: pipeline tracking, offer 
 | `data/scan-history.tsv` | Scanner dedup history |
 | `portals.yml` | Query and company config |
 | `templates/cv-template.html` | HTML template for CVs |
-| `generate-pdf.mjs` | Playwright (Chromium): HTML to PDF |
+| `generate-pdf.mjs` | Geometra MCP (`geometra_generate_pdf`): HTML to PDF |
 | `article-digest.md` | Compact proof points from portfolio (optional) |
 | `interview-prep/story-bank.md` | Accumulated STAR+R stories across evaluations |
 | `reports/` | Evaluation reports (format: `{###}-{company-slug}-{YYYY-MM-DD}.md`) |
@@ -138,12 +138,12 @@ This system is designed to be customized by YOU (Claude). When the user asks you
 
 ## Offer Verification -- MANDATORY
 
-**When Playwright is available** (interactive sessions, `--chrome` mode), ALWAYS use it to verify offers:
-1. `browser_navigate` to the URL
-2. `browser_snapshot` to read content
+**When Geometra MCP is available** (interactive sessions), ALWAYS use it to verify offers:
+1. `geometra_connect` to the URL (via proxy)
+2. `geometra_page_model` to read structured page content
 3. Only footer/navbar without JD = closed. Title + description + Apply = active.
 
-**When Playwright is NOT available** (batch workers via `claude -p`, headless environments):
+**When Geometra MCP is NOT available** (batch workers via `claude -p`, headless environments):
 1. Use WebFetch to retrieve the page content
 2. Check for JD text, job title, and apply button/link in the response
 3. If WebFetch returns only a shell/navbar (no JD content), mark the offer as `**Verification: unconfirmed**` in the report header
@@ -155,7 +155,7 @@ The goal is to never waste time on closed offers, but also never silently assume
 
 ## Stack and Conventions
 
-- Node.js (mjs modules), Playwright (PDF + scraping), YAML (config), HTML/CSS (template), Markdown (data)
+- Node.js (mjs modules), Geometra MCP (PDF + scraping + form filling), YAML (config), HTML/CSS (template), Markdown (data)
 - Scripts in `.mjs`, configuration in YAML
 - Output in `output/` (gitignored), Reports in `reports/`
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)

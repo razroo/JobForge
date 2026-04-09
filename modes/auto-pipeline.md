@@ -8,7 +8,7 @@ If the input is a **URL** (not pasted JD text), follow this strategy to extract 
 
 **Priority order:**
 
-1. **Playwright (preferred):** Most job portals (Lever, Ashby, Greenhouse, Workday) are SPAs. Use `browser_navigate` + `browser_snapshot` to render and read the JD.
+1. **Geometra MCP (preferred):** Most job portals (Lever, Ashby, Greenhouse, Workday) are SPAs. Use `geometra_connect` + `geometra_page_model` to render and read the JD.
 2. **WebFetch (fallback):** For static pages (ZipRecruiter, WeLoveProduct, company career pages).
 3. **WebSearch (last resort):** Search for the role title + company on secondary portals that index the JD in static HTML.
 
@@ -29,7 +29,7 @@ Execute the full `pdf` pipeline (read `modes/pdf.md`).
 
 If the final score is >= 3.5 (per Canonical Scoring Model thresholds in `_shared.md`), generate draft answers for the application form:
 
-1. **Extract form questions**: Use Playwright to navigate to the form and take a snapshot. If questions cannot be extracted, use the generic questions.
+1. **Extract form questions**: Use Geometra MCP (`geometra_connect` + `geometra_form_schema`) to discover all form fields. If questions cannot be extracted, use the generic questions.
 2. **Generate answers** following the tone guidelines (see below).
 3. **Save in the report** as a `## G) Draft Application Answers` section.
 

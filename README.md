@@ -4,7 +4,7 @@
 
 ![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
-![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat&logo=playwright&logoColor=white)
+![Geometra](https://img.shields.io/badge/Geometra_MCP-4A90D9?style=flat&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Made in USA](https://img.shields.io/badge/Made_in-USA_%F0%9F%87%BA%F0%9F%87%B8-red?style=flat)
 
@@ -55,7 +55,7 @@ JobForge turns Claude Code into a full job search command center. Instead of man
 # 1. Clone and install
 git clone https://github.com/CharlieGreenman/JobForge.git
 cd JobForge && npm install
-npx playwright install chromium   # Required for PDF generation
+claude mcp add geometra -- npx -y @geometra/mcp   # Browser automation + PDF generation
 
 # 2. Configure
 cp config/profile.example.yml config/profile.yml  # Edit with your details
@@ -171,7 +171,7 @@ JobForge/
 
 Index and cross-links: [docs/README.md](docs/README.md).
 
-- [Setup](docs/SETUP.md) — install Node/Playwright, profile, CV, portals, `npm run verify`
+- [Setup](docs/SETUP.md) — install Node/Geometra MCP, profile, CV, portals, `npm run verify`
 - [Architecture](docs/ARCHITECTURE.md) — modes, evaluation flow, batch runner, pipeline scripts
 - [Customization](docs/CUSTOMIZATION.md) — archetypes, scanner keywords, CV template, states
 - [Contributing](CONTRIBUTING.md) — branch workflow, quality gate, and ideas for PRs
