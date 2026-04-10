@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "geometra": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@geometra/mcp"
+      ],
+      "env": {}
+    }
+  }
+}
