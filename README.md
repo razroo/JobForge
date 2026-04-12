@@ -40,7 +40,8 @@ JobForge turns opencode into a full job search command center. Instead of manual
 | **Anti-AI-Detection CVs** | Writing rules that avoid ATS filters on Indeed, LinkedIn, Workday |
 | **6-Block Evaluation** | Role summary, CV match, level strategy, comp research, personalization, interview prep (STAR+R) |
 | **Interview Story Bank** | Curated bank of 10-12 stories with match counts, archetype tags, and automatic pruning |
-| **Follow-Up System** | Timing-based nudges: Applied 7+ days ago nudge, Interviewed 1 day ago thank-you note |
+| **Follow-Up System** | Timing-based nudges: Applied 7+ days ago nudge, Interviewed 1 day ago thank-you note, email scanning via Gmail MCP |
+| **Gmail Integration** | MCP server configured to retrieve emails for interview callbacks, offer responses, and application status updates |
 | **Rejection Analysis** | Captures stage + reason, surfaces patterns (archetype gaps, scoring miscalibration) |
 | **Offer Negotiation** | Total comp breakdown, equity valuation, leverage from pipeline, counter-offer scripts |
 | **Deep Research** | Company research that feeds back into scores and interview prep |
