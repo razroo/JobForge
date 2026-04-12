@@ -29,7 +29,7 @@ node_modules/
 *.mov
 *.mp4
 
-# Claude Code local
-.claude/settings.local.json
-.claude/memory/
+# opencode local
+.opencode/settings.local.json
+.opencode/memory/
 career-dashboard

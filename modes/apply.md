@@ -4,7 +4,7 @@ Interactive mode for when the candidate is filling out an application form in Ch
 
 ## Requirements
 
-- **Best with Geometra MCP**: In visible proxy mode, the candidate sees the browser and Claude can interact with the page via `geometra_connect`, `geometra_form_schema`, and `geometra_fill_form`.
+- **Best with Geometra MCP**: In visible proxy mode, the candidate sees the browser and opencode can interact with the page via `geometra_connect`, `geometra_form_schema`, and `geometra_fill_form`.
 - **Without Geometra**: the candidate shares a screenshot or pastes the questions manually.
 
 ## Workflow

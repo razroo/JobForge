@@ -1,7 +1,7 @@
 {
   "name": "job-forge",
   "version": "1.0.0",
-  "description": "AI-powered job search pipeline built on Claude Code",
+  "description": "AI-powered job search pipeline built on opencode",
   "scripts": {
     "verify": "node verify-pipeline.mjs",
     "build:dashboard": "cd dashboard && go build .",
@@ -11,7 +11,7 @@
     "pdf": "node generate-pdf.mjs",
     "sync-check": "node cv-sync-check.mjs"
   },
-  "keywords": ["ai", "job-search", "claude-code", "career", "automation"],
+  "keywords": ["ai", "job-search", "opencode", "career", "automation"],
   "author": "Charlie Greenman",
   "repository": {
     "type": "git",

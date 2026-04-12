@@ -1,6 +1,6 @@
 # Contributing to JobForge
 
-Thanks for your interest in contributing! JobForge is built with Claude Code, and you can use it for development too.
+Thanks for your interest in contributing! JobForge is built with opencode, and you can use it for development too.
 
 ## Quick Start
 

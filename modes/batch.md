@@ -5,21 +5,21 @@ Two usage modes: **conductor** (navigates portals in real time via Geometra MCP)
 ## Architecture
 
 ```
-Claude Conductor (claude --dangerously-skip-permissions)
+opencode Conductor (opencode --dangerously-skip-permissions)
   │
   │  Geometra MCP: navigates portals (logged-in sessions)
   │  Reads structured page model — the user sees everything in real time
   │
   ├─ Offer 1: reads JD from DOM + URL
-  │    └─► claude -p worker → report .md + PDF + tracker-line
+  │    └─► opencode -p worker → report .md + PDF + tracker-line
   │
   ├─ Offer 2: click next, reads JD + URL
-  │    └─► claude -p worker → report .md + PDF + tracker-line
+  │    └─► opencode -p worker → report .md + PDF + tracker-line
   │
   └─ End: merge tracker-additions → applications.md + summary
 ```
 
-Each worker is a child `claude -p` with a clean 200K token context. The conductor only orchestrates.
+Each worker is a child `opencode -p` with a clean 200K token context. The conductor only orchestrates.
 
 ## Files
 
@@ -42,12 +42,12 @@ batch/
    a. Chrome: click on the offer → read JD text from DOM
    b. Save JD to `/tmp/batch-jd-{id}.txt`
    c. Calculate next sequential REPORT_NUM
-   d. Execute via Bash:
-      ```bash
-      claude -p --dangerously-skip-permissions \
-        --append-system-prompt-file batch/batch-prompt.md \
-        "Process this offer. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}"
-      ```
+d. Execute via Bash:
+       ```bash
+       opencode -p --dangerously-skip-permissions \
+         --append-system-prompt-file batch/batch-prompt.md \
+         "Process this offer. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}"
+       ```
    e. Update `batch-state.tsv` (completed/failed + score + report_num)
    f. Log to `logs/{report_num}-{id}.log`
    g. Chrome: go back → next offer
@@ -82,7 +82,7 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 - Lock file (`batch-runner.pid`) prevents double execution
 - Each worker is independent: failure on offer #47 does not affect the rest
 
-## Workers (claude -p)
+## Workers (opencode -p)
 
 Each worker receives `batch-prompt.md` as system prompt. It is self-contained.
 

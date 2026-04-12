@@ -4,8 +4,8 @@
 
 ```
                     ┌─────────────────────────────────┐
-                    │         Claude Code Agent        │
-                    │   (reads CLAUDE.md + modes/*.md) │
+                    │         opencode Agent        │
+                    │   (reads OPENCODE.md + modes/*.md) │
                     └──────────┬──────────────────────┘
                                │
             ┌──────────────────┼──────────────────────┐
@@ -17,7 +17,7 @@
             │                  │                       │
             │           ┌─────────▼─────────┐          ┌────▼─────┐
             │           │ data/pipeline.md  │          │ N workers│
-            │           │    (URL inbox)    │          │ (claude -p)
+            │           │    (URL inbox)    │          │ (opencode -p)
             │           └─────────┬─────────┘          └────┬─────┘
             │                                          │
      ┌──────▼──────────────────────────────────────────▼──────┐
@@ -36,7 +36,7 @@
 
 ## Modes (`modes/`)
 
-Markdown mode files in `modes/` define how the Claude Code workflow behaves together with the root `CLAUDE.md`. **`_shared.md`** is the shared layer (archetypes, scoring dimensions, negotiation scaffolding); the rest align with `/job-forge` command entry points listed in `CLAUDE.md`.
+Markdown mode files in `modes/` define how the opencode workflow behaves together with the root `OPENCODE.md`. **`_shared.md`** is the shared layer (archetypes, scoring dimensions, negotiation scaffolding); the rest align with `/job-forge` command entry points listed in `OPENCODE.md`.
 
 | File | Focus |
 |------|--------|
@@ -75,21 +75,21 @@ For customization (archetypes, weights, tone), start with `_shared.md` and [CUST
 5. **Score**: Weighted average across 10 dimensions (1-5)
 6. **Report**: Save as `reports/{num}-{company}-{date}.md`
 7. **PDF**: Generate ATS-optimized CV (`generate-pdf.mjs`)
-8. **Track**: Write one TSV per evaluation under `batch/tracker-additions/` (see [CLAUDE.md](../CLAUDE.md) TSV layout); fold rows into `data/applications.md` with `npm run merge` / `merge-tracker.mjs` when you are ready (not automatic in every workflow)
+8. **Track**: Write one TSV per evaluation under `batch/tracker-additions/` (see [OPENCODE.md](../OPENCODE.md) TSV layout); fold rows into `data/applications.md` with `npm run merge` / `merge-tracker.mjs` when you are ready (not automatic in every workflow)
 
 ## Batch Processing
 
 The batch system processes multiple offers in parallel:
 
 ```
-batch-input.tsv    →  batch-runner.sh  →  N × claude -p workers
+batch-input.tsv    →  batch-runner.sh  →  N × opencode -p workers
 (id, url, source, notes) (orchestrator)   (self-contained prompt)
                            │
                     batch-state.tsv
                     (tracks progress)
 ```
 
-Each worker is a headless Claude instance (`claude -p`) that receives the full `batch-prompt.md` as context. Workers produce:
+Each worker is a headless opencode instance (`opencode -p`) that receives the full `batch-prompt.md` as context. Workers produce:
 - Report .md
 - PDF
 - Tracker TSV line

@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [Claude Code](https://claude.ai/code) installed and configured
+- [opencode](https://opencode.ai) installed and configured
 - Node.js 18+ (for PDF generation and utility scripts)
 - (Optional) Go (for the dashboard TUI) — use a toolchain that satisfies the `go` directive in [`dashboard/go.mod`](../dashboard/go.mod)
 
@@ -14,7 +14,7 @@
 git clone https://github.com/CharlieGreenman/JobForge.git
 cd JobForge
 npm install
-claude mcp add geometra -- npx -y @geometra/mcp   # Browser automation + PDF generation
+opencode mcp add geometra -- npx -y @geometra/mcp   # Browser automation + PDF generation
 ```
 
 ### 2. Configure your profile
@@ -46,10 +46,10 @@ Edit `portals.yml`:
 
 ### 5. Start using
 
-Open Claude Code in this directory:
+Open opencode in this directory:
 
 ```bash
-claude
+opencode
 ```
 
 Then paste a job offer URL or description. JobForge will automatically evaluate it, generate a report, create a tailored PDF, and track it.
@@ -71,9 +71,9 @@ To start with an empty tracker (for example before you paste your first URL), cr
 
 Status values should match [templates/states.yml](../templates/states.yml); see the **States** section in [Customization](CUSTOMIZATION.md). After batch evaluations, run `npm run merge` to pull in `batch/tracker-additions/*.tsv` when your workflow uses those files. For the parallel batch runner that produces those additions, see [batch/README.md](../batch/README.md). If the status column has typos, old labels, or bold markers, run `npm run normalize` to rewrite rows toward the canonical set (use `npm run normalize -- --dry-run` first to preview changes).
 
-## Available Commands (Claude Code)
+## Available Commands (opencode)
 
-Use these inside a Claude Code session in this repo (see [CLAUDE.md](../CLAUDE.md) for the full mode map):
+Use these inside an opencode session in this repo (see [OPENCODE.md](../OPENCODE.md) for the full mode map):
 
 | Action | How |
 |--------|-----|
@@ -87,7 +87,7 @@ Use these inside a Claude Code session in this repo (see [CLAUDE.md](../CLAUDE.m
 
 ## Tracker and scripts (terminal)
 
-From the repository root, these commands maintain the application tracker and pipeline checks. They do not require Claude Code. `merge`, `normalize`, and `dedup` exit successfully when the tracker file is missing (same as a fresh clone). For optional PDF generation and setup lint, see the script table in [CONTRIBUTING.md](../CONTRIBUTING.md#development).
+From the repository root, these commands maintain the application tracker and pipeline checks. They do not require opencode. `merge`, `normalize`, and `dedup` exit successfully when the tracker file is missing (same as a fresh clone). For optional PDF generation and setup lint, see the script table in [CONTRIBUTING.md](../CONTRIBUTING.md#development).
 
 | Action | Command |
 |--------|---------|
@@ -134,7 +134,7 @@ To install a named binary under `dashboard/` (optional), use `go build -o job-fo
 `sync-check` requires `cv.md` and `config/profile.yml` with the fields checked in `cv-sync-check.mjs`. Until you finish the profile and CV steps in Quick Start, that is normal. Use `npm run verify` for pipeline health on a minimal checkout, then run `sync-check` once your personal files exist.
 
 **PDF generation fails**  
-Ensure Geometra MCP is configured: `claude mcp add geometra -- npx -y @geometra/mcp`. The MCP server manages Chromium via its built-in proxy. For standalone CLI usage, `generate-pdf.mjs` still requires `npx playwright install chromium` (see [CONTRIBUTING.md](../CONTRIBUTING.md#development)).
+Ensure Geometra MCP is configured: `opencode mcp add geometra -- npx -y @geometra/mcp`. The MCP server manages Chromium via its built-in proxy. For standalone CLI usage, `generate-pdf.mjs` still requires `npx playwright install chromium` (see [CONTRIBUTING.md](../CONTRIBUTING.md#development)).
 
 **Dashboard is empty or points at the wrong data**  
 The `-path` argument must be the JobForge repository root (where `data/applications.md` or `applications.md` lives), not the `dashboard/` directory. From the repo root after `npm run build:dashboard`, use `./dashboard/dashboard -path .` (see [Build Dashboard](#build-dashboard-optional) above).

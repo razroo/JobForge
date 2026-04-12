@@ -6,7 +6,7 @@ Guides for installing JobForge, understanding how pieces fit together, and tailo
 |-------|----------------|
 | [SETUP.md](SETUP.md) | Prerequisites, profile and CV, portals copy, `npm run verify`, optional Go dashboard, [troubleshooting](SETUP.md#troubleshooting) |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Modes under `modes/`, single-offer flow, batch runner, tracker and scripts, [contributor touchpoints](ARCHITECTURE.md#contributing-touchpoints) |
-| [CUSTOMIZATION.md](CUSTOMIZATION.md) | Profile, archetypes in `_shared.md`, `portals.yml`, CV template, canonical states, optional story bank and Claude Code hooks |
+| [CUSTOMIZATION.md](CUSTOMIZATION.md) | Profile, archetypes in `_shared.md`, `portals.yml`, CV template, canonical states, optional story bank and opencode hooks |
 | [examples/README.md](../examples/README.md) | Fictional CV samples (per-role markdown), optional digest, fictional [`sample-jd.md`](../examples/sample-jd.md) for `local:jds/…` shape, and sample report — starting point for new `cv.md`, JD-on-disk layout, or contributor archetypes |
 | [batch/README.md](../batch/README.md) | Batch TSV format, `batch-runner.sh`, `tracker-additions/` merge flow with `npm run merge` |
 | [jds/README.md](../jds/README.md) | Markdown JDs on disk; `local:jds/{file}.md` lines in `data/pipeline.md` |
@@ -25,8 +25,8 @@ Terminal workflows and PR-style gates are documented across a few files. Use thi
 
 ## Related material (repository root)
 
-- [modes/README.md](../modes/README.md) — per-command prompts used with `CLAUDE.md` (archetypes and shared scoring live in `_shared.md`; see **Modes** in [ARCHITECTURE.md](ARCHITECTURE.md))
-- [CLAUDE.md](../CLAUDE.md) — default agent instructions for Claude Code in this repo
+- [modes/README.md](../modes/README.md) — per-command prompts used with `OPENCODE.md` (archetypes and shared scoring live in `_shared.md`; see **Modes** in [ARCHITECTURE.md](ARCHITECTURE.md))
+- [OPENCODE.md](../OPENCODE.md) — default agent instructions for opencode in this repo
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — branch workflow, quality gate, contribution ideas
 - [templates/states.yml](../templates/states.yml) — canonical tracker status ids and labels (used by verify, merge, and normalize)
 - [templates/portals.example.yml](../templates/portals.example.yml) — starter portal and scanner config (copy to repo-root `portals.yml`)

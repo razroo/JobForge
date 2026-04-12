@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# job-forge batch runner — standalone orchestrator for claude -p workers
-# Reads batch-input.tsv, delegates each offer to a claude -p worker,
+# job-forge batch runner — standalone orchestrator for opencode -p workers
+# Reads batch-input.tsv, delegates each offer to a opencode -p worker,
 # tracks state in batch-state.tsv for resumability.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,8 +26,8 @@ MAX_RETRIES=2
 
 usage() {
   cat <<'USAGE'
-job-forge batch runner — process job offers in batch via claude -p workers
-Uses your default Claude model (Claude Max subscription).
+job-forge batch runner — process job offers in batch via opencode -p workers
+Uses your default opencode model.
 
 Usage: batch-runner.sh [OPTIONS]
 
@@ -109,8 +109,8 @@ check_prerequisites() {
     exit 1
   fi
 
-  if ! command -v claude &>/dev/null; then
-    echo "ERROR: 'claude' CLI not found in PATH."
+  if ! command -v opencode &>/dev/null; then
+    echo "ERROR: 'opencode' CLI not found in PATH."
     exit 1
   fi
 
@@ -251,9 +251,9 @@ process_offer() {
     -e "s|{{ID}}|${id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
-  # Launch claude -p worker (uses default model from Claude Max subscription)
+  # Launch opencode -p worker (uses default model)
   local exit_code=0
-  claude -p \
+  opencode -p \
     --dangerously-skip-permissions \
     --append-system-prompt-file "$resolved_prompt" \
     "$prompt" \

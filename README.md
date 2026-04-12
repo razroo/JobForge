@@ -1,8 +1,8 @@
 # JobForge
 
-> AI-powered job search pipeline built on Claude Code. Evaluate offers, generate tailored CVs, scan portals, negotiate offers, and track everything -- powered by AI agents.
+> AI-powered job search pipeline built on opencode. Evaluate offers, generate tailored CVs, scan portals, negotiate offers, and track everything -- powered by AI agents.
 
-![Claude Code](https://img.shields.io/badge/Claude_Code-000?style=flat&logo=anthropic&logoColor=white)
+![opencode](https://img.shields.io/badge/opencode-000?style=flat&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white)
 ![Geometra](https://img.shields.io/badge/Geometra_MCP-4A90D9?style=flat&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
@@ -18,7 +18,7 @@
 
 ## What Is This
 
-JobForge turns Claude Code into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
+JobForge turns opencode into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
 
 - **Evaluates offers** with a unified 10-dimension weighted scoring system
 - **Generates tailored PDFs** -- ATS-optimized CVs with anti-AI-detection writing rules
@@ -46,7 +46,7 @@ JobForge turns Claude Code into a full job search command center. Instead of man
 | **Deep Research** | Company research that feeds back into scores and interview prep |
 | **Smart LinkedIn Outreach** | Reads evaluation reports to craft targeted messages using top proof points |
 | **Portal Scanner** | 45+ companies pre-configured with fuzzy dedup for reposts |
-| **Batch Processing** | Parallel evaluation with `claude -p` workers, with honest verification flagging |
+| **Batch Processing** | Parallel evaluation with `opencode -p` workers, with honest verification flagging |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
 
 ## Quick Start
@@ -55,7 +55,8 @@ JobForge turns Claude Code into a full job search command center. Instead of man
 # 1. Clone and install
 git clone https://github.com/CharlieGreenman/JobForge.git
 cd JobForge && npm install
-claude mcp add geometra -- npx -y @geometra/mcp   # Browser automation + PDF generation
+npx -y @geometra/mcp   # Browser automation + PDF generation
+opencode mcp add geometra -- npx -y @geometra/mcp   # Add Geometra MCP to opencode
 
 # 2. Configure
 cp config/profile.example.yml config/profile.yml  # Edit with your details
@@ -64,10 +65,10 @@ cp templates/portals.example.yml portals.yml       # Customize companies
 # 3. Add your CV
 # Create cv.md in the project root with your CV in markdown
 
-# 4. Personalize with Claude
-claude   # Open Claude Code in this directory
+# 4. Personalize with opencode
+opencode   # Open opencode in this directory
 
-# Then ask Claude to adapt the system to you:
+# Then ask opencode to adapt the system to you:
 # "Change the archetypes to backend engineering roles"
 # "Add these 5 companies to portals.yml"
 # "Update my profile with this CV I'm pasting"
@@ -76,7 +77,7 @@ claude   # Open Claude Code in this directory
 # Paste a job URL or run /job-forge
 ```
 
-> **The system is designed to be customized by Claude itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask Claude to change them.
+> **The system is designed to be customized by opencode itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask opencode to change them.
 
 ## Usage
 
@@ -131,7 +132,7 @@ You paste a job URL or description
 
 ```
 JobForge/
-├── CLAUDE.md                    # Agent instructions
+├── OPENCODE.md                    # Agent instructions
 ├── cv.md                        # Your CV (create this)
 ├── article-digest.md            # Your proof points (optional)
 ├── config/

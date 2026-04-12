@@ -59,7 +59,7 @@ The negotiation section provides frameworks for salary discussions. Replace the 
 
 ## Hooks (Optional)
 
-JobForge can integrate with external systems via Claude Code hooks. Example hooks:
+JobForge can integrate with external systems via opencode hooks. Example hooks:
 
 ```json
 {
@@ -74,7 +74,7 @@ JobForge can integrate with external systems via Claude Code hooks. Example hook
 }
 ```
 
-Save hooks in `.claude/settings.json`.
+Save hooks in `.opencode/settings.json`.
 
 ## States (templates/states.yml)
 

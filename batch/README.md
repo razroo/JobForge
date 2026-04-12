@@ -1,6 +1,6 @@
 # Batch evaluation
 
-This folder holds the **parallel batch runner** for processing many job URLs with headless `claude -p` workers. For how batch fits into the rest of JobForge, see [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
+This folder holds the **parallel batch runner** for processing many job URLs with headless `opencode -p` workers. For how batch fits into the rest of JobForge, see [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
 ## What ships in git
 
@@ -57,4 +57,4 @@ After a successful merge, each processed file is moved to **`batch/tracker-addit
 
 ## Prerequisites
 
-The runner expects the `claude` CLI on `PATH` and a valid `batch-prompt.md`. It creates `reports/` and tracker paths as needed; ensure your usual JobForge setup (`cv.md`, profile, etc.) matches what `batch-prompt.md` assumes.
+The runner expects the `opencode` CLI on `PATH` and a valid `batch-prompt.md`. It creates `reports/` and tracker paths as needed; ensure your usual JobForge setup (`cv.md`, profile, etc.) matches what `batch-prompt.md` assumes.

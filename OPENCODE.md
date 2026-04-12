@@ -2,9 +2,9 @@
 
 ## What is JobForge
 
-AI-powered job search automation built on Claude Code: pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing.
+AI-powered job search automation built on opencode: pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing.
 
-**It will work out of the box, but it's designed to be made yours.** If the archetypes don't match your career, the modes are in the wrong language, or the scoring doesn't fit your priorities -- just ask. You (Claude) can edit any file in this system. The user says "change the archetypes to data engineering roles" and you do it. That's the whole point.
+**It will work out of the box, but it's designed to be made yours.** If the archetypes don't match your career, the modes are in the wrong language, or the scoring doesn't fit your priorities -- just ask. You (opencode) can edit any file in this system. The user says "change the archetypes to data engineering roles" and you do it. That's the whole point.
 
 ### Main Files
 
@@ -86,7 +86,7 @@ If the user accepts, use the `/loop` or `/schedule` skill (if available) to set 
 
 ### Personalization
 
-This system is designed to be customized by YOU (Claude). When the user asks you to change archetypes, translate modes, adjust scoring, add companies, or modify negotiation scripts -- do it directly. You read the same files you use, so you know exactly what to edit.
+This system is designed to be customized by YOU (opencode). When the user asks you to change archetypes, translate modes, adjust scoring, add companies, or modify negotiation scripts -- do it directly. You read the same files you use, so you know exactly what to edit.
 
 **Common customization requests:**
 - "Change the archetypes to [backend/frontend/data/devops] roles" → edit `modes/_shared.md`
@@ -143,7 +143,7 @@ This system is designed to be customized by YOU (Claude). When the user asks you
 2. `geometra_page_model` to read structured page content
 3. Only footer/navbar without JD = closed. Title + description + Apply = active.
 
-**When Geometra MCP is NOT available** (batch workers via `claude -p`, headless environments):
+**When Geometra MCP is NOT available** (batch workers via `opencode -p`, headless environments):
 1. Use WebFetch to retrieve the page content
 2. Check for JD text, job title, and apply button/link in the response
 3. If WebFetch returns only a shell/navbar (no JD content), mark the offer as `**Verification: unconfirmed**` in the report header
@@ -163,7 +163,7 @@ The goal is to never waste time on closed offers, but also never silently assume
 - Report numbering: sequential 3-digit zero-padded, max existing + 1
 - **RULE: After each batch of evaluations, run `node merge-tracker.mjs`** to merge tracker additions and avoid duplications.
 - **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
-- **RULE: NEVER attribute commits to Claude (no `Co-Authored-By: Claude` or similar).** All commits must be attributed solely to the person making the commit (e.g., CharlieGreenman).
+- **RULE: NEVER attribute commits to opencode (no `Co-Authored-By: opencode` or similar).** All commits must be attributed solely to the person making the commit (e.g., CharlieGreenman).
 
 ### TSV Format for Tracker Additions
 
