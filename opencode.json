@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "mcpServers": {
+  "mcp": {
     "geometra": {
       "type": "stdio",
       "command": "npx",
@@ -15,7 +15,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "git+https://github.com/shinzo-labs/gmail-mcp.git"
+        "@razroo/gmail-mcp"
       ],
       "env": {}
     }
