@@ -155,7 +155,7 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 ### 2. Register in tracker
 
-**ALWAYS** register in `data/applications.md`:
+**ALWAYS** register in `data/applications/` (the day file for the current date, e.g., `data/applications/2026-04-13.md`):
 - Next sequential number
 - Current date
 - Company

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -22,39 +23,81 @@ var (
 	reArchetypeColon = regexp.MustCompile(`(?i)\*\*Arquetipo:\*\*\s*(.+)`)
 	reReportURL      = regexp.MustCompile(`(?m)^\*\*URL:\*\*\s*(https?://\S+)`)
 	reBatchID        = regexp.MustCompile(`(?m)^\*\*Batch ID:\*\*\s*(\d+)`)
+	reDayFile        = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}\.md$`)
 )
 
-// resolveApplicationsPath picks the tracker file the same way as Node utilities
-// (verify-pipeline.mjs, merge-tracker.mjs, etc.): prefer data/applications.md when
-// it exists, otherwise applications.md at the repo root.
-func resolveApplicationsPath(careerOpsPath string) (string, error) {
+// resolveTrackerLayout determines whether to use day-based files (data/applications/YYYY-MM-DD.md)
+// or the legacy single-file tracker. Returns "day", "single", or "none" and the relevant path(s).
+func resolveTrackerLayout(careerOpsPath string) (layout string, dayDir string, singlePath string) {
+	dayDir = filepath.Join(careerOpsPath, "data", "applications")
 	dataPath := filepath.Join(careerOpsPath, "data", "applications.md")
 	rootPath := filepath.Join(careerOpsPath, "applications.md")
+
+	// Check if day-based directory exists and has .md files
+	if dir, err := os.ReadDir(dayDir); err == nil {
+		hasMD := false
+		for _, f := range dir {
+			if reDayFile.MatchString(f.Name()) {
+				hasMD = true
+				break
+			}
+		}
+		if hasMD {
+			return "day", dayDir, ""
+		}
+	}
+
+	// Fall back to single-file
 	if _, err := os.Stat(dataPath); err == nil {
-		return dataPath, nil
+		return "single", "", dataPath
 	}
 	if _, err := os.Stat(rootPath); err == nil {
-		return rootPath, nil
+		return "single", "", rootPath
 	}
-	return "", fmt.Errorf("no tracker at %s or %s", dataPath, rootPath)
+	return "none", "", ""
 }
 
 // ParseApplications reads the applications tracker and returns parsed rows.
+// Supports both day-based (data/applications/YYYY-MM-DD.md) and single-file layouts.
 func ParseApplications(careerOpsPath string) []model.CareerApplication {
-	filePath, err := resolveApplicationsPath(careerOpsPath)
-	if err != nil {
-		return nil
-	}
-	content, err := os.ReadFile(filePath)
-	if err != nil {
+	layout, dayDir, singlePath := resolveTrackerLayout(careerOpsPath)
+
+	var allLines []string
+
+	if layout == "day" {
+		// Read all day files in sorted order
+		entries, err := os.ReadDir(dayDir)
+		if err != nil {
+			return nil
+		}
+		var mdFiles []string
+		for _, e := range entries {
+			if reDayFile.MatchString(e.Name()) {
+				mdFiles = append(mdFiles, e.Name())
+			}
+		}
+		sort.Strings(mdFiles)
+		for _, f := range mdFiles {
+			content, err := os.ReadFile(filepath.Join(dayDir, f))
+			if err != nil {
+				continue
+			}
+			allLines = append(allLines, strings.Split(string(content), "\n")...)
+		}
+	} else if layout == "single" {
+		content, err := os.ReadFile(singlePath)
+		if err != nil {
+			return nil
+		}
+		allLines = strings.Split(string(content), "\n")
+	} else {
 		return nil
 	}
 
-	lines := strings.Split(string(content), "\n")
 	var apps []model.CareerApplication
 	num := 0
 
-	for _, line := range lines {
+	for _, line := range allLines {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "# ") || strings.HasPrefix(line, "|---") || strings.HasPrefix(line, "| #") {
 			continue
@@ -545,38 +588,69 @@ func LoadReportSummary(careerOpsPath, reportPath string) (archetype, tldr, remot
 	return
 }
 
-// UpdateApplicationStatus updates the status of an application in the resolved tracker file.
+// UpdateApplicationStatus updates the status of an application in the tracker.
+// Supports both day-based (data/applications/YYYY-MM-DD.md) and single-file layouts.
 func UpdateApplicationStatus(careerOpsPath string, app model.CareerApplication, newStatus string) error {
-	filePath, err := resolveApplicationsPath(careerOpsPath)
-	if err != nil {
-		return err
-	}
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		return err
-	}
+	layout, dayDir, singlePath := resolveTrackerLayout(careerOpsPath)
 
-	lines := strings.Split(string(content), "\n")
-	found := false
-
-	for i, line := range lines {
-		if !strings.HasPrefix(strings.TrimSpace(line), "|") {
-			continue
+	if layout == "day" {
+		// Search across all day files
+		entries, err := os.ReadDir(dayDir)
+		if err != nil {
+			return err
 		}
-		// Match by report number
-		if app.ReportNumber != "" && strings.Contains(line, fmt.Sprintf("[%s]", app.ReportNumber)) {
-			// Replace the status field
-			lines[i] = replaceStatusInLine(line, app.Status, newStatus)
-			found = true
-			break
+		var mdFiles []string
+		for _, e := range entries {
+			if reDayFile.MatchString(e.Name()) {
+				mdFiles = append(mdFiles, e.Name())
+			}
 		}
-	}
-
-	if !found {
+		sort.Strings(mdFiles)
+		for _, f := range mdFiles {
+			fp := filepath.Join(dayDir, f)
+			content, err := os.ReadFile(fp)
+			if err != nil {
+				continue
+			}
+			lines := strings.Split(string(content), "\n")
+			for i, line := range lines {
+				if app.ReportNumber != "" && strings.Contains(line, fmt.Sprintf("[%s]", app.ReportNumber)) {
+					lines[i] = replaceStatusInLine(line, app.Status, newStatus)
+					return os.WriteFile(fp, []byte(strings.Join(lines, "\n")), 0644)
+				}
+			}
+		}
 		return fmt.Errorf("application not found: report %s", app.ReportNumber)
 	}
 
-	return os.WriteFile(filePath, []byte(strings.Join(lines, "\n")), 0644)
+	if layout == "single" {
+		content, err := os.ReadFile(singlePath)
+		if err != nil {
+			return err
+		}
+
+		lines := strings.Split(string(content), "\n")
+		found := false
+
+		for i, line := range lines {
+			if !strings.HasPrefix(strings.TrimSpace(line), "|") {
+				continue
+			}
+			if app.ReportNumber != "" && strings.Contains(line, fmt.Sprintf("[%s]", app.ReportNumber)) {
+				lines[i] = replaceStatusInLine(line, app.Status, newStatus)
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("application not found: report %s", app.ReportNumber)
+		}
+
+		return os.WriteFile(singlePath, []byte(strings.Join(lines, "\n")), 0644)
+	}
+
+	return fmt.Errorf("no tracker found")
 }
 
 // replaceStatusInLine replaces the old status with new status in a table line.

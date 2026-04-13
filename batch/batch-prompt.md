@@ -316,11 +316,11 @@ TSV format (single line, no header, 9 tab-separated columns):
 | 8 | report | md link | `[647](reports/647-...)` | Link to report |
 | 9 | notes | string | `APPLY HIGH...` | 1-sentence summary |
 
-**IMPORTANT:** The TSV order has status BEFORE score (col 5→status, col 6→score). In applications.md the order is reversed (col 5→score, col 6→status). merge-tracker.mjs handles the conversion.
+**IMPORTANT:** The TSV order has status BEFORE score (col 5→status, col 6→score). In the tracker day files the order is reversed (col 5→score, col 6→status). merge-tracker.mjs handles the conversion.
 
 **Valid canonical states:** `Evaluated`, `Applied`, `Responded`, `Interview`, `Offer`, `Rejected`, `Discarded`, `SKIP`
 
-Where `{next_num}` is calculated by reading the last line of `data/applications.md`.
+Where `{next_num}` is calculated by reading all entries across day files in `data/applications/` and taking the max entry number.
 
 ### Step 6 — Final Output
 

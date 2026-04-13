@@ -1,6 +1,6 @@
 # Mode: followup — Follow-Up Timing & Nudge System
 
-Scans `data/applications.md` for entries that need follow-up action based on their current state and how long they've been in that state.
+Scans all day files in `data/applications/` for entries that need follow-up action based on their current state and how long they've been in that state.
 
 **This mode is read-only on existing pipeline logic.** It reads the tracker and suggests actions — it never changes scores, reports, or pipeline behavior.
 
@@ -19,7 +19,7 @@ Scans `data/applications.md` for entries that need follow-up action based on the
 
 ## Workflow
 
-1. **Read** `data/applications.md` — parse all entries with dates
+1. **Read** all day files in `data/applications/` — parse all entries with dates
 2. **Compute** days since the date column for each entry (using today's date)
 3. **Filter** to entries matching timing rules above
 4. **Sort** by urgency (most overdue first)

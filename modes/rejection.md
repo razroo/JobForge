@@ -2,7 +2,7 @@
 
 When the user reports a rejection, capture structured data and surface patterns over time.
 
-**This mode is additive.** It uses the existing notes column in applications.md (no new columns) and appends a section to existing reports (no changes to report format).
+**This mode is additive.** It uses the existing notes column in tracker files (no new columns) and appends a section to existing reports (no changes to report format).
 
 ## When to Trigger
 
@@ -12,7 +12,7 @@ When the user reports a rejection, capture structured data and surface patterns 
 
 ## Step 1 — Record the Rejection
 
-Update the entry in `data/applications.md`:
+Update the entry in `data/applications/` (the day file where the entry exists):
 - Status → `Rejected`
 - Notes → append rejection info in compact format: `REJ@{stage}:{reason}`
 
@@ -55,7 +55,7 @@ If a report exists in `reports/`, append a `## Rejection` section:
 
 When the user runs `/job-forge rejection` (without a specific company), analyze ALL rejected entries:
 
-1. **Read** `data/applications.md` — filter to Rejected entries
+1. **Read** all day files in `data/applications/` — filter to Rejected entries
 2. **Parse** `REJ@{stage}:{reason}` from notes column
 3. **Aggregate** patterns:
 
@@ -88,5 +88,5 @@ When the user runs `/job-forge rejection` (without a specific company), analyze 
 
 - Does NOT change the scoring model or thresholds automatically
 - Does NOT modify reports retroactively (only appends Rejection section)
-- Does NOT add new columns to applications.md (uses notes column)
+- Does NOT add new columns to tracker files (uses notes column)
 - Does NOT require any changes to merge-tracker, dedup, or verify scripts

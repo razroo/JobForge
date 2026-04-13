@@ -29,8 +29,8 @@
      └────────────────────────────────────────────────────────┘
                                │
                     ┌──────────▼──────────┐
-                    │  data/applications.md │
-                    │  (canonical tracker)  │
+│  data/applications/   │
+                     │  (day-based tracker)  │
                     └──────────────────────┘
 ```
 
@@ -147,7 +147,7 @@ Scripts maintain data consistency:
 
 | Script | Purpose |
 |--------|---------|
-| `merge-tracker.mjs` | Merges TSV rows from `batch/tracker-additions/` into `data/applications.md`, or root `applications.md` when the `data/` file is absent |
+| `merge-tracker.mjs` | Merges TSV rows from `batch/tracker-additions/` into day files under `data/applications/`, or `data/applications.md` when the directory is absent |
 | `verify-pipeline.mjs` | Health check — see the `npm run verify` paragraph above |
 | `dedup-tracker.mjs` | Removes duplicate entries by company+role |
 | `normalize-statuses.mjs` | Maps status aliases to canonical values |
@@ -160,7 +160,7 @@ The `dashboard/` directory contains a standalone Go TUI application that visuali
 
 **Repo root:** The program needs the path to the JobForge checkout (the directory that contains `modes/`, `reports/`, and the tracker). Flag `-path` sets that directory (default `.`, i.e. the process working directory). If you run the binary from inside `dashboard/` after `go build`, use `-path ..` so the tracker is found.
 
-**Tracker file:** Same resolution as the Node scripts: `{path}/data/applications.md` when that file exists, otherwise `{path}/applications.md`.
+**Tracker file:** Day-based directory `data/applications/` (preferred) with `YYYY-MM-DD.md` files. Falls back to single-file `data/applications.md` or root `applications.md` for legacy setups.
 
 **Build / run** (see also [SETUP.md](SETUP.md#build-dashboard-optional)):
 

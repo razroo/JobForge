@@ -124,7 +124,7 @@ func main() {
 	// Load applications
 	apps := data.ParseApplications(careerOpsPath)
 	if apps == nil {
-		fmt.Fprintf(os.Stderr, "Error: no tracker at %s/data/applications.md or %s/applications.md\n", careerOpsPath, careerOpsPath)
+		fmt.Fprintf(os.Stderr, "Error: no tracker at %s/data/applications/ (day files) or %s/data/applications.md\n", careerOpsPath, careerOpsPath)
 		os.Exit(1)
 	}
 

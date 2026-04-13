@@ -215,7 +215,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 7. Be direct and actionable -- no fluff
 8. When generating English text (PDF summaries, bullets, LinkedIn messages, STAR stories): native tech English, not translated. Short sentences, action verbs, no unnecessary passive voice.
 8b. **Case study URLs in PDF Professional Summary:** If the PDF mentions case studies or demos, URLs MUST appear in the first paragraph (Professional Summary). The recruiter may only read the summary. All URLs with `white-space: nowrap` in HTML.
-9. **Tracker additions as TSV** -- NEVER edit applications.md to add new entries. Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
+9. **Tracker additions as TSV** -- NEVER add new entries directly to day files in `data/applications/`. Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
 10. **Include `**URL:**` in every report header** -- between Score and PDF.
 
 ### Tools
@@ -226,6 +226,6 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 | WebFetch | Fallback for extracting JDs from static pages |
 | Geometra MCP | Verify offers (`geometra_page_model`), extract JDs (`geometra_connect` + `geometra_snapshot`), fill forms (`geometra_fill_form`), generate PDFs (`geometra_generate_pdf`). **Supports up to 5 parallel sessions.** Each `geometra_connect` returns a `sessionId` — pass it to all subsequent tool calls to target the right session. Omitting `sessionId` targets the most recently connected session. Use `geometra_list_sessions` to inspect active sessions. |
 | Read | cv.md, article-digest.md, cv-template.html |
-| Write | Temporary HTML for PDF, applications.md, reports .md |
+| Write | Temporary HTML for PDF, day files in `data/applications/YYYY-MM-DD.md`, reports .md |
 | Edit | Update tracker |
 | Bash | `node generate-pdf.mjs` |

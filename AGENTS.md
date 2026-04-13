@@ -10,7 +10,7 @@ AI-powered job search automation built on opencode: pipeline tracking, offer eva
 
 | File | Function |
 |------|----------|
-| `data/applications.md` | Application tracker |
+| `data/applications/` | Application tracker (day-based: `YYYY-MM-DD.md`) |
 | `data/pipeline.md` | Inbox of pending URLs |
 | `data/scan-history.tsv` | Scanner dedup history |
 | `portals.yml` | Query and company config |
@@ -60,7 +60,11 @@ If `portals.yml` is missing:
 Copy `templates/portals.example.yml` → `portals.yml`. If they gave target roles in Step 2, update `title_filter.positive` to match.
 
 #### Step 4: Tracker
-If `data/applications.md` doesn't exist, create it:
+If `data/applications/` directory doesn't exist, create it:
+```bash
+mkdir -p data/applications
+```
+The tracker stores entries in day-based files like `data/applications/2026-04-13.md`. Each file has the same table format:
 ```markdown
 # Applications Tracker
 
@@ -243,15 +247,15 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 
 ### Pipeline Integrity
 
-1. **NEVER edit applications.md to ADD new entries** -- Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
-2. **YES you can edit applications.md to UPDATE status/notes of existing entries.**
+1. **NEVER edit day files in `data/applications/` to ADD new entries** -- Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
+2. **YES you can edit day files in `data/applications/` to UPDATE status/notes of existing entries.**
 3. All reports MUST include `**URL:**` in the header (between Score and PDF).
 4. All statuses MUST be canonical (see `templates/states.yml`).
 5. Health check: `node verify-pipeline.mjs`
 6. Normalize statuses: `node normalize-statuses.mjs`
 7. Dedup: `node dedup-tracker.mjs`
 
-### Canonical States (applications.md)
+### Canonical States (applications day files)
 
 **Source of truth:** `templates/states.yml`
 

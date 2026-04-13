@@ -16,7 +16,7 @@ opencode Conductor (opencode --dangerously-skip-permissions)
   ├─ Offer 2: click next, reads JD + URL
   │    └─► opencode run worker → report .md + PDF + tracker-line
   │
-  └─ End: merge tracker-additions → applications.md + summary
+  └─ End: merge tracker-additions → data/applications/ + summary
 ```
 
 Each worker is a child `opencode run` with a clean 200K token context. The conductor only orchestrates.
@@ -52,7 +52,7 @@ d. Execute via Bash:
    f. Log to `logs/{report_num}-{id}.log`
    g. Chrome: go back → next offer
 5. **Pagination**: If no more offers → click "Next" → repeat
-6. **End**: Merge `tracker-additions/` → `applications.md` + summary
+6. **End**: Merge `tracker-additions/` → `data/applications/` (via `merge-tracker.mjs`) + summary
 
 ## Mode B: Standalone script
 

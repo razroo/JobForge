@@ -53,7 +53,7 @@ Read from `config/profile.yml`:
 - `compensation.target_range` — is the offer within, above, or below?
 - `compensation.minimum` — is it above the walk-away number?
 
-Read from `data/applications.md`:
+Read from all day files in `data/applications/`:
 - How many other offers are at Interview or Offer stage? (This is your leverage.)
 - What scores did those have? (Higher-scored alternatives = stronger negotiating position.)
 
@@ -130,7 +130,7 @@ Include a "gut feeling" row — quantitative analysis doesn't capture everything
 
 ## Step 6 — Save & Update Tracker
 
-1. Update `data/applications.md`: status → `Offer`, notes → comp summary
+1. Update the entry in its day file under `data/applications/YYYY-MM-DD.md`: status → `Offer`, notes → comp summary
 2. Append `## Offer Details` section to the existing report with full comp breakdown and negotiation outcome
 3. If the user accepts: status → a new note like `Accepted YYYY-MM-DD`
 

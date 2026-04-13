@@ -1,4 +1,6 @@
 # Personal data (user fills these)
+data/applications/
+!data/applications/.gitkeep
 data/applications.md
 data/pipeline.md
 data/scan-history.tsv

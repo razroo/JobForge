@@ -58,9 +58,15 @@ When you want to tune archetypes, scanner keywords, or the PDF template, see [Cu
 
 ## Application tracker (optional until first evaluation)
 
-New rows go to **`data/applications.md`** when that file exists. If it does not exist, utilities and the dashboard fall back to **`applications.md`** in the repo root (same column layout). A fresh clone often has neither file yet; that is normal, and `npm run verify` still exits successfully.
+New rows go to **`data/applications/YYYY-MM-DD.md`** day files when the `data/applications/` directory exists. If it does not exist, utilities and the dashboard fall back to **`data/applications.md`** or the repo root **`applications.md`** (same column layout). A fresh clone often has neither the directory nor the file yet; that is normal, and `npm run verify` still exits successfully.
 
-To start with an empty tracker (for example before you paste your first URL), create `data/applications.md` with this header:
+To start with an empty tracker (for example before you paste your first URL), create the directory:
+
+```bash
+mkdir -p data/applications
+```
+
+The first evaluation will create a day file like `data/applications/2026-04-13.md` with this header:
 
 ```markdown
 # Applications Tracker
@@ -109,7 +115,7 @@ Optional tracker and PDF scripts (`normalize`, `dedup`, `merge`, `pdf`) are list
 
 ## Build Dashboard (Optional)
 
-The TUI reads the tracker at the **JobForge repo root** (`applications.md` or `data/applications.md`). If you build inside `dashboard/`, point `-path` at the parent directory:
+The TUI reads the tracker at the **JobForge repo root** (day files in `data/applications/`, or `data/applications.md`, or root `applications.md`). If you build inside `dashboard/`, point `-path` at the parent directory:
 
 ```bash
 cd dashboard

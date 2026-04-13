@@ -42,7 +42,7 @@ npm run build:dashboard
 
 (`npm run build:dashboard` is the same as `(cd dashboard && go build .)` — requires Go on PATH.)
 
-`npm run verify` runs `verify-pipeline.mjs`. It exits successfully when `data/applications.md` is missing (fresh clone).
+`npm run verify` runs `verify-pipeline.mjs`. It exits successfully when no tracker exists (fresh clone).
 
 Other npm scripts:
 
@@ -50,9 +50,9 @@ Other npm scripts:
 |--------|------|--------|
 | `npm run build:dashboard` | `go build` in `dashboard/` | Optional TUI; same check as manual `cd dashboard && go build .` |
 | `npm run sync-check` | `cv-sync-check.mjs` | Optional setup lint: `cv.md`, `config/profile.yml`, hardcoded-metric scan; fails if those files are missing |
-| `npm run normalize` | `normalize-statuses.mjs` | Maps non-canonical statuses in `data/applications.md`; no-op if the tracker file is missing |
-| `npm run dedup` | `dedup-tracker.mjs` | Merges duplicate company/role rows; no-op if the tracker file is missing |
-| `npm run merge` | `merge-tracker.mjs` | Merges `batch/tracker-additions/*.tsv` into the tracker; no-op if the directory is missing or has no `.tsv` files; if TSVs exist but no tracker file yet, creates `data/applications.md` with an empty table (simulated only with `--dry-run`) |
+| `npm run normalize` | `normalize-statuses.mjs` | Maps non-canonical statuses in tracker files; no-op if no tracker exists |
+| `npm run dedup` | `dedup-tracker.mjs` | Merges duplicate company/role rows; no-op if no tracker exists |
+| `npm run merge` | `merge-tracker.mjs` | Merges `batch/tracker-additions/*.tsv` into the tracker (day-based or single-file); no-op if no TSVs exist; creates tracker if needed |
 | `npm run pdf` | `generate-pdf.mjs` | Pass HTML and PDF paths after `--`, e.g. `npm run pdf -- output/cv.html output/cv.pdf`; missing parent dirs for the PDF path are created |
 
 Utility scripts `verify`, `merge`, `normalize`, `dedup`, `sync-check`, and `pdf` accept `--help` / `-h` (e.g. `npm run verify -- --help`, `npm run sync-check -- --help`, `npm run pdf -- --help`).

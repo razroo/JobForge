@@ -62,6 +62,6 @@ If the final score is >= 3.5 (per Canonical Scoring Model thresholds in `_shared
 **Language**: Always in the language of the JD (EN default). Apply `/tech-translate`.
 
 ## Step 5 — Update Tracker
-Record in `data/applications.md` with all columns including Report and PDF marked as ✅.
+Record in the current day file `data/applications/YYYY-MM-DD.md` with all columns including Report and PDF marked as ✅.
 
 **If any step fails**, continue with the remaining steps and mark the failed step as pending in the tracker.

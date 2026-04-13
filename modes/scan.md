@@ -52,7 +52,7 @@ The levels are additive — all are executed, results are merged and deduplicate
 
 1. **Read configuration**: `portals.yml`
 2. **Read history**: `data/scan-history.tsv` → previously seen URLs
-3. **Read dedup sources**: `data/applications.md` + `data/pipeline.md`
+3. **Read dedup sources**: all day files in `data/applications/` + `data/pipeline.md`
 
 4. **Level 1 — Geometra scan** (parallel in batches of 3-5):
    For each company in `tracked_companies` with `enabled: true` and `careers_url` defined:
@@ -91,7 +91,7 @@ The levels are additive — all are executed, results are merged and deduplicate
    - `pipeline.md` → exact URL already in pending or processed
 
    **Layer 2 — Company + role fuzzy match (catches reposts with new URLs):**
-   - `applications.md` → normalize company name (lowercase, strip non-alphanumeric) + fuzzy role match (2+ significant words in common, words > 3 chars). This is the same logic used in `dedup-tracker.mjs` and `merge-tracker.mjs`.
+   - all day files in `data/applications/` → normalize company name (lowercase, strip non-alphanumeric) + fuzzy role match (2+ significant words in common, words > 3 chars). This is the same logic used in `dedup-tracker.mjs` and `merge-tracker.mjs`.
    - `scan-history.tsv` → same fuzzy match against company + title columns (not just URL). A role reposted on a new URL but with the same company and similar title is a duplicate.
    - `pipeline.md` → same fuzzy match against company + title in pending items that include metadata (format: `- [ ] {url} | {company} | {title}`)
 

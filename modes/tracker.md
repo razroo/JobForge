@@ -1,6 +1,6 @@
 # Mode: tracker — Application Tracker
 
-Reads and displays the application tracker: `data/applications.md` when present, otherwise `applications.md` in the repo root (same columns).
+Reads and displays the application tracker: day-based files in `data/applications/` (format: `YYYY-MM-DD.md`).
 
 **Tracker format:**
 ```markdown
@@ -16,7 +16,7 @@ Possible states (canonical, per `templates/states.yml`):
 - `Contacted` = the candidate proactively reached out to someone at the company (outbound, e.g., LinkedIn power move via `/job-forge contact`)
 - `Responded` = a recruiter/company contacted back and the candidate responded (inbound)
 
-If the user asks to update a status, edit the corresponding row.
+If the user asks to update a status, edit the corresponding row in the day file where the entry exists.
 
 Also display statistics:
 - Total applications

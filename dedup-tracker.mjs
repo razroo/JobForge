@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 /**
- * dedup-tracker.mjs — Remove duplicate entries from applications.md
+ * dedup-tracker.mjs — Remove duplicate entries from the application tracker
+ *
+ * Supports both layouts:
+ *   - Day-based: data/applications/YYYY-MM-DD.md (preferred)
+ *   - Single-file: data/applications.md or applications.md (legacy)
  *
  * Groups by normalized company + fuzzy role match.
  * Keeps entry with highest score. If discarded entry had more advanced status,
@@ -12,18 +16,18 @@
 import { readFileSync, writeFileSync, copyFileSync, existsSync } from 'fs';
 import { join, relative, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import {
+  PROJECT_DIR, DATA_APPS_DIR, DATA_APPS_FILE, ROOT_APPS_FILE,
+  usesDayFiles, ensureDayDir, getHeader, formatAppLine, parseAppLine,
+  readAllEntries, writeToDayFiles, listDayFiles, dayFilePath,
+} from './tracker-lib.mjs';
 
-const PROJECT_DIR = dirname(fileURLToPath(import.meta.url));
-// Support both layouts: data/applications.md (boilerplate) and applications.md (original)
-const APPS_FILE = existsSync(join(PROJECT_DIR, 'data/applications.md'))
-  ? join(PROJECT_DIR, 'data/applications.md')
-  : join(PROJECT_DIR, 'applications.md');
-const appsDisplay = relative(PROJECT_DIR, APPS_FILE).replace(/\\/g, '/');
 const DRY_RUN = process.argv.includes('--dry-run');
 
 if (process.argv.includes('--help') || process.argv.includes('-h')) {
   console.log(`dedup-tracker.mjs — remove duplicate tracker rows by company and role
 
+Supports day-based (data/applications/YYYY-MM-DD.md) and single-file layouts.
 Keeps the highest-scoring row per cluster; may promote status when a removed
 row was further along in the pipeline. Merges notes where applicable.
 
@@ -31,19 +35,17 @@ Usage:
   node dedup-tracker.mjs [--dry-run]
   npm run dedup [-- --dry-run]
 
-Exits successfully when the tracker file is missing (nothing to do).
-Creates a .bak copy next to the tracker before writing.
+Exits successfully when no tracker exists (nothing to do).
+Creates a .bak copy next to the tracker before writing (single-file mode).
 
 Run from the repository root.`);
   process.exit(0);
 }
 
-// Status advancement order (higher = more advanced in pipeline)
-// Applied > Rejected because active application > terminal state
 const STATUS_RANK = {
   'skip': 0,
   'discarded': 0,
-  'rejected': 1,  // Terminal — below active states
+  'rejected': 1,
   'evaluated': 2,
   'applied': 3,
   'contacted': 3.5,
@@ -80,47 +82,14 @@ function parseScore(s) {
   return m ? parseFloat(m[1]) : 0;
 }
 
-function parseAppLine(line) {
-  const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 9) return null;
-  const num = parseInt(parts[1]);
-  if (isNaN(num)) return null;
-  return {
-    num,
-    date: parts[2],
-    company: parts[3],
-    role: parts[4],
-    score: parts[5],
-    status: parts[6],
-    pdf: parts[7],
-    report: parts[8],
-    notes: parts[9] || '',
-    raw: line,
-  };
-}
-
-// Read
-if (!existsSync(APPS_FILE)) {
-  console.log('No tracker file (data/applications.md or applications.md). Nothing to dedup.');
+// Read entries
+const { entries, source } = readAllEntries();
+if (entries.length === 0) {
+  console.log('No tracker entries found. Nothing to dedup.');
   process.exit(0);
 }
-const content = readFileSync(APPS_FILE, 'utf-8');
-const lines = content.split('\n');
 
-// Parse all entries
-const entries = [];
-const entryLineMap = new Map(); // num → line index
-
-for (let i = 0; i < lines.length; i++) {
-  if (!lines[i].startsWith('|')) continue;
-  const app = parseAppLine(lines[i]);
-  if (app && app.num > 0) {
-    entries.push(app);
-    entryLineMap.set(app.num, i);
-  }
-}
-
-console.log(`📊 ${entries.length} entries loaded`);
+console.log(`📊 ${entries.length} entries loaded from ${source === 'day' ? 'day files' : 'single file'}`);
 
 // Group by company+role
 const groups = new Map();
@@ -132,12 +101,12 @@ for (const entry of entries) {
 
 // Find duplicates
 let removed = 0;
-const linesToRemove = new Set();
+const toRemove = new Set(); // entry.num values to remove
+const statusUpdates = new Map(); // num → new status
 
 for (const [company, companyEntries] of groups) {
   if (companyEntries.length < 2) continue;
 
-  // Within same company, find role matches
   const processed = new Set();
   for (let i = 0; i < companyEntries.length; i++) {
     if (processed.has(i)) continue;
@@ -169,42 +138,62 @@ for (const [company, companyEntries] of groups) {
       }
     }
 
-    // Update keeper's status if a removed entry had a more advanced one
     if (bestStatus !== keeper.status) {
-      const lineIdx = entryLineMap.get(keeper.num);
-      if (lineIdx !== undefined) {
-        const parts = lines[lineIdx].split('|').map(s => s.trim());
-        parts[6] = bestStatus;
-        lines[lineIdx] = '| ' + parts.slice(1, -1).join(' | ') + ' |';
-        console.log(`  📝 #${keeper.num}: status promoted to "${bestStatus}" (from #${cluster.find(e => e.status === bestStatus)?.num})`);
-      }
+      statusUpdates.set(keeper.num, bestStatus);
+      console.log(`  📝 #${keeper.num}: status promoted to "${bestStatus}" (from #${cluster.find(e => e.status === bestStatus)?.num})`);
     }
 
-    // Remove duplicates
+    // Mark duplicates for removal
     for (let k = 1; k < cluster.length; k++) {
       const dup = cluster[k];
-      const lineIdx = entryLineMap.get(dup.num);
-      if (lineIdx !== undefined) {
-        linesToRemove.add(lineIdx);
-        removed++;
-        console.log(`🗑️  Remove #${dup.num} (${dup.company} — ${dup.role}, ${dup.score}) → kept #${keeper.num} (${keeper.score})`);
-      }
+      toRemove.add(dup.num);
+      removed++;
+      console.log(`🗑️  Remove #${dup.num} (${dup.company} — ${dup.role}, ${dup.score}) → kept #${keeper.num} (${keeper.score})`);
     }
   }
 }
 
-// Remove lines (in reverse order to preserve indices)
-const sortedRemoveIndices = [...linesToRemove].sort((a, b) => b - a);
-for (const idx of sortedRemoveIndices) {
-  lines.splice(idx, 1);
-}
+console.log(`\n📊 ${removed} duplicates found`);
 
-console.log(`\n📊 ${removed} duplicates removed`);
+if (!DRY_RUN && (removed > 0 || statusUpdates.size > 0)) {
+  if (source === 'day') {
+    // Filter out removed entries and apply status updates, then rewrite
+    const kept = entries
+      .filter(e => !toRemove.has(e.num))
+      .map(e => {
+        if (statusUpdates.has(e.num)) {
+          return { ...e, status: statusUpdates.get(e.num) };
+        }
+        return e;
+      });
+    writeToDayFiles(kept);
+    console.log(`✅ Written to day files`);
+  } else {
+    // Single-file mode
+    const APPS_FILE = existsSync(DATA_APPS_FILE) ? DATA_APPS_FILE : ROOT_APPS_FILE;
+    const appsDisplay = relative(PROJECT_DIR, APPS_FILE).replace(/\\/g, '/');
+    copyFileSync(APPS_FILE, APPS_FILE + '.bak');
 
-if (!DRY_RUN && removed > 0) {
-  copyFileSync(APPS_FILE, APPS_FILE + '.bak');
-  writeFileSync(APPS_FILE, lines.join('\n'));
-  console.log(`✅ Written to ${appsDisplay} (backup: ${appsDisplay}.bak)`);
+    let content = readFileSync(APPS_FILE, 'utf-8');
+    const lines = content.split('\n');
+
+    const updatedLines = [];
+    for (const line of lines) {
+      const app = parseAppLine(line);
+      if (app && toRemove.has(app.num)) continue; // skip removed
+      if (app && statusUpdates.has(app.num)) {
+        const newStatus = statusUpdates.get(app.num);
+        const parts = line.split('|').map(s => s.trim());
+        parts[6] = newStatus;
+        updatedLines.push('| ' + parts.slice(1, -1).join(' | ') + ' |');
+      } else {
+        updatedLines.push(line);
+      }
+    }
+
+    writeFileSync(APPS_FILE, updatedLines.join('\n'));
+    console.log(`✅ Written to ${appsDisplay} (backup: ${appsDisplay}.bak)`);
+  }
 } else if (DRY_RUN) {
   console.log('(dry-run — no changes written)');
 } else {

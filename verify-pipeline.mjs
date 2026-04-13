@@ -2,6 +2,10 @@
 /**
  * verify-pipeline.mjs — Health check for job-forge pipeline integrity
  *
+ * Supports both layouts:
+ *   - Day-based: data/applications/YYYY-MM-DD.md (preferred)
+ *   - Single-file: data/applications.md or applications.md (legacy)
+ *
  * Checks:
  * 1. All statuses are canonical (from templates/states.yml when present, else built-in list)
  * 2. No duplicate company+role entries
@@ -18,37 +22,21 @@
 import { readFileSync, readdirSync, existsSync } from 'fs';
 import { join, relative, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import {
+  PROJECT_DIR, DATA_APPS_DIR, DATA_APPS_FILE, ROOT_APPS_FILE,
+  usesDayFiles, readAllEntries, listDayFiles, dayFilePath,
+} from './tracker-lib.mjs';
 
-if (process.argv.includes('--help') || process.argv.includes('-h')) {
-  console.log(`verify-pipeline.mjs — application tracker and batch-folder health check
-
-Validates canonical statuses, duplicate company/role rows, report file links,
-score format, table columns, pending batch/tracker-additions/*.tsv files,
-markdown bold in scores, and optional alignment with templates/states.yml.
-
-Usage:
-  node verify-pipeline.mjs
-  npm run verify
-
-Exits successfully if neither data/applications.md nor applications.md exists
-(fresh clone). Still warns when batch/tracker-additions/*.tsv are present
-(not merged). Exits with code 1 when any check fails.
-
-Run from the repository root.`);
-  process.exit(0);
-}
-
-const PROJECT_DIR = dirname(fileURLToPath(import.meta.url));
-// Support both layouts: data/applications.md (boilerplate) and applications.md (original)
-const APPS_FILE = existsSync(join(PROJECT_DIR, 'data/applications.md'))
-  ? join(PROJECT_DIR, 'data/applications.md')
-  : join(PROJECT_DIR, 'applications.md');
 const ADDITIONS_DIR = join(PROJECT_DIR, 'batch/tracker-additions');
 const STATES_FILE = existsSync(join(PROJECT_DIR, 'templates/states.yml'))
   ? join(PROJECT_DIR, 'templates/states.yml')
   : join(PROJECT_DIR, 'states.yml');
 
-const appsDisplay = relative(PROJECT_DIR, APPS_FILE).replace(/\\/g, '/');
+const appsDisplay = usesDayFiles()
+  ? relative(PROJECT_DIR, DATA_APPS_DIR)
+  : existsSync(DATA_APPS_FILE)
+    ? relative(PROJECT_DIR, DATA_APPS_FILE)
+    : relative(PROJECT_DIR, ROOT_APPS_FILE);
 
 const CANONICAL_STATUSES = [
   'evaluated', 'applied', 'contacted', 'responded', 'interview',
@@ -59,10 +47,6 @@ const ALIASES = {
   'sent': 'applied',
 };
 
-/**
- * Parse templates/states.yml enough to read state ids and alias → id (no YAML dependency).
- * Returns null if the file is missing or no ids were found.
- */
 function loadStatesFromYaml(filePath) {
   if (!existsSync(filePath)) return null;
   const text = readFileSync(filePath, 'utf-8');
@@ -109,7 +93,6 @@ function error(msg) { console.log(`❌ ${msg}`); errors++; }
 function warn(msg) { console.log(`⚠️  ${msg}`); warnings++; }
 function ok(msg) { console.log(`✅ ${msg}`); }
 
-/** Check 6: unmerged batch TSVs (same logic whether or not tracker exists). */
 function checkPendingTrackerAdditions() {
   let pendingTsvs = 0;
   if (existsSync(ADDITIONS_DIR)) {
@@ -122,7 +105,6 @@ function checkPendingTrackerAdditions() {
   if (pendingTsvs === 0) ok('No pending TSVs');
 }
 
-/** Check 8: drift between states.yml and built-in fallback (warnings only). */
 function verifyStatesYamlDrift() {
   let stateDrift = 0;
   if (statesMeta) {
@@ -145,51 +127,28 @@ function verifyStatesYamlDrift() {
   }
 }
 
-function printPipelineSummaryAndExit() {
+// --- Read entries ---
+const { entries, source } = readAllEntries();
+
+if (entries.length === 0) {
+  console.log('\n📊 No tracker entries found (expected data/applications/YYYY-MM-DD.md or data/applications.md).');
+  console.log('   This is normal for a fresh setup.\n');
+  checkPendingTrackerAdditions();
+  verifyStatesYamlDrift();
   console.log('\n' + '='.repeat(50));
   console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);
-  if (errors === 0 && warnings === 0) {
-    console.log('🟢 Pipeline is clean!');
-  } else if (errors === 0) {
-    console.log('🟡 Pipeline OK with warnings');
-  } else {
-    console.log('🔴 Pipeline has errors — fix before proceeding');
-  }
+  if (errors === 0 && warnings === 0) console.log('🟢 Pipeline is clean!');
+  else if (errors === 0) console.log('🟡 Pipeline OK with warnings');
+  else console.log('🔴 Pipeline has errors — fix before proceeding');
   process.exit(errors > 0 ? 1 : 0);
 }
 
-// --- Read applications.md ---
-if (!existsSync(APPS_FILE)) {
-  console.log('\n📊 No tracker file yet (expected data/applications.md or applications.md).');
-  console.log('   This is normal for a fresh setup; it is created when you evaluate your first offer.\n');
-  checkPendingTrackerAdditions();
-  verifyStatesYamlDrift();
-  printPipelineSummaryAndExit();
-}
-const content = readFileSync(APPS_FILE, 'utf-8');
-const lines = content.split('\n');
-
-const entries = [];
-for (const line of lines) {
-  if (!line.startsWith('|')) continue;
-  const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 9) continue;
-  const num = parseInt(parts[1]);
-  if (isNaN(num)) continue;
-  entries.push({
-    num, date: parts[2], company: parts[3], role: parts[4],
-    score: parts[5], status: parts[6], pdf: parts[7], report: parts[8],
-    notes: parts[9] || '',
-  });
-}
-
-console.log(`\n📊 Checking ${entries.length} entries in ${appsDisplay}\n`);
+console.log(`\n📊 Checking ${entries.length} entries from ${source === 'day' ? 'day files' : 'single file'}\n`);
 
 // --- Check 1: Canonical statuses ---
 let badStatuses = 0;
 for (const e of entries) {
   const clean = e.status.replace(/\*\*/g, '').trim().toLowerCase();
-  // Strip trailing dates
   const statusOnly = clean.replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
 
   if (!statusIsAllowed(statusOnly)) {
@@ -197,13 +156,11 @@ for (const e of entries) {
     badStatuses++;
   }
 
-  // Check for markdown bold in status
   if (e.status.includes('**')) {
     error(`#${e.num}: Status contains markdown bold: "${e.status}"`);
     badStatuses++;
   }
 
-  // Check for dates in status
   if (/\d{4}-\d{2}-\d{2}/.test(e.status)) {
     error(`#${e.num}: Status contains date: "${e.status}" — dates go in date column`);
     badStatuses++;
@@ -254,13 +211,31 @@ if (badScores === 0) ok('All scores valid');
 
 // --- Check 5: Row format ---
 let badRows = 0;
-for (const line of lines) {
-  if (!line.startsWith('|')) continue;
-  if (line.includes('---') || line.includes('Company')) continue;
-  const parts = line.split('|');
-  if (parts.length < 9) {
-    error(`Row with <9 columns: ${line.substring(0, 80)}...`);
-    badRows++;
+// Re-read raw lines for format check
+if (source === 'day') {
+  for (const file of listDayFiles()) {
+    const content = readFileSync(join(DATA_APPS_DIR, file), 'utf-8');
+    for (const line of content.split('\n')) {
+      if (!line.startsWith('|')) continue;
+      if (line.includes('---') || line.includes('Company')) continue;
+      const parts = line.split('|');
+      if (parts.length < 9) {
+        error(`Row with <9 columns in ${file}: ${line.substring(0, 80)}...`);
+        badRows++;
+      }
+    }
+  }
+} else {
+  const filePath = existsSync(DATA_APPS_FILE) ? DATA_APPS_FILE : ROOT_APPS_FILE;
+  const content = readFileSync(filePath, 'utf-8');
+  for (const line of content.split('\n')) {
+    if (!line.startsWith('|')) continue;
+    if (line.includes('---') || line.includes('Company')) continue;
+    const parts = line.split('|');
+    if (parts.length < 9) {
+      error(`Row with <9 columns: ${line.substring(0, 80)}...`);
+      badRows++;
+    }
   }
 }
 if (badRows === 0) ok('All rows properly formatted');
@@ -279,4 +254,14 @@ for (const e of entries) {
 if (boldScores === 0) ok('No bold in scores');
 
 verifyStatesYamlDrift();
-printPipelineSummaryAndExit();
+
+console.log('\n' + '='.repeat(50));
+console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);
+if (errors === 0 && warnings === 0) {
+  console.log('🟢 Pipeline is clean!');
+} else if (errors === 0) {
+  console.log('🟡 Pipeline OK with warnings');
+} else {
+  console.log('🔴 Pipeline has errors — fix before proceeding');
+}
+process.exit(errors > 0 ? 1 : 0);

@@ -12,7 +12,7 @@
    - **Score** and key gaps from Block B
    - **STAR stories** from Block F that are most relevant
    - **Case study** recommended in Block F
-4. Also read `data/applications.md` to check current status of this application
+4. Also read all day files in `data/applications/` to check current status of this application
 5. If NO report exists, inform the user and offer to run an evaluation first — or proceed with cv.md only
 
 This context is what makes the outreach message specific instead of generic.

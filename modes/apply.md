@@ -43,7 +43,7 @@ If the role on screen differs from the evaluated one:
 - **Warn the candidate**: "The role has changed from [X] to [Y]. Do you want me to re-evaluate or adapt the answers to the new title?"
 - **If adapt**: Adjust the answers to the new role without re-evaluating
 - **If re-evaluate**: Run a full A-F evaluation, update the report, regenerate Section G
-- **Update tracker**: Change the role title in applications.md if applicable
+- **Update tracker**: Change the role title in the day file under `data/applications/` if applicable
 
 ## Step 4 — Analyze form questions
 
@@ -95,7 +95,7 @@ Notes:
 ## Step 6 — Post-apply (optional)
 
 If the candidate confirms they submitted the application:
-1. Update status in `applications.md` from "Evaluated" to "Applied"
+1. Update status in the day file under `data/applications/YYYY-MM-DD.md` from "Evaluated" to "Applied"
 2. Update Section G of the report with the final answers
 3. Suggest next step: `/job-forge contact` for LinkedIn outreach — contact will automatically load this evaluation report and use the top proof points from Block B to craft targeted messages
 
