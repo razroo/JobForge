@@ -155,7 +155,35 @@ The goal is to never waste time on closed offers, but also never silently assume
 
 ## Stack and Conventions
 
-- Node.js (mjs modules), Geometra MCP (PDF + scraping + form filling), YAML (config), HTML/CSS (template), Markdown (data)
+- Node.js (mjs modules), Geometra MCP (PDF + scraping + form filling), Gmail MCP (email), YAML (config), HTML/CSS (template), Markdown (data)
+
+### MCP Configuration
+
+**Current MCP servers** (configured in `opencode.json`):
+
+| MCP | Package | Purpose |
+|-----|---------|---------|
+| `geometra` | `@geometra/mcp` | PDF generation, web scraping, form filling |
+| `gmail` | `@razroo/gmail-mcp` | Email integration (drafts, send, labels, threads) |
+
+```json
+{
+  "mcp": {
+    "geometra": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@geometra/mcp"]
+    },
+    "gmail": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@razroo/gmail-mcp"]
+    }
+  }
+}
+```
+
+To check or modify MCP settings, edit `opencode.json` in the project root.
 - Scripts in `.mjs`, configuration in YAML
 - Output in `output/` (gitignored), Reports in `reports/`
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
