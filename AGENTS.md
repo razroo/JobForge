@@ -153,6 +153,31 @@ The goal is to never waste time on closed offers, but also never silently assume
 
 ---
 
+## OTP Handling -- REQUIRED
+
+**When a job application requires email OTP verification (e.g., Greenhouse sends a code):**
+
+1. Use `gmail_list_messages` with `q:"from:greenhouse"` to find the OTP email
+2. Use `gmail_get_message` to read the email and extract the OTP code
+3. Use `geometra_fill_otp` to enter the OTP code into the form
+4. Submit the form
+
+**This is the standard flow for Greenhouse applications.** Always check for OTP emails before reporting a submission as failed.
+
+Example:
+```
+# Find the OTP email
+gmail_list_messages({q: "from:greenhouse", maxResults: 5})
+
+# Get the OTP code from the email
+gmail_get_message({id: "19d84d63a273c271"})
+
+# Enter the OTP
+geometra_fill_otp({value: "ABC12345", sessionId: "..."})
+```
+
+---
+
 ## Stack and Conventions
 
 - Node.js (mjs modules), Geometra MCP (PDF + scraping + form filling), Gmail MCP (email), YAML (config), HTML/CSS (template), Markdown (data)
