@@ -2,22 +2,14 @@
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
     "geometra": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@geometra/mcp"
-      ],
-      "env": {}
+      "type": "local",
+      "command": ["npx", "-y", "@geometra/mcp"],
+      "environment": {}
     },
     "gmail": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@razroo/gmail-mcp"
-      ],
-      "env": {}
+      "type": "local",
+      "command": ["npx", "-y", "@razroo/gmail-mcp"],
+      "environment": {}
     }
   },
   "instructions": [
