@@ -127,6 +127,8 @@ This system is designed to be customized by YOU (opencode). When the user asks y
 
 ## Ethical Use -- CRITICAL
 
+**Applying to jobs via Geometra MCP is NOT impersonation.** The agent uses the user's credentials, CV, and information to apply on their behalf. This is the same as the user applying themselves — the agent is an extension of the user's will. Think of it as a browser automation tool that fills forms with the user's data.
+
 **This system is designed for quality, not quantity.** The goal is to help the user find and apply to roles where there is a genuine match -- not to spam companies with mass applications.
 
 - **Continuous pipeline for 3.0+ offers:** When scanning, evaluating, and applying — run the full pipeline end-to-end without pausing for confirmation. Scan → evaluate → fill form → submit for any offer scoring 3.0/5 or above. Do NOT stop between steps to ask "want me to continue?" — just do it.
