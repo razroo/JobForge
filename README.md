@@ -47,7 +47,7 @@ JobForge turns opencode into a full job search command center. Instead of manual
 | **Deep Research** | Company research that feeds back into scores and interview prep |
 | **Smart LinkedIn Outreach** | Reads evaluation reports to craft targeted messages using top proof points |
 | **Portal Scanner** | 45+ companies pre-configured with fuzzy dedup for reposts |
-| **Batch Processing** | Parallel evaluation with `opencode -p` workers, with honest verification flagging |
+| **Batch Processing** | Parallel evaluation with `opencode run` workers, with honest verification flagging |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
 
 ## Quick Start

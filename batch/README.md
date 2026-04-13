@@ -1,6 +1,6 @@
 # Batch evaluation
 
-This folder holds the **parallel batch runner** for processing many job URLs with headless `opencode -p` workers. For how batch fits into the rest of JobForge, see [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
+This folder holds the **parallel batch runner** for processing many job URLs with headless `opencode run` workers. For how batch fits into the rest of JobForge, see [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
 ## What ships in git
 

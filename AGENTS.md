@@ -145,7 +145,7 @@ This system is designed to be customized by YOU (opencode). When the user asks y
 2. `geometra_page_model` to read structured page content
 3. Only footer/navbar without JD = closed. Title + description + Apply = active.
 
-**When Geometra MCP is NOT available** (batch workers via `opencode -p`, headless environments):
+**When Geometra MCP is NOT available** (batch workers via `opencode run`, headless environments):
 1. Use WebFetch to retrieve the page content
 2. Check for JD text, job title, and apply button/link in the response
 3. If WebFetch returns only a shell/navbar (no JD content), mark the offer as `**Verification: unconfirmed**` in the report header
@@ -155,9 +155,62 @@ The goal is to never waste time on closed offers, but also never silently assume
 
 ---
 
+## OTP Handling -- REQUIRED
+
+**When a job application requires email OTP verification (e.g., Greenhouse sends a code):**
+
+1. Use `gmail_list_messages` with `q:"from:greenhouse"` to find the OTP email
+2. Use `gmail_get_message` to read the email and extract the OTP code
+3. Use `geometra_fill_otp` to enter the OTP code into the form
+4. Submit the form
+
+**This is the standard flow for Greenhouse applications.** Always check for OTP emails before reporting a submission as failed.
+
+Example:
+```
+# Find the OTP email
+gmail_list_messages({q: "from:greenhouse", maxResults: 5})
+
+# Get the OTP code from the email
+gmail_get_message({id: "19d84d63a273c271"})
+
+# Enter the OTP
+geometra_fill_otp({value: "ABC12345", sessionId: "..."})
+```
+
+---
+
 ## Stack and Conventions
 
-- Node.js (mjs modules), Geometra MCP (PDF + scraping + form filling), YAML (config), HTML/CSS (template), Markdown (data)
+- Node.js (mjs modules), Geometra MCP (PDF + scraping + form filling), Gmail MCP (email), YAML (config), HTML/CSS (template), Markdown (data)
+
+### MCP Configuration
+
+**Current MCP servers** (configured in `opencode.json`):
+
+| MCP | Package | Purpose |
+|-----|---------|---------|
+| `geometra` | `@geometra/mcp` | PDF generation, web scraping, form filling |
+| `gmail` | `@razroo/gmail-mcp` | Email integration (drafts, send, labels, threads) |
+
+```json
+{
+  "mcp": {
+    "geometra": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@geometra/mcp"]
+    },
+    "gmail": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@razroo/gmail-mcp"]
+    }
+  }
+}
+```
+
+To check or modify MCP settings, edit `opencode.json` in the project root.
 - Scripts in `.mjs`, configuration in YAML
 - Output in `output/` (gitignored), Reports in `reports/`
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
