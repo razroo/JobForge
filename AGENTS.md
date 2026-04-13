@@ -143,7 +143,7 @@ This system is designed to be customized by YOU (opencode). When the user asks y
 2. `geometra_page_model` to read structured page content
 3. Only footer/navbar without JD = closed. Title + description + Apply = active.
 
-**When Geometra MCP is NOT available** (batch workers via `opencode -p`, headless environments):
+**When Geometra MCP is NOT available** (batch workers via `opencode run`, headless environments):
 1. Use WebFetch to retrieve the page content
 2. Check for JD text, job title, and apply button/link in the response
 3. If WebFetch returns only a shell/navbar (no JD content), mark the offer as `**Verification: unconfirmed**` in the report header

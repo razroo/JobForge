@@ -11,15 +11,15 @@ opencode Conductor (opencode --dangerously-skip-permissions)
   │  Reads structured page model — the user sees everything in real time
   │
   ├─ Offer 1: reads JD from DOM + URL
-  │    └─► opencode -p worker → report .md + PDF + tracker-line
+  │    └─► opencode run worker → report .md + PDF + tracker-line
   │
   ├─ Offer 2: click next, reads JD + URL
-  │    └─► opencode -p worker → report .md + PDF + tracker-line
+  │    └─► opencode run worker → report .md + PDF + tracker-line
   │
   └─ End: merge tracker-additions → applications.md + summary
 ```
 
-Each worker is a child `opencode -p` with a clean 200K token context. The conductor only orchestrates.
+Each worker is a child `opencode run` with a clean 200K token context. The conductor only orchestrates.
 
 ## Files
 
@@ -44,8 +44,8 @@ batch/
    c. Calculate next sequential REPORT_NUM
 d. Execute via Bash:
        ```bash
-       opencode -p --dangerously-skip-permissions \
-         --append-system-prompt-file batch/batch-prompt.md \
+       opencode run --dangerously-skip-permissions \
+         --file batch/batch-prompt.md \
          "Process this offer. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}"
        ```
    e. Update `batch-state.tsv` (completed/failed + score + report_num)
@@ -82,7 +82,7 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 - Lock file (`batch-runner.pid`) prevents double execution
 - Each worker is independent: failure on offer #47 does not affect the rest
 
-## Workers (opencode -p)
+## Workers (opencode run)
 
 Each worker receives `batch-prompt.md` as system prompt. It is self-contained.
 

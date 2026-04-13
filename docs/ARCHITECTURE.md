@@ -17,7 +17,7 @@
             │                  │                       │
             │           ┌─────────▼─────────┐          ┌────▼─────┐
             │           │ data/pipeline.md  │          │ N workers│
-            │           │    (URL inbox)    │          │ (opencode -p)
+            │           │    (URL inbox)    │          │ (opencode run)
             │           └─────────┬─────────┘          └────┬─────┘
             │                                          │
      ┌──────▼──────────────────────────────────────────▼──────┐
@@ -82,14 +82,14 @@ For customization (archetypes, weights, tone), start with `_shared.md` and [CUST
 The batch system processes multiple offers in parallel:
 
 ```
-batch-input.tsv    →  batch-runner.sh  →  N × opencode -p workers
+batch-input.tsv    →  batch-runner.sh  →  N × opencode run workers
 (id, url, source, notes) (orchestrator)   (self-contained prompt)
                            │
                     batch-state.tsv
                     (tracks progress)
 ```
 
-Each worker is a headless opencode instance (`opencode -p`) that receives the full `batch-prompt.md` as context. Workers produce:
+Each worker is a headless opencode instance (`opencode run`) that receives the full `batch-prompt.md` as context. Workers produce:
 - Report .md
 - PDF
 - Tracker TSV line

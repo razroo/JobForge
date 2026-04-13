@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# job-forge batch runner — standalone orchestrator for opencode -p workers
-# Reads batch-input.tsv, delegates each offer to a opencode -p worker,
+# job-forge batch runner — standalone orchestrator for opencode run workers
+# Reads batch-input.tsv, delegates each offer to an opencode run worker,
 # tracks state in batch-state.tsv for resumability.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,7 +26,7 @@ MAX_RETRIES=2
 
 usage() {
   cat <<'USAGE'
-job-forge batch runner — process job offers in batch via opencode -p workers
+job-forge batch runner — process job offers in batch via opencode run workers
 Uses your default opencode model.
 
 Usage: batch-runner.sh [OPTIONS]
@@ -251,11 +251,11 @@ process_offer() {
     -e "s|{{ID}}|${id}|g" \
     "$PROMPT_FILE" > "$resolved_prompt"
 
-  # Launch opencode -p worker (uses default model)
+  # Launch opencode run worker (uses default model)
   local exit_code=0
-  opencode -p \
+  opencode run \
     --dangerously-skip-permissions \
-    --append-system-prompt-file "$resolved_prompt" \
+    --file "$resolved_prompt" \
     "$prompt" \
     > "$log_file" 2>&1 || exit_code=$?
 
