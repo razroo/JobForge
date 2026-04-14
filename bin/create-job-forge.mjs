@@ -122,7 +122,11 @@ write('package.json', JSON.stringify(consumerPkg, null, 2) + '\n');
 
 const opencodeCfg = {
   $schema: 'https://opencode.ai/config.json',
-  instructions: ['templates/states.yml'],
+  // AGENTS.harness.md is a symlink to node_modules/job-forge/AGENTS.md, created
+  // by the postinstall sync script. Listing it in `instructions` makes opencode
+  // load the harness operational guide on every session; the project-root
+  // AGENTS.md (auto-loaded) stays purely personal.
+  instructions: ['AGENTS.harness.md', 'templates/states.yml'],
   mcp: {
     geometra: {
       type: 'local',
@@ -139,10 +143,18 @@ const opencodeCfg = {
 write('opencode.json', JSON.stringify(opencodeCfg, null, 2) + '\n');
 
 // ---------- AGENTS.md (auto-loaded by opencode on every session) ----------
+//
+// This file is intentionally thin. The harness's operational rules (Session
+// Hygiene, OTP handling, batch best practices, scoring) live in
+// node_modules/job-forge/AGENTS.md and load via opencode.json:instructions →
+// AGENTS.harness.md (symlink created by sync.mjs). Keep *this* file for
+// personal overrides.
 
 write('AGENTS.md', `# AGENTS — ${name}
 
 Personal job search project using the [job-forge](https://github.com/razroo/JobForge) harness. The harness lives in \`node_modules/job-forge/\`; most files you need are accessible through symlinks at the project root.
+
+**How context loads in this project:** opencode auto-loads *this* file as the project-root AGENTS.md, and also loads \`AGENTS.harness.md\` via \`opencode.json:instructions\` — that second file is a symlink to \`node_modules/job-forge/AGENTS.md\` and carries the shared operational rules (Session Hygiene, OTP handling, batch best practices, scoring). Keep *this* file for personal overrides — anything you want to diverge from or add on top.
 
 ---
 
@@ -167,9 +179,10 @@ Before doing any work, remember where things live in *this* project:
 | Generated reports | \`reports/{###}-{company-slug}-{YYYY-MM-DD}.md\` | Gitignored |
 | Generated PDFs | \`output/\` | Gitignored |
 | Templates | \`templates/\` (symlink) | \`cv-template.html\`, \`portals.example.yml\`, \`states.yml\` |
-| Harness source | \`node_modules/job-forge/\` | Read this for harness internals; \`AGENTS.md\` there has the full operational guide |
+| Harness rules | \`AGENTS.harness.md\` (symlink) | Shared operational guide, loaded via \`opencode.json:instructions\` |
+| Harness source | \`node_modules/job-forge/\` | Read this for harness internals |
 
-**\`modes/\`, \`templates/\`, \`.opencode/skills/job-forge.md\`, \`batch/batch-prompt.md\`, \`batch/batch-runner.sh\`, and \`batch/README.md\` are all symlinks into \`node_modules/job-forge/\`.** Symlinks behave like real files for Read/Glob/Grep — no need to chase them into \`node_modules\` unless you want to see their real path.
+**\`modes/\`, \`templates/\`, \`.opencode/skills/job-forge.md\`, \`batch/batch-prompt.md\`, \`batch/batch-runner.sh\`, \`batch/README.md\`, and \`AGENTS.harness.md\` are all symlinks into \`node_modules/job-forge/\`.** Symlinks behave like real files for Read/Glob/Grep — no need to chase them into \`node_modules\` unless you want to see their real path.
 
 When the user says something like "apply to N jobs", the candidates to apply to are either:
 1. Entries in \`data/applications/*.md\` with status **Evaluated** (already scored, ready to submit)
@@ -179,25 +192,9 @@ Check both. Read today's day file (\`data/applications/$(date +%Y-%m-%d).md\`) p
 
 ---
 
-## Session Hygiene — ALWAYS enforce
-
-**Multi-job workflows MUST delegate each job to its own subagent.** This rule applies even when the user does NOT explicitly invoke \`/job-forge\`.
-
-Whenever the user says any variation of "apply to N jobs", "process the pipeline", "batch evaluate", or similar phrasing that implies more than one application/evaluation in sequence:
-
-1. **Do not drive all N jobs from this session.** Repeated \`geometra_fill_form\` / \`geometra_page_model\` calls accumulate in conversation history and invalidate prompt caching — each new message ends up re-processing 100K+ tokens of fresh history instead of reading from cache.
-2. **Launch one subagent per job, in parallel batches of ≤5** (the Geometra MCP concurrency limit). Use the \`task\` tool / Agent with \`subagent_type="general-purpose"\`, passing the single URL and the relevant mode file content.
-3. **This session acts as the orchestrator only**: plan, pick the jobs, dispatch subagents, aggregate results. No Geometra form-filling in this session unless it's a single one-off application.
-
-**Verify after running:** \`npx job-forge tokens --session <id>\` — any message with \`cache_read < 5K\` and \`input > 50K\` is a cache-bust; next time split that work across subagents.
-
-**Exception:** evaluation-only or tracker-only work (no Geometra, no repeated tool calls) can proceed in a single session. The rule targets tool-heavy multi-step loops.
-
----
-
 ## Personal additions
 
-(Add project-specific rules below — e.g., model preferences, Geometra quirks, etc.)
+(Add project-specific rules below — model preferences, Geometra quirks, overrides to harness defaults, etc. Shared operational rules live in \`AGENTS.harness.md\`.)
 `);
 
 // ---------- Personal files (from templates) ----------
@@ -273,6 +270,7 @@ batch/logs/
 /batch/batch-prompt.md
 /batch/batch-runner.sh
 /batch/README.md
+/AGENTS.harness.md
 
 # Standard
 node_modules/

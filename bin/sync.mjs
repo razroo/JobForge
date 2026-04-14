@@ -62,6 +62,10 @@ const links = [
   { src: 'batch/batch-prompt.md',          dst: 'batch/batch-prompt.md' },
   { src: 'batch/batch-runner.sh',          dst: 'batch/batch-runner.sh' },
   { src: 'batch/README.md',                dst: 'batch/README.md' },
+  // Harness AGENTS.md surfaced at project root as AGENTS.harness.md so
+  // opencode.json:instructions can reference it. The consumer's own
+  // AGENTS.md stays fully personal; opencode combines both into context.
+  { src: 'AGENTS.md',                      dst: 'AGENTS.harness.md' },
 ];
 
 let created = 0, skipped = 0, warned = 0;

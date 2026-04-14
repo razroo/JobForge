@@ -39,6 +39,7 @@
     "normalize-statuses.mjs",
     "generate-pdf.mjs",
     "cv-sync-check.mjs",
+    "AGENTS.md",
     "README.md",
     "LICENSE"
   ],
