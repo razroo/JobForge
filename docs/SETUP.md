@@ -22,10 +22,7 @@ cd my-job-search
 #    and batch/{batch-prompt.md,batch-runner.sh,README.md})
 npm install
 
-# 3. Add Geometra MCP for browser automation + PDF generation
-opencode mcp add geometra -- npx -y @geometra/mcp
-
-# 4. Fill in personal files
+# 3. Fill in personal files
 #    - cv.md (your CV in markdown)
 #    - config/profile.yml (copied from profile.example.yml — edit with your
 #      name, email, target roles, narrative, proof points)
@@ -33,9 +30,11 @@ opencode mcp add geometra -- npx -y @geometra/mcp
 #      and tracked companies)
 #    - article-digest.md (optional; proof points with metrics)
 
-# 5. Launch opencode
+# 4. Launch opencode
 opencode
 ```
+
+The scaffolded `opencode.json` already registers the Geometra MCP (browser automation + PDF generation) and Gmail MCP (reading interview/offer replies), so they launch automatically the first time opencode starts — no `opencode mcp add` step required.
 
 Paste a job URL or run `/job-forge` to see the command menu.
 
@@ -54,7 +53,6 @@ Use this if you want to hack on the harness itself (add modes, tune the scoring 
 git clone https://github.com/razroo/JobForge.git
 cd JobForge
 npm install
-opencode mcp add geometra -- npx -y @geometra/mcp
 
 # Add personal files the same way as Path A
 cp config/profile.example.yml config/profile.yml
@@ -62,7 +60,7 @@ cp templates/portals.example.yml portals.yml
 # Create cv.md in the project root
 ```
 
-When you're inside this repo, the `postinstall` symlink step is a no-op (detected and skipped). All npm scripts run the harness code directly.
+When you're inside this repo, the `postinstall` symlink step is a no-op (detected and skipped). All npm scripts run the harness code directly. The repo's `opencode.json` at the project root registers the same Geometra + Gmail MCPs as the scaffolder ships to consumers.
 
 ## Personalization
 
@@ -163,7 +161,7 @@ Use it to identify which sessions or models are consuming the most tokens. The `
 `sync-check` requires `cv.md` and `config/profile.yml` with the fields checked in `cv-sync-check.mjs`. Until you finish the profile and CV steps, that is normal.
 
 **PDF generation fails**  
-Ensure Geometra MCP is configured: `opencode mcp add geometra -- npx -y @geometra/mcp`. The MCP server manages Chromium via its built-in proxy. For standalone CLI usage, `generate-pdf.mjs` also works with standalone Playwright/Chromium — install with `npx playwright install chromium`.
+The scaffolded `opencode.json` already registers Geometra MCP; if it's not running, check `opencode mcp list` and verify the scaffolded config under the `mcp.geometra` key — its `command` should be `["npx", "-y", "@geometra/mcp"]` and `enabled: true`. Geometra manages Chromium via its built-in proxy. For standalone CLI usage (outside opencode), `generate-pdf.mjs` also works with standalone Playwright/Chromium — install with `npx playwright install chromium`.
 
 **Symlinks are missing or pointing to a stale path**  
 Run `npx job-forge sync` (or `npm run sync`) to recreate them. This happens if you move the project directory after installing, or if `postinstall` didn't run (rare — check `npm install` output for errors).

@@ -22,9 +22,10 @@
 npx github:razroo/JobForge create-job-forge my-job-search
 cd my-job-search
 npm install
-opencode mcp add geometra -- npx -y @geometra/mcp
 opencode
 ```
+
+The scaffolded `opencode.json` already has the Geometra MCP (browser automation + PDF) and Gmail MCP (reading replies) wired up — they launch automatically the first time opencode starts.
 
 Then fill in `cv.md`, `config/profile.yml`, and `portals.yml` with your personal data, paste a job URL into opencode, and JobForge evaluates + tracks it.
 
