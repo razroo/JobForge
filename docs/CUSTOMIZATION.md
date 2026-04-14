@@ -1,5 +1,18 @@
 # Customization Guide
 
+> **Note on customizing mode files.** In a consumer project (scaffolded via `npx create-job-forge`), `modes/` is a symlink to `node_modules/job-forge/modes/`. If you edit a file through the symlink you're editing the shared harness copy, which gets overwritten on the next `npm update job-forge`. To customize a specific mode file locally, **remove the symlink and replace it with a real copy**:
+>
+> ```bash
+> cp node_modules/job-forge/modes/_shared.md modes/_shared.md.new
+> rm modes/_shared.md               # remove the symlink (breaks the whole modes/ dir link)
+> mkdir -p modes                    # recreate as a real dir
+> cp node_modules/job-forge/modes/*.md modes/
+> mv modes/_shared.md.new modes/_shared.md
+> # edit modes/_shared.md — npx job-forge sync will leave it alone from now on
+> ```
+>
+> A cleaner path is to keep customization in `config/profile.yml` where possible (the shared mode files already read from it). Open an issue against `razroo/JobForge` if a piece of personal data is currently stuck in a mode file and ought to be in `profile.yml`.
+
 ## Profile (config/profile.yml)
 
 This is the single source of truth for your identity. All modes read from here.
@@ -78,9 +91,10 @@ Save hooks in `.opencode/settings.json`.
 
 ## States (templates/states.yml)
 
-The canonical states rarely need changing. If you add new states, update:
+The canonical states rarely need changing. Since `templates/` is a symlink into the harness in consumer projects, adding new states means contributing back to `razroo/JobForge` (see [CONTRIBUTING.md](../CONTRIBUTING.md)). If you're working in the harness repo directly (Path B), update:
+
 1. `templates/states.yml`
 2. `normalize-statuses.mjs` (alias mappings)
 3. `modes/_shared.md` (any references)
-4. `merge-tracker.mjs` — TSV merges validate the status column against labels in `templates/states.yml`; extend the parser or built-in fallbacks there if you add states before running `npm run merge`; see [batch/README.md](../batch/README.md)
+4. `merge-tracker.mjs` — TSV merges validate the status column against labels in `templates/states.yml`; extend the parser or built-in fallbacks there if you add states before running `npx job-forge merge` / `npm run merge`; see [batch/README.md](../batch/README.md)
 5. `verify-pipeline.mjs` — extend `CANONICAL_STATUSES` (and `ALIASES` if needed) so the health check stays aligned with `states.yml`; see [Architecture — Pipeline Integrity](ARCHITECTURE.md#pipeline-integrity)

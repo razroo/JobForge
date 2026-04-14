@@ -3,62 +3,76 @@
 ## Prerequisites
 
 - [opencode](https://opencode.ai) installed and configured
-- Node.js 18+ (for PDF generation and utility scripts)
+- Node.js 18+ (for the CLI, PDF generation, and tracker scripts)
 - (Optional) Go (for the dashboard TUI) — use a toolchain that satisfies the `go` directive in [`dashboard/go.mod`](../dashboard/go.mod)
 
-## Quick Start (5 steps)
+## Quick Start (two paths)
 
-### 1. Clone and install
+### Path A — Scaffold a personal project (recommended)
+
+JobForge is distributed as an installable npm package. Use the scaffolder to create a new project that keeps only your personal data (CV, profile, portals, tracker) while the harness (modes, skills, scripts) lives in `node_modules/job-forge` and updates with one command.
 
 ```bash
-git clone https://github.com/CharlieGreenman/JobForge.git
-cd JobForge
+# 1. Scaffold
+npx github:razroo/JobForge create-job-forge my-job-search
+cd my-job-search
+
+# 2. Install the harness (pulls razroo/JobForge from GitHub; postinstall
+#    creates symlinks for modes/, templates/, .opencode/skills/job-forge.md,
+#    and batch/{batch-prompt.md,batch-runner.sh,README.md})
 npm install
-opencode mcp add geometra -- npx -y @geometra/mcp   # Browser automation + PDF generation
-```
 
-### 2. Configure your profile
+# 3. Add Geometra MCP for browser automation + PDF generation
+opencode mcp add geometra -- npx -y @geometra/mcp
 
-```bash
-cp config/profile.example.yml config/profile.yml
-```
+# 4. Fill in personal files
+#    - cv.md (your CV in markdown)
+#    - config/profile.yml (copied from profile.example.yml — edit with your
+#      name, email, target roles, narrative, proof points)
+#    - portals.yml (copied from templates/portals.example.yml — edit keywords
+#      and tracked companies)
+#    - article-digest.md (optional; proof points with metrics)
 
-Edit `config/profile.yml` with your personal details: name, email, target roles, narrative, proof points.
-
-### 3. Add your CV
-
-Create `cv.md` in the project root with your full CV in markdown format. This is the source of truth for all evaluations and PDFs.
-
-For structure and section ideas, see the fictional samples in [`examples/`](../examples/) (for example `cv-example.md`, `cv-example-backend-engineer.md`, `cv-example-fullstack-engineer.md`, `cv-example-data-engineer.md`, `cv-example-frontend-engineer.md`, `cv-example-mobile-engineer.md`, `cv-example-devops-engineer.md`, `cv-example-engineering-manager.md`, `cv-example-security-engineer.md`, `cv-example-qa-engineer.md`, `cv-example-solutions-architect.md`, and `cv-example-product-manager.md`).
-
-(Optional) Create `article-digest.md` with proof points from your portfolio projects/articles.
-
-### 4. Configure portals
-
-```bash
-cp templates/portals.example.yml portals.yml
-```
-
-Edit `portals.yml`:
-- Update `title_filter.positive` with keywords matching your target roles
-- Add companies you want to track in `tracked_companies`
-- Customize `search_queries` for your preferred job boards
-
-### 5. Start using
-
-Open opencode in this directory:
-
-```bash
+# 5. Launch opencode
 opencode
 ```
 
-Then paste a job offer URL or description. JobForge will automatically evaluate it, generate a report, create a tailored PDF, and track it.
+Paste a job URL or run `/job-forge` to see the command menu.
 
-When you want to tune archetypes, scanner keywords, or the PDF template, see [Customization](CUSTOMIZATION.md).
+To **upgrade the harness** later:
+
+```bash
+npm update job-forge       # pulls latest razroo/JobForge
+npx job-forge sync         # refresh symlinks if anything drifted
+```
+
+### Path B — Clone the harness directly
+
+Use this if you want to hack on the harness itself (add modes, tune the scoring model, contribute back). Personal files are gitignored.
+
+```bash
+git clone https://github.com/razroo/JobForge.git
+cd JobForge
+npm install
+opencode mcp add geometra -- npx -y @geometra/mcp
+
+# Add personal files the same way as Path A
+cp config/profile.example.yml config/profile.yml
+cp templates/portals.example.yml portals.yml
+# Create cv.md in the project root
+```
+
+When you're inside this repo, the `postinstall` symlink step is a no-op (detected and skipped). All npm scripts run the harness code directly.
+
+## Personalization
+
+For structure and section ideas, see the fictional samples in [`examples/`](../examples/) (for example `cv-example.md`, `cv-example-backend-engineer.md`, `cv-example-fullstack-engineer.md`, `cv-example-data-engineer.md`, `cv-example-frontend-engineer.md`, `cv-example-mobile-engineer.md`, `cv-example-devops-engineer.md`, `cv-example-engineering-manager.md`, `cv-example-security-engineer.md`, `cv-example-qa-engineer.md`, `cv-example-solutions-architect.md`, and `cv-example-product-manager.md`).
+
+> **The system is designed to be customized by opencode itself.** Modes, archetypes, scoring weights, negotiation scripts — just ask opencode to change them. See [Customization](CUSTOMIZATION.md).
 
 ## Application tracker (optional until first evaluation)
 
-New rows go to **`data/applications/YYYY-MM-DD.md`** day files when the `data/applications/` directory exists. If it does not exist, utilities and the dashboard fall back to **`data/applications.md`** or the repo root **`applications.md`** (same column layout). A fresh clone often has neither the directory nor the file yet; that is normal, and `npm run verify` still exits successfully.
+New rows go to **`data/applications/YYYY-MM-DD.md`** day files when the `data/applications/` directory exists. If it does not exist, utilities and the dashboard fall back to **`data/applications.md`** or the repo root **`applications.md`** (same column layout). A fresh setup often has neither the directory nor the file yet; that is normal, and `npx job-forge verify` still exits successfully.
 
 To start with an empty tracker (for example before you paste your first URL), create the directory:
 
@@ -75,11 +89,11 @@ The first evaluation will create a day file like `data/applications/2026-04-13.m
 |---|------|---------|------|-------|--------|-----|--------|-------|
 ```
 
-Status values should match [templates/states.yml](../templates/states.yml); see the **States** section in [Customization](CUSTOMIZATION.md). After batch evaluations, run `npm run merge` to pull in `batch/tracker-additions/*.tsv` when your workflow uses those files. For the parallel batch runner that produces those additions, see [batch/README.md](../batch/README.md). If the status column has typos, old labels, or bold markers, run `npm run normalize` to rewrite rows toward the canonical set (use `npm run normalize -- --dry-run` first to preview changes).
+Status values should match [templates/states.yml](../templates/states.yml); see the **States** section in [Customization](CUSTOMIZATION.md). After batch evaluations, run `npx job-forge merge` to pull in `batch/tracker-additions/*.tsv` when your workflow uses those files. For the parallel batch runner that produces those additions, see [batch/README.md](../batch/README.md). If the status column has typos, old labels, or bold markers, run `npx job-forge normalize` to rewrite rows toward the canonical set (use `npx job-forge normalize --dry-run` first to preview changes).
 
-## Available Commands (opencode)
+## Available commands (opencode)
 
-Use these inside an opencode session in this repo (see [OPENCODE.md](../OPENCODE.md) for the full mode map):
+Use these inside an opencode session in your project (see the skill at `.opencode/skills/job-forge.md` for the full routing logic):
 
 | Action | How |
 |--------|-----|
@@ -93,29 +107,32 @@ Use these inside an opencode session in this repo (see [OPENCODE.md](../OPENCODE
 
 ## Tracker and scripts (terminal)
 
-From the repository root, these commands maintain the application tracker and pipeline checks. They do not require opencode. `merge`, `normalize`, and `dedup` exit successfully when the tracker file is missing (same as a fresh clone). For optional PDF generation and setup lint, see the script table in [CONTRIBUTING.md](../CONTRIBUTING.md#development).
+From your project root, these commands maintain the tracker and pipeline checks. They do not require opencode. `merge`, `normalize`, and `dedup` exit successfully when the tracker file is missing (same as a fresh setup).
 
-| Action | Command |
-|--------|---------|
-| Pipeline health check | `npm run verify` |
-| Merge `batch/tracker-additions/*.tsv` into the tracker | `npm run merge` |
-| Map status column to canonical labels | `npm run normalize` (preview with `npm run normalize -- --dry-run`) |
-| Merge duplicate company/role rows | `npm run dedup` |
-| Build optional dashboard TUI (Go on `PATH`) | `npm run build:dashboard` — same as `(cd dashboard && go build .)`; run `./dashboard/dashboard -path .` from repo root (see [Build Dashboard](#build-dashboard-optional)) |
+| Action | Command | npm alias |
+|--------|---------|-----------|
+| Pipeline health check | `npx job-forge verify` | `npm run verify` |
+| Merge `batch/tracker-additions/*.tsv` into the tracker | `npx job-forge merge` | `npm run merge` |
+| Map status column to canonical labels | `npx job-forge normalize` | `npm run normalize` |
+| Merge duplicate company/role rows | `npx job-forge dedup` | `npm run dedup` |
+| Generate ATS-optimized CV PDF | `npx job-forge pdf` | `npm run pdf` |
+| Setup lint (cv.md + profile.yml) | `npx job-forge sync-check` | `npm run sync-check` |
+| Token usage report (from opencode SQLite DB) | `npx job-forge tokens` | `npm run tokens` |
+| Re-create harness symlinks | `npx job-forge sync` | `npm run sync` |
+| Build optional dashboard TUI (Go on `PATH`) | `(cd node_modules/job-forge/dashboard && go build .)` | `npm run build:dashboard` (harness repo only) |
 
-## Verify Setup
+Path B users (cloning the harness) can keep using the shorter `npm run <script>` aliases since the scripts live at the repo root.
+
+## Verify setup
 
 ```bash
-npm run verify               # Pipeline integrity (verify-pipeline.mjs). OK if the tracker file does not exist yet; still warns on unmerged batch/tracker-additions/*.tsv — run npm run merge when you intend to fold those rows into the tracker (see [batch/README.md](../batch/README.md))
-npm run build:dashboard      # Optional: go build in dashboard/ — same PR gate as [CONTRIBUTING.md](../CONTRIBUTING.md#development); skip if Go is not installed
-npm run sync-check           # Same as node cv-sync-check.mjs — requires cv.md and config/profile.yml
+npx job-forge verify           # Pipeline integrity. OK if the tracker file does not exist yet; still warns on unmerged batch/tracker-additions/*.tsv — run npx job-forge merge when you intend to fold those rows into the tracker (see batch/README.md)
+npx job-forge sync-check       # Requires cv.md and config/profile.yml
 ```
 
-Optional tracker and PDF scripts (`normalize`, `dedup`, `merge`, `pdf`) are listed in [CONTRIBUTING.md](../CONTRIBUTING.md#development).
+## Build dashboard (optional, Path B only)
 
-## Build Dashboard (Optional)
-
-The TUI reads the tracker at the **JobForge repo root** (day files in `data/applications/`, or `data/applications.md`, or root `applications.md`). If you build inside `dashboard/`, point `-path` at the parent directory:
+The TUI reads the tracker at the JobForge repo root (day files in `data/applications/`, or `data/applications.md`, or root `applications.md`). If you build inside `dashboard/`, point `-path` at the parent directory:
 
 ```bash
 cd dashboard
@@ -123,40 +140,49 @@ go build -o job-forge-dashboard .
 ./job-forge-dashboard -path ..   # repo root is one level up
 ```
 
-From the repo root, `npm run build:dashboard` runs `go build .` inside `dashboard/` (same as the PR gate in [CONTRIBUTING.md](../CONTRIBUTING.md#development); default binary name is `dashboard` in that folder).
+From the repo root, `npm run build:dashboard` runs `go build .` inside `dashboard/`.
 
-From the repo root after building:
+Path A users who want the dashboard can either clone the harness separately or run the binary from `node_modules/job-forge/dashboard/` after `go build`.
+
+## Token usage tracking
+
+The harness ships a per-session token/cost report that queries opencode's SQLite database:
 
 ```bash
-npm run build:dashboard
-./dashboard/dashboard -path .
+npx job-forge tokens                  # last 7 days
+npx job-forge tokens --days 1         # today only
+npx job-forge tokens --days 1 --append  # append to data/token-usage.tsv
+npx job-forge tokens --session <id>   # drill into one session
 ```
 
-To install a named binary under `dashboard/` (optional), use `go build -o job-forge-dashboard .` inside `dashboard/` and run `./dashboard/job-forge-dashboard -path .` instead.
+Use it to identify which sessions or models are consuming the most tokens. The `opencode.json` shipped with the scaffolder loads only `templates/states.yml` into every session and lets the skill router load mode/data files on demand, which typically keeps per-call input tokens at ~20-40K instead of ~130-170K.
 
 ## Troubleshooting
 
-**`npm run verify` succeeds, but `npm run sync-check` fails**  
-`sync-check` requires `cv.md` and `config/profile.yml` with the fields checked in `cv-sync-check.mjs`. Until you finish the profile and CV steps in Quick Start, that is normal. Use `npm run verify` for pipeline health on a minimal checkout, then run `sync-check` once your personal files exist.
+**`npx job-forge verify` succeeds, but `npx job-forge sync-check` fails**  
+`sync-check` requires `cv.md` and `config/profile.yml` with the fields checked in `cv-sync-check.mjs`. Until you finish the profile and CV steps, that is normal.
 
 **PDF generation fails**  
-Ensure Geometra MCP is configured: `opencode mcp add geometra -- npx -y @geometra/mcp`. The MCP server manages Chromium via its built-in proxy. For standalone CLI usage, `generate-pdf.mjs` still requires `npx playwright install chromium` (see [CONTRIBUTING.md](../CONTRIBUTING.md#development)).
+Ensure Geometra MCP is configured: `opencode mcp add geometra -- npx -y @geometra/mcp`. The MCP server manages Chromium via its built-in proxy. For standalone CLI usage, `generate-pdf.mjs` also works with standalone Playwright/Chromium — install with `npx playwright install chromium`.
+
+**Symlinks are missing or pointing to a stale path**  
+Run `npx job-forge sync` (or `npm run sync`) to recreate them. This happens if you move the project directory after installing, or if `postinstall` didn't run (rare — check `npm install` output for errors).
+
+**`npx job-forge sync` says "X already exists as a real file/dir — leaving alone"**  
+You or the scaffolder created a real file where the harness wants to put a symlink. If you want to customize that file locally, keep it as-is — the sync script preserves real files. If you want the harness version, delete your local copy and rerun `npx job-forge sync`.
 
 **Dashboard is empty or points at the wrong data**  
-The `-path` argument must be the JobForge repository root (where `data/applications.md` or `applications.md` lives), not the `dashboard/` directory. From the repo root after `npm run build:dashboard`, use `./dashboard/dashboard -path .` (see [Build Dashboard](#build-dashboard-optional) above).
+The `-path` argument must be the project root (where `data/applications/` or `data/applications.md` lives), not the `dashboard/` directory.
 
-**`go build` or `npm run build:dashboard` reports `go: command not found`**  
+**`go build` reports `go: command not found` or a version error**  
 Install Go and put it on your `PATH`, or omit the dashboard; everything else runs with Node.js.
 
-**`go build` fails with a version error (toolchain too old)**  
-Upgrade Go so it meets the `go` line in [`dashboard/go.mod`](../dashboard/go.mod).
-
-**`npm run merge` says there is nothing to merge, but you have TSV files**  
+**`npx job-forge merge` says there is nothing to merge, but you have TSV files**  
 Only files directly under `batch/tracker-additions/` with a `.tsv` extension are picked up. After a successful merge, rows are merged into the tracker and those files move to `batch/tracker-additions/merged/`, so a second run correctly finds nothing left. If you created TSVs elsewhere or only have files under `merged/`, move or regenerate them in the top-level `tracker-additions` folder (see [batch/README.md](../batch/README.md)).
 
 **A `local:jds/...` line in the pipeline does not resolve**  
-Paths are relative to the repository root: create the markdown file under `jds/` and list it in `data/pipeline.md` as `local:jds/{filename}.md` (same spelling as the file name). See [jds/README.md](../jds/README.md) and [`modes/pipeline.md`](../modes/pipeline.md).
+Paths are relative to the project root: create the markdown file under `jds/` and list it in `data/pipeline.md` as `local:jds/{filename}.md` (same spelling as the file name). See [jds/README.md](../jds/README.md) and [`modes/pipeline.md`](../modes/pipeline.md).
 
 ## Contributing
 
-Pull requests and issue reports are welcome. See [CONTRIBUTING.md](../CONTRIBUTING.md) for branch workflow, ideas (documentation, `examples/`, `templates/portals.example.yml`, dashboard features, utility scripts), and the checks maintainers expect before a PR (`npm run verify` and `npm run build:dashboard`).
+Pull requests and issue reports are welcome on `razroo/JobForge`. See [CONTRIBUTING.md](../CONTRIBUTING.md) for branch workflow, ideas (documentation, `examples/`, `templates/portals.example.yml`, dashboard features, utility scripts), and the checks maintainers expect before a PR (`npm run verify` and `npm run build:dashboard`). Contributors work against Path B (clone the harness directly).

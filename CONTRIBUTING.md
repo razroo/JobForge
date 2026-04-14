@@ -2,14 +2,17 @@
 
 Thanks for your interest in contributing! JobForge is built with opencode, and you can use it for development too.
 
+Contributor workflows operate against a direct clone of the harness repo (Path B in [docs/SETUP.md](docs/SETUP.md)). Consumer-project users (Path A — scaffolded with `npx create-job-forge`) typically don't need to clone the harness at all.
+
 ## Quick Start
 
-1. Fork the repo
-2. Create a branch (`git checkout -b feature/my-feature`)
-3. Make your changes
-4. Test with a fresh clone (see [docs/SETUP.md](docs/SETUP.md))
-5. Commit and push
-6. Open a Pull Request
+1. Fork `razroo/JobForge`
+2. Clone your fork and run `npm install` inside it (the `postinstall` symlink step is a no-op inside the harness repo)
+3. Create a branch (`git checkout -b feature/my-feature`)
+4. Make your changes
+5. Verify with `npm run verify` and `npm run build:dashboard` (see [Development](#development) below)
+6. Commit and push
+7. Open a Pull Request against `razroo/JobForge`
 
 ## What to Contribute
 
@@ -17,7 +20,7 @@ Thanks for your interest in contributing! JobForge is built with opencode, and y
 - Add companies to `templates/portals.example.yml`
 - Improve documentation (start from the [documentation index](docs/README.md) so new pages land in the right place)
 - Add example CVs for different roles (in `examples/` — see `examples/README.md`)
-- Report bugs via [Issues](https://github.com/CharlieGreenman/JobForge/issues)
+- Report bugs via [Issues](https://github.com/razroo/JobForge/issues)
 
 **Bigger contributions:**
 - New evaluation dimensions or scoring logic
@@ -33,7 +36,7 @@ Thanks for your interest in contributing! JobForge is built with opencode, and y
 
 ## Development
 
-Before opening a PR, from the repo root:
+Before opening a PR, from the harness repo root:
 
 ```bash
 npm run verify
@@ -43,6 +46,8 @@ npm run build:dashboard
 (`npm run build:dashboard` is the same as `(cd dashboard && go build .)` — requires Go on PATH.)
 
 `npm run verify` runs `verify-pipeline.mjs`. It exits successfully when no tracker exists (fresh clone).
+
+> **Contributor note:** Inside the harness repo, scripts resolve PROJECT_DIR via `process.cwd()`, so running `npm run verify` from the repo root operates on your local `data/` directory (gitignored). If you have a personal project that you want to test changes against, use `JOB_FORGE_PROJECT=/path/to/personal/project npm run verify`.
 
 Other npm scripts:
 
@@ -84,4 +89,4 @@ Paths such as `modes/`, `batch/`, `dashboard/`, `docs/`, and `scripts/` are incl
 - [Setup guide](docs/SETUP.md) — install, profile, CV, portals, verify
 - [Architecture](docs/ARCHITECTURE.md) — how evaluation, batch, and scripts fit together
 - [Customization](docs/CUSTOMIZATION.md) — profile, archetypes, portals, template, states
-- [Open an issue](https://github.com/CharlieGreenman/JobForge/issues)
+- [Open an issue](https://github.com/razroo/JobForge/issues)

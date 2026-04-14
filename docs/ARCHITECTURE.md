@@ -1,5 +1,37 @@
 # Architecture
 
+## Package architecture (v2.0.0+)
+
+JobForge ships as an npm package. There are two kinds of repo involved:
+
+- **Harness** — this repo, `razroo/JobForge`. Installable via `github:razroo/JobForge` (no npm registry). Contains modes, scripts, skill router, templates, fonts, dashboard, and bin entries.
+- **Consumer project** — what users interact with day-to-day. Scaffolded via `npx create-job-forge <dir>`, or hand-authored with `job-forge` listed in `package.json` dependencies.
+
+The consumer's project root contains only personal data:
+
+```
+my-search/
+├── package.json                 # depends on "job-forge"
+├── opencode.json                # instructions: ["templates/states.yml"]
+├── cv.md                        # personal
+├── config/profile.yml           # personal
+├── portals.yml                  # personal
+├── data/                        # personal (gitignored)
+├── reports/                     # personal (gitignored)
+├── modes/                       # → symlink to node_modules/job-forge/modes/
+├── templates/                   # → symlink to node_modules/job-forge/templates/
+├── .opencode/skills/job-forge.md # → symlink
+├── batch/batch-prompt.md        # → symlink
+├── batch/batch-runner.sh        # → symlink
+└── node_modules/job-forge/      # harness, fetched from github
+```
+
+Symlinks are created by the harness's `postinstall` hook (`bin/sync.mjs`) on every `npm install`. They are gitignored in the scaffolder template. Real files at those paths are preserved — if a user locally customizes a mode file, the sync skips that symlink and warns.
+
+The consumer's `opencode.json` only loads `templates/states.yml` as an always-present instruction. The skill router (`.opencode/skills/job-forge.md`) loads mode and data files on demand, keeping per-session input tokens low (~20-40K for most modes instead of ~130-170K when everything was force-loaded).
+
+**Upgrading** the harness in a consumer project is `npm update job-forge && npx job-forge sync`.
+
 ## System Overview
 
 ```
@@ -122,7 +154,7 @@ Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeli
 
 ## Pipeline Integrity
 
-From the repo root, `npm run verify` runs `verify-pipeline.mjs`. When a tracker file exists, it validates canonical statuses (using `templates/states.yml` when that file is present and parseable), warns on probable duplicate company/role rows, checks that report column markdown links resolve to files in the repo, validates score column format (`X.X/5`, `N/A`, or `DUP`), rejects table rows with too few columns, flags markdown bold inside the score column, and warns if any `batch/tracker-additions/*.tsv` files are still waiting to be merged. It also compares state ids from `templates/states.yml` to an internal fallback list and warns when the two sets drift. **Fresh clone:** the command exits successfully when neither `data/applications.md` nor root `applications.md` exists yet; pending-TSV and states-drift checks still run so contributors see unmerged batch output early. Optional setup validation after you add `cv.md` and `config/profile.yml`: `npm run sync-check` (`cv-sync-check.mjs`).
+From the project root, `npx job-forge verify` (or `npm run verify`) runs `verify-pipeline.mjs`. When a tracker file exists, it validates canonical statuses (using `templates/states.yml` when that file is present and parseable), warns on probable duplicate company/role rows, checks that report column markdown links resolve to files in the repo, validates score column format (`X.X/5`, `N/A`, or `DUP`), rejects table rows with too few columns, flags markdown bold inside the score column, and warns if any `batch/tracker-additions/*.tsv` files are still waiting to be merged. It also compares state ids from `templates/states.yml` to an internal fallback list and warns when the two sets drift. **Fresh clone:** the command exits successfully when neither `data/applications.md` nor root `applications.md` exists yet; pending-TSV and states-drift checks still run so contributors see unmerged batch output early. Optional setup validation after you add `cv.md` and `config/profile.yml`: `npm run sync-check` (`cv-sync-check.mjs`).
 
 **`verify-pipeline.mjs` checks (same order as the script header):**
 
@@ -141,18 +173,24 @@ When the tracker file is missing, checks 1–5 and 7 are skipped; checks 6 and 8
 
 Prefer one focused change per pull request: a single mode under `modes/`, one repository-root `.mjs` utility, documentation under `docs/`, fictional samples under [`examples/`](../examples/README.md), templates such as [`templates/portals.example.yml`](../templates/portals.example.yml), the batch flow described in [`batch/README.md`](../batch/README.md), or the Go TUI under `dashboard/` — not a repo-wide refactor across several of those at once. Branch workflow, the verify + dashboard build gate, and starter ideas are in [CONTRIBUTING.md](../CONTRIBUTING.md) (**What to Contribute** and **Development**). To look for in-repo `TODO`, `FIXME`, or `HACK` markers before choosing a task, use the `rg` one-liner in [CONTRIBUTING.md — Optional: scripted agent iterations](../CONTRIBUTING.md#optional-scripted-agent-iterations). Upstream PRs should stay generic: do not commit real candidate data (`cv.md`, `config/profile.yml`, personalized `portals.yml`, `data/applications.md`, `reports/`, or similar paths called out in CONTRIBUTING and `.gitignore`).
 
-**PR / maintainer gate:** Before opening a pull request, run `npm run verify` and `npm run build:dashboard` (or `(cd dashboard && go build .)`) from the repo root (same as [CONTRIBUTING.md](../CONTRIBUTING.md#development)). For optional scripted iterations that repeat that gate and commit one small change per pass, see [`scripts/cursor-agent-loop.sh`](../scripts/cursor-agent-loop.sh) (environment variables and usage in the script header; overview in [CONTRIBUTING.md](../CONTRIBUTING.md#optional-scripted-agent-iterations)).
+**PR / maintainer gate:** Before opening a pull request against `razroo/JobForge`, run `npm run verify` and `npm run build:dashboard` (or `(cd dashboard && go build .)`) from the harness repo root (same as [CONTRIBUTING.md](../CONTRIBUTING.md#development)). For optional scripted iterations that repeat that gate and commit one small change per pass, see [`scripts/cursor-agent-loop.sh`](../scripts/cursor-agent-loop.sh) (environment variables and usage in the script header; overview in [CONTRIBUTING.md](../CONTRIBUTING.md#optional-scripted-agent-iterations)).
 
-Scripts maintain data consistency:
+Scripts maintain data consistency. In a consumer project they're invoked via the `job-forge` CLI (`npx job-forge <cmd>`); in the harness repo they're also directly runnable as `node <script>.mjs`.
 
-| Script | Purpose |
-|--------|---------|
-| `merge-tracker.mjs` | Merges TSV rows from `batch/tracker-additions/` into day files under `data/applications/`, or `data/applications.md` when the directory is absent |
-| `verify-pipeline.mjs` | Health check — see the `npm run verify` paragraph above |
-| `dedup-tracker.mjs` | Removes duplicate entries by company+role |
-| `normalize-statuses.mjs` | Maps status aliases to canonical values |
-| `generate-pdf.mjs` | Renders HTML to PDF via Geometra MCP (`geometra_generate_pdf`) or standalone Playwright/Chromium (`npm run pdf -- <input.html> <output.pdf>`) |
-| `cv-sync-check.mjs` | Setup lint: `cv.md` + `config/profile.yml`, hardcoded-metric scan on `modes/_shared.md` and `batch/batch-prompt.md`, optional `article-digest.md` freshness |
+| Script (in harness) | CLI | Purpose |
+|---------------------|-----|---------|
+| `merge-tracker.mjs` | `npx job-forge merge` | Merges TSV rows from `batch/tracker-additions/` into day files under `data/applications/`, or `data/applications.md` when the directory is absent |
+| `verify-pipeline.mjs` | `npx job-forge verify` | Health check — see the verify paragraph above |
+| `dedup-tracker.mjs` | `npx job-forge dedup` | Removes duplicate entries by company+role |
+| `normalize-statuses.mjs` | `npx job-forge normalize` | Maps status aliases to canonical values |
+| `generate-pdf.mjs` | `npx job-forge pdf` | Renders HTML to PDF via Geometra MCP (`geometra_generate_pdf`) or standalone Playwright/Chromium (`npx job-forge pdf <input.html> <output.pdf>`) |
+| `cv-sync-check.mjs` | `npx job-forge sync-check` | Setup lint: `cv.md` + `config/profile.yml`, hardcoded-metric scan on `modes/_shared.md` and `batch/batch-prompt.md`, optional `article-digest.md` freshness |
+| `scripts/token-usage-report.mjs` | `npx job-forge tokens` | Per-session opencode token/cost report from the SQLite DB |
+| `tracker-lib.mjs` | _(library)_ | Shared helpers for reading/writing day-based tracker files — imported by merge/dedup/verify/normalize |
+| `bin/sync.mjs` | `npx job-forge sync` | Creates the harness symlinks in a consumer project (also runs as `postinstall`) |
+| `bin/create-job-forge.mjs` | `npx create-job-forge <dir>` | Scaffolds a new personal project |
+
+All scripts resolve the consumer project dir via `process.env.JOB_FORGE_PROJECT || process.cwd()`, so running the CLI from anywhere in the consumer project Just Works.
 
 ## Dashboard TUI
 
