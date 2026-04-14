@@ -64,6 +64,10 @@ Available commands:
 
 Inbox: add URLs to data/pipeline.md → /job-forge pipeline
 Or paste a JD directly to run the full pipeline.
+
+Token usage check (terminal, outside opencode):
+  npx job-forge tokens --days 1        # today's sessions with input/cache breakdown
+  npx job-forge tokens --session <id>  # drill into one session for cache-bust hunting
 ```
 
 ---
@@ -111,3 +115,24 @@ Agent(
 ```
 
 Execute the instructions from the loaded mode file.
+
+---
+
+## Session Hygiene — REQUIRED for keeping token usage low
+
+**Rule: multi-job workflows MUST delegate each job to its own subagent.**
+
+Long interactive sessions (>100 messages) — especially with Geometra MCP doing repeated `geometra_fill_form` / `geometra_page_model` calls — accumulate conversation history that the model has to re-read on every turn. Tool results from Geometra disrupt prompt caching, so the full history is re-processed as *fresh* input tokens instead of cache reads. Observed symptom: `cache_read` drops to ~2K while `input_tokens` climbs to 100K+ per message.
+
+This applies to:
+
+- **`apply` mode with >1 job URL** → launch one subagent per URL (parallelize in batches of 5 — the Geometra MCP parallelism limit). Never run more than 1-2 applications in a single interactive session.
+- **`batch` mode** → already uses `batch-runner.sh`'s parallel `opencode run` workers. Do not wrap `batch` in an interactive session that also does the form filling.
+- **`pipeline` mode with 3+ URLs** → split into per-URL subagents.
+- **Anything that calls `geometra_fill_form` more than twice in a row** should be split into subagents.
+
+**Rationale:** A 300-message "apply to 20 jobs" session burns roughly 100K tokens of *fresh* input per message (history re-processed, cache busted). Twenty 30-message per-job subagents do the same work with each sub-session short enough that the cache actually holds — typically 5-10× lower effective token usage.
+
+**Verify after running:** `npx job-forge tokens --session <id>` shows per-message input/cache. Messages with `cache_read < 5K` and `input > 50K` are cache-bust offenders — investigate what's disrupting the cache prefix (usually a mid-session tool schema change or a compact rerun).
+
+**Also:** when the current session has only evaluation or tracker work (no Geometra / no long form flows), you can proceed in a single session. The rule targets tool-heavy multi-step work, not lightweight reads.

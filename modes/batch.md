@@ -2,6 +2,12 @@
 
 Two usage modes: **conductor** (navigates portals in real time via Geometra MCP) or **standalone** (script for already-collected URLs).
 
+## Session-length rule — REQUIRED
+
+**Never run `batch` as one long interactive session.** Each offer gets its own `opencode run` worker via `batch-runner.sh` — that's the whole point of the architecture. Workers have clean ~200K-token contexts and exit after producing one report + PDF + tracker line, so prompt caching stays healthy.
+
+If you find yourself doing `geometra_fill_form` or `geometra_page_model` for the Nth time in the *same* session, stop and delegate. See "Session Hygiene" in `.opencode/skills/job-forge.md` for the full rationale (cache-bust behavior with repeated Geometra tool calls).
+
 ## Architecture
 
 ```

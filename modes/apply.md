@@ -2,6 +2,12 @@
 
 Interactive mode for when the candidate is filling out an application form in Chrome. Reads what's on screen, loads prior context from the offer evaluation, and generates personalized answers for each form question.
 
+## Session-length rule — REQUIRED
+
+**If the candidate wants to apply to more than one job**, this mode MUST delegate each application to its own subagent (parallelize up to 5, the Geometra MCP concurrency limit). Never drive 10+ applications from a single interactive session: the accumulating Geometra tool results invalidate prompt caching and each message ends up re-processing 100K+ tokens of fresh history — see "Session Hygiene" in `.opencode/skills/job-forge.md`.
+
+For a single application interactively, carry on in the current session — the rule targets multi-job loops.
+
 ## Requirements
 
 - **Best with Geometra MCP**: In visible proxy mode, the candidate sees the browser and opencode can interact with the page via `geometra_connect`, `geometra_form_schema`, and `geometra_fill_form`.
