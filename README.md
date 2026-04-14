@@ -16,6 +16,24 @@
 
 ---
 
+## Quick Start
+
+```bash
+npx github:razroo/JobForge create-job-forge my-job-search
+cd my-job-search
+npm install
+opencode mcp add geometra -- npx -y @geometra/mcp
+opencode
+```
+
+Then fill in `cv.md`, `config/profile.yml`, and `portals.yml` with your personal data, paste a job URL into opencode, and JobForge evaluates + tracks it.
+
+**Upgrade later:** `npm update job-forge && npx job-forge sync`
+
+Full setup guide and alternative install paths (including contributing to the harness itself): **[docs/SETUP.md](docs/SETUP.md)**.
+
+---
+
 ## What Is This
 
 JobForge turns opencode into a full job search command center. Instead of manually tracking applications in a spreadsheet, you get an AI-powered pipeline that:
@@ -50,54 +68,6 @@ JobForge turns opencode into a full job search command center. Instead of manual
 | **Batch Processing** | Parallel evaluation with `opencode run` workers, with honest verification flagging |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
 
-## Quick Start
-
-JobForge is distributed as an installable npm package. Scaffold a fresh personal project that pulls the harness from github — your `cv.md`, `portals.yml`, `data/`, and `reports/` stay local; harness files (modes, scripts, skills) live in `node_modules/job-forge` and update with a single command.
-
-```bash
-# 1. Scaffold a new personal project
-npx github:razroo/JobForge create-job-forge my-job-search
-cd my-job-search
-
-# 2. Install the harness (creates symlinks for modes/, templates/, skill file, etc.)
-npm install
-
-# 3. Fill in your personal data
-# - cv.md               (your CV in markdown)
-# - config/profile.yml  (your identity, location, target roles)
-# - portals.yml         (companies you want to scan)
-
-# 4. Launch opencode
-opencode
-# Paste a job URL, or run /job-forge for the command menu
-```
-
-### Upgrading the harness
-
-```bash
-npm update job-forge      # pulls the latest from razroo/JobForge
-job-forge sync            # refresh symlinks if anything drifts
-```
-
-### Personalizing via opencode
-
-> **The system is designed to be customized by opencode itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask opencode to change them.
-
-Open opencode and say things like:
-- "Change the archetypes to backend engineering roles"
-- "Add these 5 companies to portals.yml"
-- "Update my profile with this CV I'm pasting"
-
-### Alternative: clone the harness directly
-
-If you'd rather work inside this repo (hacking on the harness itself), clone and install here. Personal data is gitignored.
-
-```bash
-git clone https://github.com/razroo/JobForge.git
-cd JobForge && npm install
-# then add cv.md, config/profile.yml, portals.yml as above
-```
-
 ## Usage
 
 ```
@@ -119,6 +89,8 @@ cd JobForge && npm install
 ```
 
 Or just paste a job URL or description directly -- JobForge auto-detects it and runs the full pipeline.
+
+> **The system is designed to be customized by opencode itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask opencode to change them: "Change the archetypes to backend engineering roles", "Add these 5 companies to portals.yml", "Update my profile with this CV I'm pasting".
 
 ## How It Works
 
@@ -158,8 +130,7 @@ my-search/
 ├── cv.md                        # your CV (personal)
 ├── article-digest.md            # your proof points (optional, personal)
 ├── portals.yml                  # companies you want to scan (personal)
-├── config/
-│   └── profile.yml              # your identity, location, target roles (personal)
+├── config/profile.yml           # your identity, target roles (personal)
 ├── data/                        # applications, pipeline, scan history (personal, gitignored)
 ├── reports/                     # generated evaluation reports (personal, gitignored)
 ├── batch/
@@ -171,14 +142,11 @@ my-search/
 │   └── batch-runner.sh          # → symlink to node_modules/job-forge/
 ├── modes/                       # → symlink to node_modules/job-forge/modes/
 ├── templates/                   # → symlink to node_modules/job-forge/templates/
-├── .opencode/
-│   └── skills/
-│       └── job-forge.md         # → symlink to node_modules/job-forge/
-└── node_modules/
-    └── job-forge/               # the harness (fetched from github:razroo/JobForge)
+├── .opencode/skills/job-forge.md  # → symlink to node_modules/job-forge/
+└── node_modules/job-forge/      # the harness (fetched from github:razroo/JobForge)
 ```
 
-Symlinks are regenerated on every `npm install` via the package's `postinstall` hook. The consumer never has to know about harness internals — they just edit `cv.md`, `portals.yml`, and `config/profile.yml`.
+Symlinks are regenerated on every `npm install` via the package's `postinstall` hook. You never have to know about harness internals — just edit `cv.md`, `portals.yml`, and `config/profile.yml`.
 
 **The harness itself** (this repo, what gets installed into `node_modules/job-forge/`):
 
@@ -212,9 +180,9 @@ JobForge/
 
 Index and cross-links: [docs/README.md](docs/README.md).
 
-- [Setup](docs/SETUP.md) — install Node/Geometra MCP, profile, CV, portals, `npm run verify`
-- [Architecture](docs/ARCHITECTURE.md) — modes, evaluation flow, batch runner, pipeline scripts
-- [Customization](docs/CUSTOMIZATION.md) — archetypes, scanner keywords, CV template, states
+- [Setup](docs/SETUP.md) — both install paths, profile, CV, portals, verify, token tracking, troubleshooting
+- [Architecture](docs/ARCHITECTURE.md) — package architecture, modes, evaluation flow, batch runner, pipeline scripts
+- [Customization](docs/CUSTOMIZATION.md) — archetypes, scanner keywords, CV template, states, customizing symlinked modes
 - [Contributing](CONTRIBUTING.md) — branch workflow, quality gate, and ideas for PRs
 
 ## License
