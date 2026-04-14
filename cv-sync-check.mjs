@@ -20,7 +20,11 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const projectRoot = __dirname;
+// Consumer's project root. When installed as a package, we operate on cwd.
+const projectRoot = process.env.JOB_FORGE_PROJECT || process.cwd();
+// Harness dir (where shipped files like modes/_shared.md live). When installed
+// as a package, the consumer has modes/ as a symlink, so either path resolves.
+const harnessRoot = __dirname;
 
 if (process.argv.includes('--help') || process.argv.includes('-h')) {
   console.log(`cv-sync-check.mjs — optional setup lint for a personalized clone

@@ -11,10 +11,12 @@
  */
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'fs';
-import { dirname, join, relative } from 'path';
-import { fileURLToPath } from 'url';
+import { join, relative } from 'path';
 
-const PROJECT_DIR = dirname(fileURLToPath(import.meta.url));
+// Resolve the consumer's project directory. When installed as a package, the
+// scripts live in node_modules/ but should operate on the consumer's cwd.
+// JOB_FORGE_PROJECT env var overrides for tooling/tests.
+const PROJECT_DIR = process.env.JOB_FORGE_PROJECT || process.cwd();
 export const DATA_APPS_DIR = join(PROJECT_DIR, 'data', 'applications');
 export const DATA_APPS_FILE = join(PROJECT_DIR, 'data', 'applications.md');
 export const ROOT_APPS_FILE = join(PROJECT_DIR, 'applications.md');

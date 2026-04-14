@@ -15,10 +15,10 @@
 
 import { execSync } from 'child_process';
 import { writeFileSync, existsSync } from 'fs';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 
-const PROJECT_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
+// Consumer's project dir (for locating data/token-usage.tsv).
+const PROJECT_DIR = process.env.JOB_FORGE_PROJECT || process.cwd();
 const OPENCODE = process.env.OPENCODE_BIN || '/Users/charlie/.opencode/bin/opencode';
 
 // ---------- CLI args ----------

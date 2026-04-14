@@ -361,12 +361,16 @@ if (!DRY_RUN) {
 console.log(`\n📊 Summary: +${added} added, 🔄${updated} updated, ⏭️${skipped} skipped`);
 if (DRY_RUN) console.log('(dry-run — no changes written)');
 
-// Optional verify
+// Optional verify — resolve verify-pipeline.mjs relative to this file (works whether
+// installed as a package in node_modules or run from the repo root).
 if (VERIFY && !DRY_RUN) {
   console.log('\n--- Running verification ---');
   const { execSync } = await import('child_process');
+  const { fileURLToPath } = await import('url');
+  const { dirname } = await import('path');
+  const here = dirname(fileURLToPath(import.meta.url));
   try {
-    execSync(`node ${join(PROJECT_DIR, 'verify-pipeline.mjs')}`, { stdio: 'inherit' });
+    execSync(`node ${join(here, 'verify-pipeline.mjs')}`, { stdio: 'inherit' });
   } catch (e) {
     process.exit(1);
   }

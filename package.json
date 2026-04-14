@@ -1,7 +1,12 @@
 {
   "name": "job-forge",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "AI-powered job search pipeline built on opencode",
+  "type": "module",
+  "bin": {
+    "job-forge": "bin/job-forge.mjs",
+    "create-job-forge": "bin/create-job-forge.mjs"
+  },
   "scripts": {
     "verify": "node verify-pipeline.mjs",
     "build:dashboard": "cd dashboard && go build .",
@@ -12,13 +17,36 @@
     "sync-check": "node cv-sync-check.mjs",
     "tokens": "node scripts/token-usage-report.mjs",
     "tokens:today": "node scripts/token-usage-report.mjs --days 1",
-    "tokens:log": "node scripts/token-usage-report.mjs --days 1 --append"
+    "tokens:log": "node scripts/token-usage-report.mjs --days 1 --append",
+    "postinstall": "node bin/sync.mjs"
   },
+  "files": [
+    "bin/",
+    ".opencode/",
+    "modes/",
+    "templates/",
+    "config/profile.example.yml",
+    "fonts/",
+    "scripts/",
+    "batch/batch-prompt.md",
+    "batch/batch-runner.sh",
+    "batch/README.md",
+    "docs/",
+    "tracker-lib.mjs",
+    "merge-tracker.mjs",
+    "dedup-tracker.mjs",
+    "verify-pipeline.mjs",
+    "normalize-statuses.mjs",
+    "generate-pdf.mjs",
+    "cv-sync-check.mjs",
+    "README.md",
+    "LICENSE"
+  ],
   "keywords": ["ai", "job-search", "opencode", "career", "automation"],
   "author": "Charlie Greenman",
   "repository": {
     "type": "git",
-    "url": "https://github.com/CharlieGreenman/JobForge"
+    "url": "https://github.com/razroo/JobForge"
   },
   "license": "MIT",
   "engines": {
