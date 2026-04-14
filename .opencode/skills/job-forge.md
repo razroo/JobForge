@@ -70,7 +70,9 @@ Or paste a JD directly to run the full pipeline.
 
 ## Context Loading by Mode
 
-After determining the mode, load the necessary files before executing:
+**IMPORTANT: Only load files needed for the active mode.** Do NOT pre-load all data or mode files. This keeps token usage low.
+
+After determining the mode, Read the necessary files before executing:
 
 ### Modes that require `_shared.md` + their mode file:
 Read `modes/_shared.md` + `modes/{mode}.md`
@@ -81,6 +83,21 @@ Applies to: `auto-pipeline`, `offer`, `compare`, `pdf`, `contact`, `apply`, `pip
 Read `modes/{mode}.md`
 
 Applies to: `tracker`, `deep`, `training`, `project`, `followup`, `rejection`, `negotiation`
+
+### Data files — load only when the mode needs them:
+
+| File | Load when mode is... |
+|------|---------------------|
+| `data/applications.md` (or `data/applications/*.md` if day-based) | `tracker`, `followup`, `rejection`, `compare`, `auto-pipeline` (for dedup check), `batch` (for next number) |
+| `data/pipeline.md` | `pipeline`, `scan` (to append new finds) |
+| `data/scan-history.tsv` | `scan` only |
+| `portals.yml` | `scan` only |
+| `batch/batch-prompt.md` | `batch` only |
+| `batch/batch-state.tsv` | `batch` only (for resume) |
+| `config/profile.yml` | When `_shared.md` is loaded (it references profile) |
+| `cv.md` | `pdf`, `auto-pipeline`, `apply` (when tailoring CV) |
+
+**Do NOT read `data/scan-history.tsv` (70KB+), `portals.yml` (100KB+), or `data/applications.md` (grows over time) unless the mode explicitly needs them.**
 
 ### Modes delegated to subagent:
 For `scan`, `apply` (with Geometra MCP), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.

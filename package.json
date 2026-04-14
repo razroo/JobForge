@@ -9,7 +9,10 @@
     "dedup": "node dedup-tracker.mjs",
     "merge": "node merge-tracker.mjs",
     "pdf": "node generate-pdf.mjs",
-    "sync-check": "node cv-sync-check.mjs"
+    "sync-check": "node cv-sync-check.mjs",
+    "tokens": "node scripts/token-usage-report.mjs",
+    "tokens:today": "node scripts/token-usage-report.mjs --days 1",
+    "tokens:log": "node scripts/token-usage-report.mjs --days 1 --append"
   },
   "keywords": ["ai", "job-search", "opencode", "career", "automation"],
   "author": "Charlie Greenman",

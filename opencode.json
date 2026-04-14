@@ -13,10 +13,6 @@
     }
   },
   "instructions": [
-    "modes/*.md",
-    "data/*.md",
-    "templates/*.md",
-    "batch/*.md",
     "templates/states.yml"
   ]
 }
