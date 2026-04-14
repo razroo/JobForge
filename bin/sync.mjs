@@ -10,6 +10,7 @@
  *   templates/                       ← opencode.json instructions reference it
  *   batch/batch-prompt.md            ← batch worker prompt template
  *   batch/batch-runner.sh            ← batch orchestrator
+ *   .cursor/mcp.json                 ← Cursor MCP config (Geometra + Gmail)
  *
  * This script creates symlinks to the harness copies. Idempotent:
  *   - If the symlink already points to the harness, skip.
@@ -56,6 +57,8 @@ if (PROJECT_DIR === PKG_ROOT) {
 
 // Each entry: { source (inside harness), target (inside consumer project) }
 const links = [
+  // Cursor IDE: MCP servers (Geometra + Gmail) — mirrors opencode.json mcp entries
+  { src: '.cursor/mcp.json', dst: '.cursor/mcp.json' },
   { src: '.opencode/skills/job-forge.md', dst: '.opencode/skills/job-forge.md' },
   { src: 'modes',                          dst: 'modes' },
   { src: 'templates',                      dst: 'templates' },

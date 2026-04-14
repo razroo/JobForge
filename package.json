@@ -22,6 +22,7 @@
   },
   "files": [
     "bin/",
+    ".cursor/mcp.json",
     ".opencode/",
     "modes/",
     "templates/",
