@@ -241,26 +241,18 @@ process_offer() {
 
   local log_file="$LOGS_DIR/${report_num}-${id}.log"
 
-  # Prepare system prompt with placeholders resolved
-  local resolved_prompt="$BATCH_DIR/.resolved-prompt-${id}.md"
-  sed \
-    -e "s|{{URL}}|${url}|g" \
-    -e "s|{{JD_FILE}}|${jd_file}|g" \
-    -e "s|{{REPORT_NUM}}|${report_num}|g" \
-    -e "s|{{DATE}}|${date}|g" \
-    -e "s|{{ID}}|${id}|g" \
-    "$PROMPT_FILE" > "$resolved_prompt"
-
-  # Launch opencode run worker (uses default model)
+  # Launch opencode run worker (uses default model).
+  # Pass batch-prompt.md unmodified so every worker shares a byte-identical
+  # system prompt — otherwise sed-substituted per-job values would bust the
+  # opencode prompt cache on every run. Per-job values (URL, JD file, report
+  # num, date, batch ID) are in the user message; the worker resolves the
+  # {{...}} placeholders itself by reading them from there.
   local exit_code=0
   opencode run \
     --dangerously-skip-permissions \
-    --file "$resolved_prompt" \
+    --file "$PROMPT_FILE" \
     "$prompt" \
     > "$log_file" 2>&1 || exit_code=$?
-
-  # Cleanup resolved prompt
-  rm -f "$resolved_prompt"
 
   local completed_at
   completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -440,12 +432,26 @@ main() {
       process_offer "${pending_ids[$i]}" "${pending_urls[$i]}" "${pending_sources[$i]}" "${pending_notes[$i]}"
     done
   else
+    # Prime the opencode prompt cache: run the first offer alone so its
+    # ~8-10K-token system prompt is written to cache, then the remaining
+    # parallel workers read from cache instead of each writing their own
+    # copy. Avoids paying 1.25× input on the prompt for every worker.
+    local start_idx=0
+    if (( ${#pending_ids[@]} > 1 )); then
+      echo "Priming prompt cache with offer #${pending_ids[0]}..."
+      process_offer "${pending_ids[0]}" "${pending_urls[0]}" "${pending_sources[0]}" "${pending_notes[0]}"
+      start_idx=1
+    fi
+
     # Parallel processing with job control
     local running=0
     local -a pids=()
     local -a pid_ids=()
 
     for i in "${!pending_ids[@]}"; do
+      if (( i < start_idx )); then
+        continue
+      fi
       # Wait if we're at parallel limit
       while (( running >= PARALLEL )); do
         # Wait for any child to finish

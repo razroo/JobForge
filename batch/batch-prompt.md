@@ -27,15 +27,21 @@ You are a job offer evaluation worker for the candidate (read name from config/p
 
 ---
 
-## Placeholders (substituted by the orchestrator)
+## Job-Specific Parameters (read from user message)
 
-| Placeholder | Description |
-|-------------|-------------|
-| `{{URL}}` | Offer URL |
-| `{{JD_FILE}}` | Path to the file containing the JD text |
-| `{{REPORT_NUM}}` | Report number (3 digits, zero-padded: 001, 002...) |
-| `{{DATE}}` | Current date YYYY-MM-DD |
-| `{{ID}}` | Unique offer ID from batch-input.tsv |
+The orchestrator passes the concrete values for this job **in the user message**, not in this prompt. This prompt is a static template shared across all workers so the opencode prompt cache can be reused — resolving per-job values here would bust the cache on every run.
+
+Look in the user message for:
+
+| Parameter | Description |
+|-----------|-------------|
+| URL | Offer URL |
+| JD file | Path to the file containing the JD text |
+| Report number | 3 digits, zero-padded (001, 002...) |
+| Date | YYYY-MM-DD |
+| Batch ID | Unique offer ID from batch-input.tsv |
+
+Everywhere this prompt writes `{{URL}}`, `{{JD_FILE}}`, `{{REPORT_NUM}}`, `{{DATE}}`, `{{ID}}`, substitute the values from the user message.
 
 ---
 
