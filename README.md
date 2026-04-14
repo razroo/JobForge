@@ -52,33 +52,51 @@ JobForge turns opencode into a full job search command center. Instead of manual
 
 ## Quick Start
 
+JobForge is distributed as an installable npm package. Scaffold a fresh personal project that pulls the harness from github — your `cv.md`, `portals.yml`, `data/`, and `reports/` stay local; harness files (modes, scripts, skills) live in `node_modules/job-forge` and update with a single command.
+
 ```bash
-# 1. Clone and install
-git clone https://github.com/CharlieGreenman/JobForge.git
-cd JobForge && npm install
-npx -y @geometra/mcp   # Browser automation + PDF generation
-opencode mcp add geometra -- npx -y @geometra/mcp   # Add Geometra MCP to opencode
+# 1. Scaffold a new personal project
+npx github:razroo/JobForge create-job-forge my-job-search
+cd my-job-search
 
-# 2. Configure
-cp config/profile.example.yml config/profile.yml  # Edit with your details
-cp templates/portals.example.yml portals.yml       # Customize companies
+# 2. Install the harness (creates symlinks for modes/, templates/, skill file, etc.)
+npm install
 
-# 3. Add your CV
-# Create cv.md in the project root with your CV in markdown
+# 3. Fill in your personal data
+# - cv.md               (your CV in markdown)
+# - config/profile.yml  (your identity, location, target roles)
+# - portals.yml         (companies you want to scan)
 
-# 4. Personalize with opencode
-opencode   # Open opencode in this directory
-
-# Then ask opencode to adapt the system to you:
-# "Change the archetypes to backend engineering roles"
-# "Add these 5 companies to portals.yml"
-# "Update my profile with this CV I'm pasting"
-
-# 5. Start using
-# Paste a job URL or run /job-forge
+# 4. Launch opencode
+opencode
+# Paste a job URL, or run /job-forge for the command menu
 ```
 
+### Upgrading the harness
+
+```bash
+npm update job-forge      # pulls the latest from razroo/JobForge
+job-forge sync            # refresh symlinks if anything drifts
+```
+
+### Personalizing via opencode
+
 > **The system is designed to be customized by opencode itself.** Modes, archetypes, scoring weights, negotiation scripts -- just ask opencode to change them.
+
+Open opencode and say things like:
+- "Change the archetypes to backend engineering roles"
+- "Add these 5 companies to portals.yml"
+- "Update my profile with this CV I'm pasting"
+
+### Alternative: clone the harness directly
+
+If you'd rather work inside this repo (hacking on the harness itself), clone and install here. Personal data is gitignored.
+
+```bash
+git clone https://github.com/razroo/JobForge.git
+cd JobForge && npm install
+# then add cv.md, config/profile.yml, portals.yml as above
+```
 
 ## Usage
 
@@ -131,42 +149,63 @@ You paste a job URL or description
 
 ## Project Structure
 
+**Your personal project** (after `npx create-job-forge my-search`):
+
+```
+my-search/
+├── package.json                 # depends on "job-forge" (github:razroo/JobForge)
+├── opencode.json                # thin config — enables MCPs + states.yml
+├── cv.md                        # your CV (personal)
+├── article-digest.md            # your proof points (optional, personal)
+├── portals.yml                  # companies you want to scan (personal)
+├── config/
+│   └── profile.yml              # your identity, location, target roles (personal)
+├── data/                        # applications, pipeline, scan history (personal, gitignored)
+├── reports/                     # generated evaluation reports (personal, gitignored)
+├── batch/
+│   ├── batch-input.tsv          # URLs to batch-evaluate (personal)
+│   ├── batch-state.tsv          # resumable batch state (personal)
+│   ├── tracker-additions/       # TSVs waiting to merge (personal)
+│   ├── logs/                    # per-worker logs (personal, gitignored)
+│   ├── batch-prompt.md          # → symlink to node_modules/job-forge/
+│   └── batch-runner.sh          # → symlink to node_modules/job-forge/
+├── modes/                       # → symlink to node_modules/job-forge/modes/
+├── templates/                   # → symlink to node_modules/job-forge/templates/
+├── .opencode/
+│   └── skills/
+│       └── job-forge.md         # → symlink to node_modules/job-forge/
+└── node_modules/
+    └── job-forge/               # the harness (fetched from github:razroo/JobForge)
+```
+
+Symlinks are regenerated on every `npm install` via the package's `postinstall` hook. The consumer never has to know about harness internals — they just edit `cv.md`, `portals.yml`, and `config/profile.yml`.
+
+**The harness itself** (this repo, what gets installed into `node_modules/job-forge/`):
+
 ```
 JobForge/
-├── OPENCODE.md                    # Agent instructions
-├── cv.md                        # Your CV (create this)
-├── article-digest.md            # Your proof points (optional)
-├── config/
-│   └── profile.example.yml      # Template for your profile
-├── modes/                       # _shared.md + 16 skill modes
-│   ├── _shared.md               # Shared context + scoring model
-│   ├── offer.md                 # Single evaluation
-│   ├── pdf.md                   # PDF generation + anti-AI-detection
-│   ├── scan.md                  # Portal scanner + fuzzy dedup
-│   ├── contact.md               # LinkedIn outreach (report-aware)
-│   ├── deep.md                  # Company research (feeds into scores)
-│   ├── followup.md              # Follow-up timing
-│   ├── rejection.md             # Rejection analysis
-│   ├── negotiation.md           # Offer negotiation
-│   ├── batch.md                 # Batch processing
-│   └── ...
-├── templates/
-│   ├── cv-template.html         # ATS-optimized CV template
-│   ├── portals.example.yml      # Scanner config template
-│   └── states.yml               # Canonical statuses
-├── batch/
-│   ├── batch-prompt.md          # Self-contained worker prompt
-│   └── batch-runner.sh          # Orchestrator script
-├── dashboard/                   # Optional Go TUI for the tracker (`go build` in this dir)
-├── docs/                        # Setup, architecture, customization + docs/README index
-├── examples/                    # Fictional CV samples + sample report (see examples/README.md)
-├── interview-prep/
-│   └── story-bank.md            # Curated STAR stories (max 12)
-├── scripts/                     # Optional agent loop helper (see CONTRIBUTING.md)
-├── data/                        # Your tracking data (gitignored)
-├── reports/                     # Evaluation reports (gitignored)
-├── output/                      # Generated PDFs (gitignored)
-└── fonts/                       # Space Grotesk + DM Sans
+├── package.json                # bin: job-forge, create-job-forge
+├── bin/
+│   ├── job-forge.mjs           # CLI dispatcher (merge/verify/pdf/tokens/sync/...)
+│   ├── sync.mjs                # postinstall: creates symlinks in consumer project
+│   └── create-job-forge.mjs    # npx create-job-forge scaffolder
+├── .opencode/skills/job-forge.md  # the skill router
+├── modes/                      # _shared.md + 16 skill modes
+├── templates/                  # cv-template.html, portals.example.yml, states.yml
+├── config/profile.example.yml  # template for consumer's profile.yml
+├── batch/batch-prompt.md       # batch worker prompt template
+├── batch/batch-runner.sh       # parallel orchestrator
+├── scripts/token-usage-report.mjs   # opencode cost analyzer
+├── tracker-lib.mjs             # shared tracker read/write helper
+├── merge-tracker.mjs           # merge batch TSVs → tracker
+├── dedup-tracker.mjs           # remove dupes
+├── verify-pipeline.mjs         # pipeline integrity checks
+├── normalize-statuses.mjs      # canonicalize status values
+├── generate-pdf.mjs            # CV PDF generator
+├── cv-sync-check.mjs           # setup lint
+├── dashboard/                  # optional Go TUI
+├── fonts/                      # Space Grotesk + DM Sans (for PDF)
+└── docs/                       # architecture, setup, customization
 ```
 
 ## Documentation
