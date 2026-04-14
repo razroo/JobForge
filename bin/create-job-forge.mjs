@@ -138,6 +138,35 @@ const opencodeCfg = {
 };
 write('opencode.json', JSON.stringify(opencodeCfg, null, 2) + '\n');
 
+// ---------- AGENTS.md (auto-loaded by opencode on every session) ----------
+
+write('AGENTS.md', `# AGENTS — Personal Overlay
+
+This project uses the [job-forge](https://github.com/razroo/JobForge) harness installed in \`node_modules/job-forge\`. For harness-level conventions (setup, archetypes, skill modes, ethical use, offer verification, OTP handling, TSV format, pipeline integrity, canonical states), refer to \`node_modules/job-forge/AGENTS.md\`.
+
+---
+
+## Session Hygiene — ALWAYS enforce
+
+**Multi-job workflows MUST delegate each job to its own subagent.** This rule applies even when the user does NOT explicitly invoke \`/job-forge\`.
+
+Whenever the user says any variation of "apply to N jobs", "process the pipeline", "batch evaluate", or similar phrasing that implies more than one application/evaluation in sequence:
+
+1. **Do not drive all N jobs from this session.** Repeated \`geometra_fill_form\` / \`geometra_page_model\` calls accumulate in conversation history and invalidate prompt caching — each new message ends up re-processing 100K+ tokens of fresh history instead of reading from cache.
+2. **Launch one subagent per job, in parallel batches of ≤5** (the Geometra MCP concurrency limit). Use the \`task\` tool / Agent with \`subagent_type="general-purpose"\`, passing the single URL and the relevant mode file content.
+3. **This session acts as the orchestrator only**: plan, pick the jobs, dispatch subagents, aggregate results. No Geometra form-filling in this session unless it's a single one-off application.
+
+**Verify after running:** \`npx job-forge tokens --session <id>\` — any message with \`cache_read < 5K\` and \`input > 50K\` is a cache-bust; next time split that work across subagents.
+
+**Exception:** evaluation-only or tracker-only work (no Geometra, no repeated tool calls) can proceed in a single session. The rule targets tool-heavy multi-step loops.
+
+---
+
+## Personal additions
+
+(Add project-specific rules below — e.g., model preferences, Geometra quirks, etc.)
+`);
+
 // ---------- Personal files (from templates) ----------
 
 copy('config/profile.example.yml', 'config/profile.yml');
