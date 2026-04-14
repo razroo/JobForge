@@ -140,9 +140,42 @@ write('opencode.json', JSON.stringify(opencodeCfg, null, 2) + '\n');
 
 // ---------- AGENTS.md (auto-loaded by opencode on every session) ----------
 
-write('AGENTS.md', `# AGENTS — Personal Overlay
+write('AGENTS.md', `# AGENTS — ${name}
 
-This project uses the [job-forge](https://github.com/razroo/JobForge) harness installed in \`node_modules/job-forge\`. For harness-level conventions (setup, archetypes, skill modes, ethical use, offer verification, OTP handling, TSV format, pipeline integrity, canonical states), refer to \`node_modules/job-forge/AGENTS.md\`.
+Personal job search project using the [job-forge](https://github.com/razroo/JobForge) harness. The harness lives in \`node_modules/job-forge/\`; most files you need are accessible through symlinks at the project root.
+
+---
+
+## Project Layout — start here
+
+Before doing any work, remember where things live in *this* project:
+
+| What | Where | Notes |
+|------|-------|-------|
+| Application tracker | \`data/applications/YYYY-MM-DD.md\` | **Day-based**. One markdown table per day. **There is NO \`applications.md\` — do not look for it.** |
+| Inbox of pending URLs | \`data/pipeline.md\` | The queue for \`/job-forge pipeline\` |
+| Scanner dedup history | \`data/scan-history.tsv\` | Only touch in \`/job-forge scan\` |
+| Scanner config | \`portals.yml\` (project root) | Company configs |
+| Profile / identity | \`config/profile.yml\` | Candidate name, email, target roles |
+| CV | \`cv.md\` (project root) | Markdown, source of truth |
+| Proof points | \`article-digest.md\` | Optional, at project root |
+| Skill modes | \`modes/\` (symlink) | \`.md\` files, one per skill. Read \`modes/_shared.md\` for scoring and \`modes/{mode}.md\` for the mode. |
+| Skill router | \`.opencode/skills/job-forge.md\` (symlink) | How \`/job-forge <mode>\` dispatches |
+| Batch prompt template | \`batch/batch-prompt.md\` (symlink) | Used by \`batch/batch-runner.sh\` |
+| Batch runner | \`batch/batch-runner.sh\` (symlink) | Parallel \`opencode run\` orchestrator |
+| Batch input / state | \`batch/batch-input.tsv\`, \`batch/batch-state.tsv\` | Personal data |
+| Generated reports | \`reports/{###}-{company-slug}-{YYYY-MM-DD}.md\` | Gitignored |
+| Generated PDFs | \`output/\` | Gitignored |
+| Templates | \`templates/\` (symlink) | \`cv-template.html\`, \`portals.example.yml\`, \`states.yml\` |
+| Harness source | \`node_modules/job-forge/\` | Read this for harness internals; \`AGENTS.md\` there has the full operational guide |
+
+**\`modes/\`, \`templates/\`, \`.opencode/skills/job-forge.md\`, \`batch/batch-prompt.md\`, \`batch/batch-runner.sh\`, and \`batch/README.md\` are all symlinks into \`node_modules/job-forge/\`.** Symlinks behave like real files for Read/Glob/Grep — no need to chase them into \`node_modules\` unless you want to see their real path.
+
+When the user says something like "apply to N jobs", the candidates to apply to are either:
+1. Entries in \`data/applications/*.md\` with status **Evaluated** (already scored, ready to submit)
+2. URLs in \`data/pipeline.md\` that haven't been evaluated yet
+
+Check both. Read today's day file (\`data/applications/$(date +%Y-%m-%d).md\`) plus the latest few day files for recent Evaluated entries.
 
 ---
 
