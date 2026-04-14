@@ -177,21 +177,36 @@ The goal is to never waste time on closed offers, but also never silently assume
 
 ---
 
-## OTP Handling -- REQUIRED
+## OTP Handling via Gmail MCP -- REQUIRED
 
-**When a job application requires email OTP verification (e.g., Greenhouse sends a code):**
+**Many application portals gate submission behind an email verification code.** When the form shows an "enter the code we sent to your email" step, the Gmail MCP is the mechanism to complete it — never stop and ask the user to paste the code manually, and never mark the application as failed without checking Gmail first.
 
-1. Use `gmail_list_messages` with `q:"from:greenhouse"` to find the OTP email
-2. Use `gmail_get_message` to read the email and extract the OTP code
-3. Use `geometra_fill_otp` to enter the OTP code into the form
-4. Submit the form
+**Known portals that send OTP:**
 
-**This is the standard flow for Greenhouse applications.** Always check for OTP emails before reporting a submission as failed.
+| Portal | Typical sender | Gmail query |
+|--------|----------------|-------------|
+| Greenhouse | `no-reply@greenhouse.io` | `from:greenhouse newer_than:10m` |
+| Workday | `noreply@*.myworkday.com` | `from:myworkday newer_than:10m` |
+| Lever | `no-reply@hire.lever.co` | `from:lever newer_than:10m` |
+| Ashby | `notifications@ashbyhq.com` | `from:ashby newer_than:10m` |
+
+If the portal isn't in this table, fall back to a broad recency query (`newer_than:10m subject:(verify OR code OR confirm)`) and narrow from there.
+
+**Flow:**
+
+1. Submit (or reach) the OTP step in the form — do NOT abandon the session
+2. Wait ~5-10 seconds for the email to arrive
+3. `gmail_list_messages` with the matching `q:` above to find the most recent verification email
+4. `gmail_get_message` to read the body and extract the code (usually 6-8 chars, often bolded or in its own line)
+5. `geometra_fill_otp` to enter it
+6. Submit the form
+
+**Always check Gmail before reporting a submission as failed.** The most common false-failure is "submit button did nothing" — that usually means the portal silently opened an OTP step that wasn't handled.
 
 Example:
 ```
 # Find the OTP email
-gmail_list_messages({q: "from:greenhouse", maxResults: 5})
+gmail_list_messages({q: "from:greenhouse newer_than:10m", maxResults: 5})
 
 # Get the OTP code from the email
 gmail_get_message({id: "19d84d63a273c271"})
@@ -199,6 +214,8 @@ gmail_get_message({id: "19d84d63a273c271"})
 # Enter the OTP
 geometra_fill_otp({value: "ABC12345", sessionId: "..."})
 ```
+
+See `modes/apply.md` for how this fits into the interactive apply flow.
 
 ---
 

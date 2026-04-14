@@ -98,7 +98,20 @@ Notes:
 - [Personalization suggestions the candidate should review]
 ```
 
-## Step 6 — Post-apply (optional)
+## Step 6 — Handle OTP verification (if prompted)
+
+After the candidate (or Geometra) submits, many portals — Greenhouse, Workday, Lever, Ashby — gate submission behind an email verification code. If an OTP step appears:
+
+1. **Do NOT stop and ask the candidate to paste the code manually.** Use the Gmail MCP.
+2. Wait ~5-10 seconds for the email, then `gmail_list_messages` with a sender-scoped recency query (e.g. `from:greenhouse newer_than:10m`).
+3. `gmail_get_message` on the most recent match, extract the code from the body.
+4. `geometra_fill_otp` to enter it, then submit.
+
+**Before reporting the submission as failed, always check Gmail.** A "submit did nothing" outcome usually means a silent OTP step — not a real failure.
+
+Full sender-to-query table and fallback patterns: see "OTP Handling via Gmail MCP" in `AGENTS.md`.
+
+## Step 7 — Post-apply (optional)
 
 If the candidate confirms they submitted the application:
 1. Update status in the day file under `data/applications/YYYY-MM-DD.md` from "Evaluated" to "Applied"
