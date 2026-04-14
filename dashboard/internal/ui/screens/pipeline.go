@@ -9,9 +9,9 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/CharlieGreenman/JobForge/dashboard/internal/data"
-	"github.com/CharlieGreenman/JobForge/dashboard/internal/model"
-	"github.com/CharlieGreenman/JobForge/dashboard/internal/theme"
+	"github.com/razroo/JobForge/dashboard/internal/data"
+	"github.com/razroo/JobForge/dashboard/internal/model"
+	"github.com/razroo/JobForge/dashboard/internal/theme"
 )
 
 // PipelineClosedMsg is emitted when the pipeline screen is dismissed.

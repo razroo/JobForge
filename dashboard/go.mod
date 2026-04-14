@@ -1,4 +1,4 @@
-module github.com/CharlieGreenman/JobForge/dashboard
+module github.com/razroo/JobForge/dashboard
 
 go 1.24.2
 

@@ -5,8 +5,8 @@ type: software
 authors:
   - family-names: "Greenman"
     given-names: "Charlie"
-url: "https://github.com/CharlieGreenman/JobForge"
-repository-code: "https://github.com/CharlieGreenman/JobForge"
+url: "https://github.com/razroo/JobForge"
+repository-code: "https://github.com/razroo/JobForge"
 license: MIT
 keywords:
   - ai
