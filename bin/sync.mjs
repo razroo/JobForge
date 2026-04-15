@@ -60,6 +60,11 @@ const links = [
   // Cursor IDE: MCP servers (Geometra + Gmail) — mirrors opencode.json mcp entries
   { src: '.cursor/mcp.json', dst: '.cursor/mcp.json' },
   { src: '.opencode/skills/job-forge.md', dst: '.opencode/skills/job-forge.md' },
+  // Subagent definitions (general-free, general-paid, glm-minimal) that the
+  // orchestrator can delegate to for cost-aware model routing. See each
+  // agent's frontmatter for its role. Users can override individually by
+  // replacing the symlink with a local file.
+  { src: '.opencode/agents',               dst: '.opencode/agents' },
   { src: 'modes',                          dst: 'modes' },
   { src: 'templates',                      dst: 'templates' },
   { src: 'batch/batch-prompt.md',          dst: 'batch/batch-prompt.md' },

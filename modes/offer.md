@@ -2,6 +2,20 @@
 
 When the candidate pastes an offer (text or URL), ALWAYS deliver all 6 blocks:
 
+## Emit-once rule — REQUIRED
+
+Before writing any of the blocks below, **emit the Score JSON block first** (per `_shared.md` → "Score Emission — EMIT-ONCE JSON"). The blocks that follow reference the JSON's score keys and rationales; they do NOT re-enumerate the 10 dimensions.
+
+Workflow:
+
+1. Detect archetype (Step 0 below).
+2. Read `cv.md` + `article-digest.md` (if loaded via `instructions`, already in context).
+3. Decide the 10 scores. **Do not narrate this process in thinking.** Write the scores straight into the JSON block.
+4. Emit the JSON block exactly once.
+5. Then write Blocks A-F referencing the JSON — not parallel to it.
+
+Re-scoring mid-report is banned. If you change your mind on a dimension, update the JSON and regenerate the prose from it — don't keep two copies in sync.
+
 ## Step 0 — Archetype Detection
 
 Classify the offer into one of the 6 archetypes (see `_shared.md`). If it's a hybrid, indicate the 2 closest ones. This determines:
@@ -117,13 +131,20 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 **Date:** {YYYY-MM-DD}
 **Archetype:** {detected}
-**Score:** {X/5}
+**Score:** {X.X/5}
+**URL:** {original offer URL}
 **PDF:** {path or pending}
 
 ---
 
+## Score
+
+{the JSON block emitted per _shared.md, verbatim, inside a fenced ```json block}
+
+---
+
 ## A) Role Summary
-(full content of block A)
+(full content of block A — reference scores by key, do not re-enumerate dimensions)
 
 ## B) CV Match
 (full content of block B)
@@ -141,7 +162,7 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 (full content of block F)
 
 ## G) Draft Application Answers
-(only if score >= 4.5 — draft answers for the application form)
+(only if `draft_answers_threshold_met` in the JSON — draft answers for the application form)
 
 ---
 
@@ -151,7 +172,7 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 ### Global Score
 
-**Use the Canonical Scoring Model from `modes/_shared.md`.** All 10 weighted dimensions. Show the per-dimension breakdown in the report, then compute the weighted total as the final score.
+**Use the Canonical Scoring Model from `modes/_shared.md`.** The per-dimension breakdown lives in the JSON block (`## Score` section of the report). Don't repeat it as a prose table — that's the duplication we're eliminating. If you need to reference a specific dimension in the narrative, quote its score and rationale from the JSON inline: *"Seniority fit (3/5 — Senior IC, no formal mgmt) is the main gap."*
 
 ### 2. Register in tracker
 

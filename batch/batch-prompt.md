@@ -49,12 +49,15 @@ Everywhere this prompt writes `{{URL}}`, `{{JD_FILE}}`, `{{REPORT_NUM}}`, `{{DAT
 
 ### Step 1 — Retrieve JD
 
-**Note: Batch workers do NOT have Geometra MCP/browser access.** Use WebFetch only.
+**Note: Batch workers do NOT have Geometra MCP/browser access.** Use WebFetch only, and fetch each URL at most once.
 
-1. Read the JD file at `{{JD_FILE}}`
-2. If the file is empty or does not exist, try to fetch the JD from `{{URL}}` with WebFetch
-3. If WebFetch returns content but it looks like a shell page (no JD text, just navbar/footer), add `**Verification: unconfirmed**` to the report header and proceed — the conductor or user will verify later
-4. If both fail, report an error and stop
+1. Read the JD file at `{{JD_FILE}}` (provided by orchestrator)
+2. If the JD file has content, use it directly — do NOT also WebFetch the URL (the file is the source of truth)
+3. If the JD file is empty or missing, WebFetch `{{URL}}` **once**
+4. If WebFetch returns content but it looks like a shell page (no JD text, just navbar/footer), add `**Verification: unconfirmed**` to the report header and proceed — the conductor or user will verify later
+5. If both the file and WebFetch fail, report an error and stop
+
+**Never chain WebFetch + file read + second WebFetch for the same URL** — each fetch re-pulls the same tokens into context.
 
 ### Step 2 — A-F Evaluation
 
@@ -151,19 +154,7 @@ Top 5 CV changes + Top 5 LinkedIn changes.
 
 **Use the Canonical Scoring Model from `modes/_shared.md`.** All 10 dimensions, weighted exactly as defined there. This ensures scores from batch workers are directly comparable to scores from interactive evaluations and the `compare` comparison mode.
 
-| # | Dimension | Weight | Score |
-|---|-----------|--------|-------|
-| 1 | North Star alignment | 25% | X/5 |
-| 2 | CV match | 15% | X/5 |
-| 3 | Seniority fit | 15% | X/5 |
-| 4 | Comp estimate | 10% | X/5 |
-| 5 | Growth trajectory | 10% | X/5 |
-| 6 | Remote quality | 5% | X/5 |
-| 7 | Company reputation | 5% | X/5 |
-| 8 | Tech stack modernity | 5% | X/5 |
-| 9 | Speed to offer | 5% | X/5 |
-| 10 | Cultural signals | 5% | X/5 |
-| | **Weighted total** | | **X.X/5** |
+**Emit the score as a single JSON block** per `_shared.md` → "Score Emission — EMIT-ONCE JSON". Do NOT also write a prose scoring table — the JSON is the only representation. The report `.md` embeds this JSON verbatim under a `## Score` section, and Blocks A-F reference it by key instead of re-enumerating the 10 dimensions.
 
 ### Step 3 — Save Report .md
 
@@ -181,15 +172,21 @@ Where `{company-slug}` is the company name in lowercase, no spaces, with hyphens
 
 **Date:** {{DATE}}
 **Archetype:** {detected}
-**Score:** {X/5}
+**Score:** {X.X/5}
 **URL:** {original offer URL}
 **PDF:** job-forge/output/cv-candidate-{company-slug}-{{DATE}}.pdf
 **Batch ID:** {{ID}}
 
 ---
 
+## Score
+
+{the Score JSON block from _shared.md, verbatim, inside a fenced ```json block}
+
+---
+
 ## A) Role Summary
-(full content)
+(full content — reference scores by key, do not re-enumerate the 10 dimensions)
 
 ## B) CV Match
 (full content)

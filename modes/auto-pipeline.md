@@ -4,13 +4,15 @@ When the user pastes a JD (text or URL) without an explicit sub-command, execute
 
 ## Step 0 — Extract JD
 
-If the input is a **URL** (not pasted JD text), follow this strategy to extract the content:
+If the input is a **URL** (not pasted JD text), fetch the content **once** using exactly ONE of the methods below. **Do NOT chain methods as redundant fallbacks** — each method re-pulls the same 3-5K tokens into context.
 
-**Priority order:**
+**Pick exactly one method, in this priority order:**
 
-1. **Geometra MCP (preferred):** Most job portals (Lever, Ashby, Greenhouse, Workday) are SPAs. Use `geometra_connect` + `geometra_page_model` to render and read the JD.
-2. **WebFetch (fallback):** For static pages (ZipRecruiter, WeLoveProduct, company career pages).
-3. **WebSearch (last resort):** Search for the role title + company on secondary portals that index the JD in static HTML.
+1. **Geometra MCP (preferred):** Most job portals (Lever, Ashby, Greenhouse, Workday) are SPAs. Use `geometra_connect` + `geometra_page_model` to render and read the JD. **If this returns non-empty JD text, STOP — do not WebFetch the same URL.**
+2. **WebFetch (only if Geometra is unavailable OR returned only a shell with no JD text):** For static pages (ZipRecruiter, WeLoveProduct, company career pages).
+3. **WebSearch (only if methods 1 AND 2 both failed):** Search for the role title + company on secondary portals that index the JD in static HTML.
+
+**Rule:** Each URL gets fetched at most once per session. If you already have the JD text in context — from Geometra, a previous WebFetch, or pasted by the candidate — do not fetch again.
 
 **If no method works:** Ask the candidate to paste the JD manually or share a screenshot.
 

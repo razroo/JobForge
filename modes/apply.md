@@ -28,7 +28,7 @@ For a single application interactively, carry on in the current session — the 
 
 ## Step 1 — Detect the offer
 
-**With Geometra MCP:** `geometra_connect` to the active page, then `geometra_page_model` to read the title, URL, and visible content.
+**With Geometra MCP:** `geometra_connect` to the active page, then `geometra_page_model` to read the title, URL, and visible content. **Do NOT also WebFetch the same URL** — Geometra's page model already contains the JD text. Each additional fetch re-pulls the same content into conversation history at full input cost.
 
 **Without Geometra:** Ask the candidate to:
 - Share a screenshot of the form (Read tool reads images)
@@ -97,6 +97,47 @@ Notes:
 - [Any observations about the role, changes, etc.]
 - [Personalization suggestions the candidate should review]
 ```
+
+## Step 5.5 — Submit the form (ATOMIC — REQUIRED)
+
+When the candidate asks you to actually submit (or when running in auto-pipeline mode at score ≥ 3.0), follow these rules **strictly**. They exist because Greenhouse-style forms regenerate internal field IDs after any DOM-mutating action (especially file uploads), which breaks multi-call fill sequences and forces the model into a retry loop that burns tens of thousands of tokens.
+
+### Rule A — One `run_actions` call, never split
+
+Do the entire submission in a **single** `geometra_run_actions` call that chains all steps. Never split upload / fill / submit across multiple tool calls:
+
+```
+geometra_run_actions({
+  sessionId: "...",
+  actions: [
+    { type: "upload_files",  fieldLabel: "Resume/CV", paths: ["/abs/path/cv.pdf"] },
+    { type: "fill_fields",   valuesByLabel: { "First Name": "...", "Last Name": "...", ... } },
+    { type: "pick_listbox_option", fieldLabel: "Country", value: "United States" },
+    ... (one entry per choice/listbox) ...
+    { type: "click",         labelOrText: "Submit application" }
+  ]
+})
+```
+
+### Rule B — Prefer `fieldLabel` over `fieldId`
+
+Labels are stable across DOM refreshes; IDs are not. If `fieldLabel` works, use it everywhere. Only fall back to `fieldId` when two fields share the same label (rare — add a qualifier via sibling text instead).
+
+### Rule C — If the session cycles, reconnect and retry ONCE
+
+If Geometra returns "session expired" or "unknown session", reconnect with `geometra_connect` to the same URL, get a fresh session ID, and **re-run the same atomic `run_actions` call**. Do NOT re-fetch the form schema, do NOT re-pick field IDs — your labels haven't changed, so the same actions will still match. One retry max — if it fails again, stop and report.
+
+### Rule D — Never re-fetch the schema mid-flow
+
+`geometra_form_schema` returns hundreds of nested field IDs and pollutes context. Fetch it **at most once** per application, right after the initial `geometra_connect`, to discover the list of labels. After that, operate on labels only. Do not call `geometra_form_schema` again "to verify" — you're just paying for the same payload twice.
+
+### Rule E — Never mix upload + separate fill
+
+If you've uploaded a file with a dedicated `geometra_run_actions` call (e.g., the resume), and THEN try a separate `geometra_fill_form` or `geometra_fill_fields` call, the field IDs from the pre-upload schema are already stale. This was the primary failure mode on the Anthropic FDE apply trace — 4 retries, ~10K wasted tokens. The fix is Rule A: do everything in one shot.
+
+### Exception — two-phase when the form has a post-upload conditional section
+
+Some portals reveal additional fields ONLY after a file upload (e.g., Workday "parse my resume"). In that case, use exactly two `run_actions` calls: (1) upload + wait_for, (2) fill+submit. After the first call, call `geometra_form_schema` **once** to discover the newly-revealed labels, then run the second call using labels. Never more than two phases.
 
 ## Step 6 — Handle OTP verification (if prompted)
 

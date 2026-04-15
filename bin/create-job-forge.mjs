@@ -122,11 +122,19 @@ write('package.json', JSON.stringify(consumerPkg, null, 2) + '\n');
 
 const opencodeCfg = {
   $schema: 'https://opencode.ai/config.json',
-  // AGENTS.harness.md is a symlink to node_modules/job-forge/AGENTS.md, created
-  // by the postinstall sync script. Listing it in `instructions` makes opencode
-  // load the harness operational guide on every session; the project-root
-  // AGENTS.md (auto-loaded) stays purely personal.
-  instructions: ['AGENTS.harness.md', 'templates/states.yml'],
+  // Files listed here load into every session's cached prefix, so they're
+  // cached once (on Anthropic) instead of Read-as-tool-call on every session.
+  //   AGENTS.harness.md → symlink to node_modules/job-forge/AGENTS.md (harness rules)
+  //   modes/_shared.md  → symlink into node_modules; canonical scoring model
+  //   cv.md             → candidate's CV (personal, created during onboarding)
+  //   templates/states.yml → canonical application states (validated by merge-tracker.mjs)
+  // Ordering matters for cache prefix stability: put most-stable files first.
+  instructions: [
+    'AGENTS.harness.md',
+    'templates/states.yml',
+    'modes/_shared.md',
+    'cv.md',
+  ],
   mcp: {
     geometra: {
       type: 'local',
@@ -137,6 +145,16 @@ const opencodeCfg = {
       type: 'local',
       command: ['npx', '-y', '@razroo/gmail-mcp'],
       enabled: true,
+    },
+  },
+  // Restrict the primary orchestrator to dispatching only the three harness
+  // subagents. Prevents accidental self-calls or unregistered agents.
+  // Override locally in opencode.json if you add project-specific agents.
+  permission: {
+    task: {
+      'general-free': 'allow',
+      'general-paid': 'allow',
+      'glm-minimal': 'allow',
     },
   },
 };
@@ -268,6 +286,7 @@ batch/logs/
 /templates
 /.cursor/mcp.json
 /.opencode/skills/job-forge.md
+/.opencode/agents
 /batch/batch-prompt.md
 /batch/batch-runner.sh
 /batch/README.md

@@ -156,6 +156,54 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 **Final score** = weighted sum, rounded to 1 decimal (e.g., 4.2/5).
 
+### Score Emission — EMIT-ONCE JSON (REQUIRED)
+
+**Before writing any report prose**, emit the score as a single JSON block. Then derive the narrative from the JSON — do NOT re-enumerate the 10 dimensions in thinking or prose. This rule exists because repeated scoring monologues are a major token-burn source: a typical eval session otherwise spends ~1,500 tokens narrating the same 10 scores two or three times.
+
+**Shape** (emit exactly one block, nothing else in the block):
+
+```json
+{
+  "report_num": "520",
+  "company": "Anthropic",
+  "role": "Manager, Forward Deployed Engineering",
+  "archetype": "AI Forward Deployed Engineer",
+  "url": "https://job-boards.greenhouse.io/anthropic/jobs/5099753008",
+  "date": "2026-04-15",
+  "scores": {
+    "north_star":    { "score": 5, "rationale": "Exact FDE archetype match" },
+    "cv_match":      { "score": 3, "rationale": "60% coverage; mgmt gap" },
+    "seniority_fit": { "score": 3, "rationale": "Senior IC, no formal mgmt" },
+    "comp":          { "score": 5, "rationale": "$320-400K vs target $135-200K" },
+    "growth":        { "score": 5, "rationale": "Founding team" },
+    "remote":        { "score": 3, "rationale": "Hybrid, 25% in-office" },
+    "company":       { "score": 5, "rationale": "Top AI brand" },
+    "stack":         { "score": 5, "rationale": "Cutting-edge AI" },
+    "speed":         { "score": 3, "rationale": "Standard process" },
+    "culture":       { "score": 5, "rationale": "Builder culture" }
+  },
+  "weighted_total": 4.2,
+  "recommendation": "apply",
+  "pdf_threshold_met": true,
+  "draft_answers_threshold_met": true
+}
+```
+
+**Rules:**
+
+- `score` per dimension is 1-5 (integer or 0.5 step).
+- `rationale` is ≤ 12 words, no markdown.
+- `weighted_total` = round(Σ weight × score, 1). The 10 weights sum to 100% exactly.
+- `recommendation` ∈ {`"apply"` (≥3.5), `"apply_with_caveats"` (3.0-3.4), `"skip"` (<3.0)}.
+- `pdf_threshold_met` ⇔ `weighted_total ≥ 3.0`.
+- `draft_answers_threshold_met` ⇔ `weighted_total ≥ 3.5`.
+
+**After emitting the JSON:**
+
+1. Embed the same JSON block verbatim in the report `.md` under a `## Score` section (fenced as ` ```json `).
+2. Write Blocks A-F **referencing** the scores by key (e.g., "Seniority fit: 3/5 — Senior IC, no formal management"). Do NOT re-list all 10 dimensions in prose. Do NOT repeat the rationales verbatim.
+3. Do NOT narrate the scoring process in thinking before emitting the JSON. Decide, emit, move on.
+
 **Score interpretation (use consistently everywhere):**
 - **4.5-5.0** — Strong match. Generate PDF + draft answers. Apply promptly.
 - **3.5-4.4** — Good match. Generate PDF + draft answers. Worth applying with tailored CV.

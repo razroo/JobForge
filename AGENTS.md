@@ -18,6 +18,29 @@ Whenever the user says any variation of "apply to N jobs", "process the pipeline
 
 ---
 
+## Subagent Routing — which agent for which task
+
+The harness ships three subagents (see `.opencode/agents/`). The orchestrator MUST route work by cost tier, not pick the default for everything. **GLM 5.1 does not discount cache reads**, so running procedural work on it costs ~10× what it would on a cache-discounting model. Free-tier models handle procedural work fine (confirmed empirically: `opencode/big-pickle` processed 1000+ messages at $0 in prior runs).
+
+| Task type | Subagent | Why |
+|-----------|----------|-----|
+| Drive Geometra form-fill / submit (atomic `run_actions`) | `@general-free` | Procedural; label-driven; deterministic |
+| Merge TSVs, run `verify-pipeline.mjs`, dedup | `@general-free` | Script-driven; no writing quality needed |
+| OTP retrieval via Gmail MCP + `geometra_fill_otp` | `@general-free` | Fixed-shape lookup + input |
+| Scan portals, extract offer metadata, emit JSON | `@general-free` | Structured output; no judgment |
+| Evaluation narrative — Blocks A-F per `modes/offer.md` | `@general-paid` | Judgment + writing quality |
+| Cover letter, "Why X?" answers, Section G drafts | `@general-paid` | Tone and specificity matter |
+| STAR+R interview stories, story-bank curation | `@general-paid` | Quality signals seniority |
+| LinkedIn outreach messages (`modes/contact.md`) | `@general-paid` | First impression |
+| "Extract N fields from this text → JSON" (≤5K input) | `@glm-minimal` | One-shot transform; no context needed |
+| "Classify this JD as archetype X/Y/Z" | `@glm-minimal` | Narrow, structured output |
+
+**Rule:** when you (the orchestrator) delegate a task, pick the cheapest agent that can do it well. Do NOT route every subagent through the same tier. Auto-pipeline mode should split a single job across `@general-paid` (evaluation) and `@general-free` (PDF gen + tracker + apply), not run it all on one model.
+
+**When to break this rule:** if the user explicitly asks for "quality over cost" or flags a high-stakes application (top-tier company, offer-stage negotiation, executive search), route everything through `@general-paid`. Document the exception in the session.
+
+---
+
 ## What is JobForge
 
 AI-powered job search automation built on opencode: pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing.
