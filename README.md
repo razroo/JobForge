@@ -29,7 +29,7 @@ The scaffolded `opencode.json` already has the Geometra MCP (browser automation 
 
 Then fill in `cv.md`, `config/profile.yml`, and `portals.yml` with your personal data, paste a job URL into opencode, and JobForge evaluates + tracks it.
 
-**Upgrade later:** `npm update job-forge && npx job-forge sync`
+**Upgrade later:** `npm run update-harness` (pulls latest, re-syncs symlinks, prints the resolved commit)
 
 Full setup guide and alternative install paths (including contributing to the harness itself): **[docs/SETUP.md](docs/SETUP.md)**.
 
@@ -68,6 +68,8 @@ JobForge turns opencode into a full job search command center. Instead of manual
 | **Portal Scanner** | 45+ companies pre-configured with fuzzy dedup for reposts |
 | **Batch Processing** | Parallel evaluation with `opencode run` workers, with honest verification flagging |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
+| **Cost-Aware Agent Routing** | Three subagents (`@general-free`, `@general-paid`, `@glm-minimal`) with per-task model tiers; procedural work runs on free-tier models, quality-sensitive work on paid. See [Subagent Routing in AGENTS.md](AGENTS.md) for the task-to-agent mapping. |
+| **Token Cost Visibility** | `job-forge tokens --days 1` for per-session breakdown; `job-forge session-report --since-minutes 60 --log` to flag sessions over budget and append history to `data/token-usage.tsv`. Auto-logged after every batch run. |
 
 ## Usage
 
