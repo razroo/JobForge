@@ -1,8 +1,28 @@
 ---
-description: Procedural worker on free-tier model. Use for form filling via Geometra, tracker updates, TSV merges, scan dedup, and other mechanical/scripted tasks where quality-sensitive text generation is NOT required.
+description: Procedural worker on free-tier model. Use for form filling via Geometra, tracker updates, TSV merges, scan dedup, OTP retrieval, and other mechanical/scripted tasks where quality-sensitive text generation is NOT required.
 mode: subagent
 model: opencode/big-pickle
 temperature: 0.1
+reasoningEffort: minimal
+tools:
+  # Re-enable the Geometra tools this agent actually uses (global config
+  # disables all geometra_* to strip their schemas from the orchestrator's
+  # context). Dropping ~20 unused Geometra schemas saves ~2-3K tokens per
+  # request across every message this agent sends.
+  geometra_connect: true
+  geometra_page_model: true
+  geometra_form_schema: true
+  geometra_run_actions: true
+  geometra_fill_otp: true
+  geometra_upload_files: true
+  geometra_list_sessions: true
+  geometra_disconnect: true
+  geometra_wait_for_resume_parse: true
+  # Gmail tools for OTP retrieval only
+  gmail_list_messages: true
+  gmail_get_message: true
+  gmail_search_messages: true
+  gmail_read_message: true
 ---
 
 You are the @general-free subagent. You run on a free-tier model, which means the orchestrator has delegated this task to you **specifically because the work is procedural**: deterministic steps, scripted outputs, no nuanced writing required.

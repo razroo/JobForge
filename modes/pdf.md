@@ -2,7 +2,7 @@
 
 ## Full Pipeline
 
-1. Read `cv.md` as the source of truth
+1. `cv.md` is already in your context via `opencode.json:instructions` — use it as the source of truth, do NOT Read it again
 2. Ask the user for the JD if not already in context (text or URL)
 3. Extract 15-20 keywords from the JD
 4. Detect JD language → CV language (EN default)

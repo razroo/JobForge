@@ -39,7 +39,7 @@ Before researching, check `reports/` for an existing evaluation of this company+
 - Positioning vs competition?
 
 ### 6. Candidate Angle
-Read cv.md and profile.yml:
+cv.md is already in context via opencode.json:instructions — do NOT Read it again. Read profile.yml once if you need identity fields:
 - What unique value does the candidate bring to this team?
 - Which projects are most relevant?
 - What story should they tell in the interview?

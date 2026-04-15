@@ -9,7 +9,7 @@ Before writing any of the blocks below, **emit the Score JSON block first** (per
 Workflow:
 
 1. Detect archetype (Step 0 below).
-2. Read `cv.md` + `article-digest.md` (if loaded via `instructions`, already in context).
+2. `cv.md` is already in your context via `opencode.json:instructions` — **do NOT Read it again**. If you need detailed proof points beyond cv.md, Read `article-digest.md` (if it exists) — once, not per block.
 3. Decide the 10 scores. **Do not narrate this process in thinking.** Write the scores straight into the JSON block.
 4. Emit the JSON block exactly once.
 5. Then write Blocks A-F referencing the JSON — not parallel to it.
@@ -36,7 +36,7 @@ Table with:
 
 ## Block B — CV Match
 
-Read `cv.md`. Create a table with each JD requirement mapped to exact lines from the CV.
+**cv.md is already in your context** (via opencode.json:instructions) — use it directly, don't Read it again. Create a table with each JD requirement mapped to exact lines from the CV.
 
 **Adapted to the archetype:**
 - If FDE → prioritize proof points about fast delivery and client-facing work

@@ -3,6 +3,16 @@ description: Quality-sensitive worker on paid model. Use for offer evaluation na
 mode: subagent
 model: opencode/glm-5.1
 temperature: 0.3
+reasoningEffort: medium
+tools:
+  # This agent writes narratives from data the orchestrator already gathered.
+  # It does NOT drive Geometra forms (that's @general-free's job) and does
+  # NOT need Gmail. Built-in tools (Read/Write/Edit/Grep/Glob/Bash/WebSearch/
+  # WebFetch) are enabled by default — no need to list them explicitly.
+  # Explicitly deny MCP tool surfaces to keep the schema lean on paid model
+  # (where input tokens hurt 10× more than on free tier).
+  geometra_*: false
+  gmail_*: false
 ---
 
 You are the @general-paid subagent. The orchestrator delegated this task to you because it requires quality writing or judgment — the kind of work `@general-free` isn't well-suited for.

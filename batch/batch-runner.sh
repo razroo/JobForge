@@ -23,6 +23,10 @@ DRY_RUN=false
 RETRY_FAILED=false
 START_FROM=0
 MAX_RETRIES=2
+# Bundle size: each worker processes N offers sequentially in one opencode run.
+# Amortizes the ~10K-token system prompt + tool schema prefix across N offers
+# instead of paying it per-offer. Set to 1 for legacy per-offer mode.
+BUNDLE_SIZE=5
 
 usage() {
   cat <<'USAGE'
@@ -33,6 +37,9 @@ Usage: batch-runner.sh [OPTIONS]
 
 Options:
   --parallel N         Number of parallel workers (default: 1)
+  --bundle-size N      Offers per worker invocation (default: 5, use 1 for
+                       legacy per-offer mode). Each worker processes N
+                       offers sequentially, amortizing the system prompt.
   --dry-run            Show what would be processed, don't execute
   --retry-failed       Only retry offers marked as "failed" in state
   --start-from N       Start from offer ID N (skip earlier IDs)
@@ -65,6 +72,7 @@ USAGE
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --parallel) PARALLEL="$2"; shift 2 ;;
+    --bundle-size) BUNDLE_SIZE="$2"; shift 2 ;;
     --dry-run) DRY_RUN=true; shift ;;
     --retry-failed) RETRY_FAILED=true; shift ;;
     --start-from) START_FROM="$2"; shift 2 ;;
@@ -277,6 +285,134 @@ process_offer() {
   fi
 }
 
+# Process a BUNDLE of offers in one opencode run.
+# Amortizes the ~10K-token system prompt across N offers instead of paying
+# it per-offer.  Args: space-separated list of offer IDs.
+process_bundle() {
+  local -a bundle_ids=("$@")
+  local count=${#bundle_ids[@]}
+  if (( count == 0 )); then return 0; fi
+  if (( count == 1 )); then
+    # Single-offer bundle is just legacy behavior — use the existing per-offer path
+    local id="${bundle_ids[0]}"
+    local row
+    row=$(awk -F'\t' -v id="$id" '$1 == id { print $0; exit }' "$INPUT_FILE")
+    IFS=$'\t' read -r _id url source notes <<< "$row"
+    process_offer "$id" "$url" "$source" "$notes"
+    return
+  fi
+
+  local date
+  date=$(date +%Y-%m-%d)
+  local started_at
+  started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+  # Build per-offer spec array
+  local spec_json="["
+  local first=true
+  local -a assigned_report_nums=()
+  local next_num
+  next_num=$(next_report_num)
+  local n=$((10#$next_num))
+
+  for id in "${bundle_ids[@]}"; do
+    local row
+    row=$(awk -F'\t' -v id="$id" '$1 == id { print $0; exit }' "$INPUT_FILE")
+    IFS=$'\t' read -r _id url source notes <<< "$row"
+    local report_num
+    report_num=$(printf '%03d' "$n")
+    n=$((n + 1))
+    assigned_report_nums+=("$report_num")
+    local jd_file="/tmp/batch-jd-${id}.txt"
+    local retries
+    retries=$(get_retries "$id")
+
+    update_state "$id" "$url" "processing" "$started_at" "-" "$report_num" "-" "-" "$retries"
+
+    if [[ "$first" == "true" ]]; then first=false; else spec_json+=","; fi
+    spec_json+=$(printf '{"id":"%s","url":"%s","jd_file":"%s","report_num":"%s","date":"%s"}' \
+      "$id" "$url" "$jd_file" "$report_num" "$date")
+  done
+  spec_json+="]"
+
+  local bundle_tag
+  bundle_tag="bundle-$(IFS='_'; echo "${bundle_ids[*]}")"
+  local log_file="$LOGS_DIR/${bundle_tag}.log"
+  echo "--- Processing bundle of $count offers: ${bundle_ids[*]}"
+
+  local prompt
+  prompt=$(cat <<EOF
+Process these $count offers sequentially using the full pipeline in batch-prompt.md
+(Step 1 JD retrieval → Steps 2-6 evaluate/report/PDF/tracker line).  **Do each
+offer fully before starting the next.**  Continue to the next offer even if one
+fails.  After each offer, emit ONE single-line JSON on its own line with this
+exact shape (no extra prose, no code fences around it):
+
+{"id":"<id>","status":"completed|failed","report_num":"<num>","company":"...","role":"...","score":<num-or-null>,"pdf":"<path-or-null>","report":"<path-or-null>","error":"<msg-or-null>"}
+
+The orchestrator parses these lines to update state — anything between status
+JSONs is fine but do NOT omit or reorder the required keys.
+
+Offers:
+$spec_json
+EOF
+)
+
+  local exit_code=0
+  opencode run \
+    --dangerously-skip-permissions \
+    --file "$PROMPT_FILE" \
+    "$prompt" \
+    > "$log_file" 2>&1 || exit_code=$?
+
+  local completed_at
+  completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+  # Parse per-offer status JSONs from the log. One per line, matching the
+  # shape above. Missing entries mean the worker didn't reach that offer —
+  # mark them as failed.
+  local -A seen=()
+  while IFS= read -r json_line; do
+    [[ "$json_line" =~ \"id\":\"([^\"]+)\" ]] || continue
+    local id="${BASH_REMATCH[1]}"
+    [[ -n "${seen[$id]:-}" ]] && continue
+    seen[$id]=1
+    local status="failed"
+    [[ "$json_line" =~ \"status\":\"completed\" ]] && status="completed"
+    local score="-"
+    if [[ "$json_line" =~ \"score\":([0-9.]+) ]]; then score="${BASH_REMATCH[1]}"; fi
+    local report_num="-"
+    if [[ "$json_line" =~ \"report_num\":\"([^\"]+)\" ]]; then report_num="${BASH_REMATCH[1]}"; fi
+    local error_msg="-"
+    if [[ "$json_line" =~ \"error\":\"([^\"]+)\" ]]; then error_msg="${BASH_REMATCH[1]}"; fi
+    local url
+    url=$(awk -F'\t' -v id="$id" '$1 == id { print $2; exit }' "$INPUT_FILE")
+    local retries
+    retries=$(get_retries "$id")
+    if [[ "$status" == "failed" ]]; then retries=$((retries + 1)); fi
+    update_state "$id" "$url" "$status" "$started_at" "$completed_at" "$report_num" "$score" "$error_msg" "$retries"
+    echo "    $([ "$status" == "completed" ] && echo ✅ || echo ❌) #${id} (status=$status, score=$score, report=$report_num)"
+  done < "$log_file"
+
+  # Any offer in the bundle not seen in the output → mark failed
+  for id in "${bundle_ids[@]}"; do
+    if [[ -z "${seen[$id]:-}" ]]; then
+      local url
+      url=$(awk -F'\t' -v id="$id" '$1 == id { print $2; exit }' "$INPUT_FILE")
+      local retries
+      retries=$(get_retries "$id")
+      retries=$((retries + 1))
+      update_state "$id" "$url" "failed" "$started_at" "$completed_at" "-" "-" \
+        "Worker finished without emitting status JSON for this offer" "$retries"
+      echo "    ❌ #${id} (no status emitted — worker may have stopped early)"
+    fi
+  done
+
+  if [[ $exit_code -ne 0 ]]; then
+    echo "    ⚠️  Worker exit code $exit_code — see $log_file"
+  fi
+}
+
 # Merge tracker additions into applications.md
 merge_tracker() {
   echo ""
@@ -285,6 +421,20 @@ merge_tracker() {
   echo ""
   echo "=== Verifying pipeline integrity ==="
   node "$PROJECT_DIR/verify-pipeline.mjs" || echo "⚠️  Verification found issues (see above)"
+}
+
+# Log per-session token usage and warn on expensive sessions
+# (Opencode has no SessionEnd hook; this is the closest substitute for batch runs.)
+cost_report() {
+  # Only look at sessions started after this batch began. Uses --since-minutes
+  # with a generous floor so long batches are still covered.
+  local since=${1:-120}
+  echo ""
+  echo "=== Token usage (last ${since} min, warn at \$1.00) ==="
+  if command -v npx &>/dev/null; then
+    npx --no-install job-forge session-report --since-minutes "$since" --log --warn-at 1.00 \
+      || echo "(session-report unavailable; run 'job-forge session-report' manually)"
+  fi
 }
 
 # Print summary
@@ -425,21 +575,45 @@ main() {
     exit 0
   fi
 
-  # Process offers
+  # Partition pending into bundles of BUNDLE_SIZE
+  local -a bundles=()
+  local b_current=""
+  local b_count=0
+  for id in "${pending_ids[@]}"; do
+    if [[ -z "$b_current" ]]; then
+      b_current="$id"
+    else
+      b_current+=" $id"
+    fi
+    b_count=$((b_count + 1))
+    if (( b_count >= BUNDLE_SIZE )); then
+      bundles+=("$b_current")
+      b_current=""
+      b_count=0
+    fi
+  done
+  if [[ -n "$b_current" ]]; then bundles+=("$b_current"); fi
+  local bundle_count=${#bundles[@]}
+  echo "Partitioned into $bundle_count bundle(s) of up to $BUNDLE_SIZE offer(s) each"
+
+  # Process bundles
   if (( PARALLEL <= 1 )); then
-    # Sequential processing
-    for i in "${!pending_ids[@]}"; do
-      process_offer "${pending_ids[$i]}" "${pending_urls[$i]}" "${pending_sources[$i]}" "${pending_notes[$i]}"
+    # Sequential processing (one bundle at a time)
+    for b in "${bundles[@]}"; do
+      # shellcheck disable=SC2206
+      local -a ids_in_bundle=($b)
+      process_bundle "${ids_in_bundle[@]}"
     done
   else
-    # Prime the opencode prompt cache: run the first offer alone so its
-    # ~8-10K-token system prompt is written to cache, then the remaining
-    # parallel workers read from cache instead of each writing their own
-    # copy. Avoids paying 1.25× input on the prompt for every worker.
+    # Prime the opencode prompt cache with the first bundle alone so its
+    # ~10K-token system prompt is written to cache, then remaining parallel
+    # bundles read from cache instead of each writing their own copy.
     local start_idx=0
-    if (( ${#pending_ids[@]} > 1 )); then
-      echo "Priming prompt cache with offer #${pending_ids[0]}..."
-      process_offer "${pending_ids[0]}" "${pending_urls[0]}" "${pending_sources[0]}" "${pending_notes[0]}"
+    if (( bundle_count > 1 )); then
+      echo "Priming prompt cache with first bundle: ${bundles[0]}"
+      # shellcheck disable=SC2206
+      local -a prime_ids=(${bundles[0]})
+      process_bundle "${prime_ids[@]}"
       start_idx=1
     fi
 
@@ -448,7 +622,7 @@ main() {
     local -a pids=()
     local -a pid_ids=()
 
-    for i in "${!pending_ids[@]}"; do
+    for i in "${!bundles[@]}"; do
       if (( i < start_idx )); then
         continue
       fi
@@ -469,10 +643,12 @@ main() {
         sleep 1
       done
 
-      # Launch worker in background
-      process_offer "${pending_ids[$i]}" "${pending_urls[$i]}" "${pending_sources[$i]}" "${pending_notes[$i]}" &
+      # Launch a bundle worker in background
+      # shellcheck disable=SC2206
+      local -a ids_in_bundle=(${bundles[$i]})
+      process_bundle "${ids_in_bundle[@]}" &
       pids+=($!)
-      pid_ids+=("${pending_ids[$i]}")
+      pid_ids+=("bundle-${i}")
       running=$((running + 1))
     done
 
@@ -487,6 +663,11 @@ main() {
 
   # Print summary
   print_summary
+
+  # Auto-log token usage for this batch to data/token-usage.tsv and
+  # flag any session that exceeded the $1 budget. No-op if opencode DB
+  # isn't available (e.g. batch ran on a CI runner without opencode).
+  cost_report 180
 }
 
 main "$@"

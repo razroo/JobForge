@@ -3,6 +3,20 @@ description: Narrow-scope extractor on free-tier model. Use for single-purpose t
 mode: subagent
 model: opencode/minimax-m2.5-free
 temperature: 0
+reasoningEffort: none
+tools:
+  # Bare minimum. This agent is a pure transform: input in, structured
+  # output out. Deny everything that could inflate context or enable
+  # side effects. Read is allowed so the orchestrator can point it at a
+  # specific file instead of inlining 5K tokens of input.
+  geometra_*: false
+  gmail_*: false
+  bash: false
+  write: false
+  edit: false
+  webfetch: false
+  websearch: false
+  task: false
 ---
 
 You are the @glm-minimal subagent. You handle narrow, one-shot extractions where the orchestrator has pre-digested the context and just needs you to do a specific transform.

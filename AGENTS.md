@@ -39,6 +39,23 @@ The harness ships three subagents (see `.opencode/agents/`). The orchestrator MU
 
 **When to break this rule:** if the user explicitly asks for "quality over cost" or flags a high-stakes application (top-tier company, offer-stage negotiation, executive search), route everything through `@general-paid`. Document the exception in the session.
 
+### Pre-flight delegation (HARD RULE)
+
+For any task that will involve **more than one tool call** — i.e., anything beyond a one-shot answer — the orchestrator's **first tool call MUST be `task`** (dispatching to a subagent). Not `Read`, not `Bash`, not `geometra_connect`, not `Grep`. The orchestrator plans and dispatches; subagents execute.
+
+**Why this is absolute:** every tool call in the orchestrator accumulates in the top-level session's history and pollutes the cache prefix. Once the orchestrator has read three files and made two Geometra calls, delegating to a subagent no longer helps — the subagent inherits the bloated context. The only way to keep the orchestrator lean is to delegate *before* doing anything else.
+
+**What counts as "more than one tool call":**
+- Evaluating any offer (always ≥3 steps: fetch JD, score, write report)
+- Any `/job-forge` mode invocation except `tracker` (read-only)
+- Applying to a job
+- Scanning portals
+- Any batch operation
+
+**Explicit exception:** trivial one-shot answers — "what does this error mean?", "read this file and summarize", "what's my next report number?" — can stay in the orchestrator. If the question can be answered in ≤1 tool call, do not delegate.
+
+**Detection signal:** if you (orchestrator) find yourself about to make your 2nd tool call in a session that wasn't a trivial one-shot, STOP. Instead, `task` out the remaining work as a single delegated job.
+
 ---
 
 ## What is JobForge

@@ -38,6 +38,18 @@ const commands = {
   'sync-check': 'cv-sync-check.mjs',
   tokens:       'scripts/token-usage-report.mjs',
   sync:         'bin/sync.mjs',
+  // Deterministic helpers — agents call these instead of deriving values
+  // themselves, which saves thinking + Bash + verify tokens per invocation.
+  'next-num':       'scripts/next-num.mjs',
+  slugify:          'scripts/slugify.mjs',
+  today:            'scripts/today.mjs',
+  'tracker-line':   'scripts/tracker-line.mjs',
+  // Auto-visibility into cost: run at end of session or batch to log usage
+  // and warn on >$budget sessions. No opencode lifecycle hook exists, so
+  // this is the closest to a SessionEnd trigger — wire it into your
+  // shell wrapper around `opencode`, or into batch-runner.sh (already done).
+  'session-report':       'scripts/session-report.mjs',
+  'render-report-header': 'scripts/render-report-header.mjs',
 };
 
 const [, , cmd, ...rest] = process.argv;
@@ -58,9 +70,26 @@ Commands:
   tokens         Show opencode token usage and cost by session/day
   sync           Re-create harness symlinks in the current project
 
+Deterministic helpers (prefer these over LLM-derived values):
+  next-num       Print next sequential report number (e.g. 521)
+  slugify NAME   Convert a company/role name to a filename-safe slug
+  today          Print today's date in YYYY-MM-DD
+  tracker-line   Emit a 9-col TSV row for batch/tracker-additions/
+
+Cost visibility:
+  session-report        Summarize recent session costs, warn on >budget sessions
+                        (e.g. job-forge session-report --since-minutes 60 --log)
+
+Report assembly:
+  render-report-header  Given a score JSON on stdin, print the canonical
+                        report header + "## Score" section. Agents append
+                        Blocks A-F after this instead of re-emitting the
+                        standard boilerplate every evaluation.
+
 Pass --help after a command to see its own flags, e.g.:
   job-forge merge --help
   job-forge tokens --days 1
+  job-forge slugify "Anthropic, PBC"
 
 Project directory resolves to $JOB_FORGE_PROJECT or cwd.`);
 }

@@ -157,6 +157,15 @@ const opencodeCfg = {
       'glm-minimal': 'allow',
     },
   },
+  // Tool-surface trimming — opencode ships every MCP tool's schema in every
+  // request unless disabled. The harness uses ~10 of Geometra's ~30 tools
+  // and ~4 of Gmail's. Disable all at the root level and re-enable the
+  // specific ones needed per agent in .opencode/agents/<name>.md. Saves
+  // ~2-3K tokens per request in the orchestrator's context window.
+  tools: {
+    'geometra_*': false,
+    'gmail_*': false,
+  },
 };
 write('opencode.json', JSON.stringify(opencodeCfg, null, 2) + '\n');
 
