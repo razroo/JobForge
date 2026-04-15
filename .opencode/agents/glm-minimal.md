@@ -4,6 +4,13 @@ mode: subagent
 model: opencode/minimax-m2.5-free
 temperature: 0
 reasoningEffort: none
+# Fallback chain for @razroo/opencode-model-fallback (>=0.3.1). One
+# backup is enough — this agent handles narrow one-shot transforms and
+# should not ladder all the way to paid. If both free models are rate-
+# limited, callers get a clear "chain exhausted" signal and can retry
+# later or escalate manually.
+fallback_models:
+  - opencode/big-pickle
 tools:
   # Bare minimum. This agent is a pure transform: input in, structured
   # output out. Deny everything that could inflate context or enable

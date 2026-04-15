@@ -118,9 +118,12 @@ const consumerPkg = {
     'job-forge': 'github:razroo/JobForge',
     // Model-fallback plugin: rotates agents through their fallback_models
     // chain on rate-limit / 5xx errors so a rate-limited free-tier model
-    // doesn't wedge the whole flow. See opencode.json:plugin and
-    // opencode.json:agent below for the chain config.
-    '@razroo/opencode-model-fallback': '^0.3.0',
+    // doesn't wedge the whole flow. The chains live upstream in each
+    // agent's MD frontmatter (`.opencode/agents/*.md` in the harness);
+    // consumers can override individual chains by adding their own
+    // agent.<name>.fallback_models block to opencode.json. Requires
+    // 0.3.1+ for the frontmatter-merge path.
+    '@razroo/opencode-model-fallback': '^0.3.1',
   },
   engines: { node: '>=18' },
 };
@@ -168,24 +171,6 @@ const opencodeCfg = {
       'general-free': 'allow',
       'general-paid': 'allow',
       'glm-minimal': 'allow',
-    },
-  },
-  // Per-agent fallback chains for @razroo/opencode-model-fallback. Pairs
-  // each subagent's primary model (declared in .opencode/agents/<name>.md)
-  // with an ordered list of backups. Free-tier agents fall back to other
-  // free models first, then to a paid model as last resort (accept cost
-  // to unstick the flow). Paid agents fall back to a different paid
-  // provider. Override any of these locally without modifying the
-  // symlinked agent MD frontmatter.
-  agent: {
-    'general-free': {
-      fallback_models: ['opencode/minimax-m2.5-free', 'opencode/glm-5.1'],
-    },
-    'general-paid': {
-      fallback_models: ['anthropic/claude-sonnet-4-6'],
-    },
-    'glm-minimal': {
-      fallback_models: ['opencode/big-pickle'],
     },
   },
   // Tool-surface trimming — opencode ships every MCP tool's schema in every

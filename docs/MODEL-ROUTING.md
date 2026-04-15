@@ -133,7 +133,7 @@ Failure pattern to watch for:
 
 A rate-limited or overloaded free-tier model would otherwise wedge the whole subagent flow — the delegated task errors and the orchestrator sits stuck. The harness ships with [`@razroo/opencode-model-fallback`](https://www.npmjs.com/package/@razroo/opencode-model-fallback) (added as a dependency in the scaffolder) to rotate agents through a configured `fallback_models` chain automatically.
 
-Default chains (per-agent, in `opencode.json:agent`):
+Default chains ship upstream in each agent's YAML frontmatter (`node_modules/job-forge/.opencode/agents/*.md`, symlinked into your project's `.opencode/agents/`):
 
 | Agent | Primary | Fallback chain (in order) |
 |-------|---------|---------------------------|
@@ -141,21 +141,29 @@ Default chains (per-agent, in `opencode.json:agent`):
 | `@general-paid` | `opencode/glm-5.1` | `anthropic/claude-sonnet-4-6` |
 | `@glm-minimal` | `opencode/minimax-m2.5-free` | `opencode/big-pickle` |
 
-Free-tier agents try the other free model first, then escalate to paid if both are rate-limited — accepting cost to unstick the flow. Paid agents fall back to a different paid provider. You can edit these chains in your project's `opencode.json` without touching the symlinked agent MD files.
+Free-tier agents try the other free model first, then escalate to paid if both are rate-limited — accepting cost to unstick the flow. Paid agents fall back to a different paid provider.
+
+Consumers **do not need to configure anything** to get these defaults: the chains arrive via the symlinked agent MD files, and `@razroo/opencode-model-fallback` (≥0.3.1) reads them from the `options.fallback_models` field that opencode relocates unknown frontmatter keys into. The consumer's `opencode.json` only needs `"plugin": ["@razroo/opencode-model-fallback"]` — which the scaffolder sets automatically.
 
 **When fallback fires:** the plugin pattern-matches rate-limit / 5xx / quota / "overloaded" / "insufficient credits" errors. Failed models enter a 60-second cooldown before they're retried. Every rotation logs to `~/.config/opencode/opencode-model-fallback.log` with the trigger error, original model, and target model — grep for `"Auto-retrying with fallback model"` to confirm it fired.
 
-**Customize per agent:**
+### Overriding an upstream chain
+
+Add an `agent.<name>.fallback_models` block to your project's `opencode.json`. Top-level entries win over upstream frontmatter:
 
 ```json
-"agent": {
-  "general-free": {
-    "fallback_models": ["opencode/minimax-m2.5-free", "opencode/glm-5.1"]
+{
+  "agent": {
+    "general-free": {
+      "fallback_models": ["my/preferred-free", "my/preferred-paid"]
+    }
   }
 }
 ```
 
-**Customize globally** (shared chain for agents without their own) via `.opencode/opencode-model-fallback.json`:
+### Global fallback chain (agents without their own)
+
+Plugin-level config at `.opencode/opencode-model-fallback.json` — applies to any agent whose `fallback_models` is empty:
 
 ```json
 {
@@ -166,7 +174,9 @@ Free-tier agents try the other free model first, then escalate to paid if both a
 }
 ```
 
-Disable the plugin entirely: remove `"@razroo/opencode-model-fallback"` from `opencode.json:plugin`.
+### Disabling fallback
+
+Remove `"@razroo/opencode-model-fallback"` from `opencode.json:plugin` — agents keep their `model:` primary and errors propagate normally.
 
 ## Known limitations
 

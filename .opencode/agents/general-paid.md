@@ -4,6 +4,12 @@ mode: subagent
 model: opencode/glm-5.1
 temperature: 0.3
 reasoningEffort: medium
+# Fallback chain for @razroo/opencode-model-fallback (>=0.3.1). Paid
+# agents fall back to a different paid provider rather than dropping
+# to free tier — writing quality matters for this agent's output.
+# Override via agent.general-paid.fallback_models in opencode.json.
+fallback_models:
+  - anthropic/claude-sonnet-4-6
 tools:
   # This agent writes narratives from data the orchestrator already gathered.
   # It does NOT drive Geometra forms (that's @general-free's job) and does

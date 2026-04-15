@@ -4,6 +4,16 @@ mode: subagent
 model: opencode/big-pickle
 temperature: 0.1
 reasoningEffort: minimal
+# Fallback chain for @razroo/opencode-model-fallback (>=0.3.1). On rate
+# limit / 5xx / known provider errors, rotate to the next model below
+# before giving up. Free-tier → free-tier → paid escape hatch: tries
+# the other free model first, then accepts paid cost to unstick the
+# flow rather than leaving the subagent wedged.
+# Consumers can override by adding agent.general-free.fallback_models
+# to their own opencode.json — that path wins over this frontmatter.
+fallback_models:
+  - opencode/minimax-m2.5-free
+  - opencode/glm-5.1
 tools:
   # Re-enable the Geometra tools this agent actually uses (global config
   # disables all geometra_* to strip their schemas from the orchestrator's
