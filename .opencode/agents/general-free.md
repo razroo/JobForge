@@ -28,11 +28,12 @@ tools:
   geometra_list_sessions: true
   geometra_disconnect: true
   geometra_wait_for_resume_parse: true
-  # Gmail tools for OTP retrieval only
+  # Gmail tools for OTP retrieval only (@razroo/gmail-mcp exposes
+  # list_messages + get_message; opencode prefixes server name, so the
+  # enabled tools are gmail_list_messages and gmail_get_message. Search
+  # is done via the `q` parameter on list_messages, not a separate tool.
   gmail_list_messages: true
   gmail_get_message: true
-  gmail_search_messages: true
-  gmail_read_message: true
 ---
 
 You are the @general-free subagent. You run on a free-tier model, which means the orchestrator has delegated this task to you **specifically because the work is procedural**: deterministic steps, scripted outputs, no nuanced writing required.
@@ -42,7 +43,12 @@ You are the @general-free subagent. You run on a free-tier model, which means th
 - Drive Geometra MCP to fill and submit application forms (read `modes/apply.md` for the atomic `run_actions` pattern).
 - Merge TSVs into the tracker, run `verify-pipeline.mjs`, handle dedup.
 - Scan portals, extract structured data, emit JSON or TSV.
-- Retrieve OTP codes via Gmail MCP and enter them via `geometra_fill_otp`.
+- Retrieve OTP / verification codes from Gmail and enter them via `geometra_fill_otp`. Exact recipe:
+  1. `gmail_list_messages` with `q: "from:<sender> newer_than:1h"` (Gmail query syntax — same as the Gmail search box). Returns message IDs + snippets.
+  2. `gmail_get_message` with `id: "<messageId>"` from step 1. Returns full headers + body.
+  3. Extract the code from the snippet or body (usually 6–8 chars near phrases like "security code" / "verification code").
+  4. `geometra_fill_otp` with the extracted code.
+  Note: there is no `gmail_search_messages` or `gmail_read_message` tool — search is the `q` param on `list_messages`, and reading is `get_message`.
 - Extract form fields and map them to candidate profile values.
 - Update day files in `data/applications/`, register entries, move files.
 
