@@ -28,9 +28,13 @@ my-search/
 
 Symlinks are created by the harness's `postinstall` hook (`bin/sync.mjs`) on every `npm install`. They are gitignored in the scaffolder template. Real files at those paths are preserved — if a user locally customizes a mode file, the sync skips that symlink and warns.
 
-The consumer's `opencode.json` only loads `templates/states.yml` as an always-present instruction. The skill router (`.opencode/skills/job-forge.md`) loads mode and data files on demand, keeping per-session input tokens low (~20-40K for most modes instead of ~130-170K when everything was force-loaded).
+The consumer's `opencode.json` loads a small set of stable files as always-present instructions: `AGENTS.harness.md` (harness operational rules), `templates/states.yml` (canonical application states), `modes/_shared.md` (scoring model), and `cv.md` (the candidate's CV). Caching these in the prefix means agents never Read them as tool calls. Churning content (score calibration anchors, specific mode files) stays out of `instructions` and is Read on demand.
 
-**Upgrading** the harness in a consumer project is `npm update job-forge && npx job-forge sync`.
+The skill router (`.opencode/skills/job-forge.md`) loads mode and data files on demand, keeping per-session input tokens low (~20-40K for most modes instead of ~130-170K when everything was force-loaded).
+
+**Cost-tiered subagents** live in `.opencode/agents/` (`general-free`, `general-paid`, `glm-minimal`) — the orchestrator delegates procedural work to free-tier models and reserves paid models for quality-sensitive writing. See [MODEL-ROUTING.md](MODEL-ROUTING.md) for the routing architecture, why it exists, and how to customize.
+
+**Upgrading** the harness in a consumer project is `npm run update-harness` (fetches latest, re-runs symlink sync, prints the resolved commit SHA).
 
 ## System Overview
 

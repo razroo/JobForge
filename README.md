@@ -186,6 +186,7 @@ Index and cross-links: [docs/README.md](docs/README.md).
 - [Setup](docs/SETUP.md) — both install paths, profile, CV, portals, verify, token tracking, troubleshooting
 - [Architecture](docs/ARCHITECTURE.md) — package architecture, modes, evaluation flow, batch runner, pipeline scripts
 - [Customization](docs/CUSTOMIZATION.md) — archetypes, scanner keywords, CV template, states, customizing symlinked modes
+- [Model Routing](docs/MODEL-ROUTING.md) — the three cost-tiered subagents, why the architecture exists, and how to swap models or add your own
 - [Contributing](CONTRIBUTING.md) — branch workflow, quality gate, and ideas for PRs
 
 ## License
