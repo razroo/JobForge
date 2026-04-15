@@ -116,6 +116,11 @@ const consumerPkg = {
   },
   dependencies: {
     'job-forge': 'github:razroo/JobForge',
+    // Model-fallback plugin: rotates agents through their fallback_models
+    // chain on rate-limit / 5xx errors so a rate-limited free-tier model
+    // doesn't wedge the whole flow. See opencode.json:plugin and
+    // opencode.json:agent below for the chain config.
+    '@razroo/opencode-model-fallback': '^0.3.0',
   },
   engines: { node: '>=18' },
 };
@@ -125,6 +130,11 @@ write('package.json', JSON.stringify(consumerPkg, null, 2) + '\n');
 
 const opencodeCfg = {
   $schema: 'https://opencode.ai/config.json',
+  // Model-fallback plugin: on rate-limit / 5xx / known provider errors,
+  // rotates the agent's model to the next entry in its fallback_models
+  // chain (see `agent` below) and replays the request. Without this, a
+  // rate-limited free-tier model wedges the whole subagent flow.
+  plugin: ['@razroo/opencode-model-fallback'],
   // Files listed here load into every session's cached prefix, so they're
   // cached once (on Anthropic) instead of Read-as-tool-call on every session.
   //   AGENTS.harness.md → symlink to node_modules/job-forge/AGENTS.md (harness rules)
@@ -158,6 +168,24 @@ const opencodeCfg = {
       'general-free': 'allow',
       'general-paid': 'allow',
       'glm-minimal': 'allow',
+    },
+  },
+  // Per-agent fallback chains for @razroo/opencode-model-fallback. Pairs
+  // each subagent's primary model (declared in .opencode/agents/<name>.md)
+  // with an ordered list of backups. Free-tier agents fall back to other
+  // free models first, then to a paid model as last resort (accept cost
+  // to unstick the flow). Paid agents fall back to a different paid
+  // provider. Override any of these locally without modifying the
+  // symlinked agent MD frontmatter.
+  agent: {
+    'general-free': {
+      fallback_models: ['opencode/minimax-m2.5-free', 'opencode/glm-5.1'],
+    },
+    'general-paid': {
+      fallback_models: ['anthropic/claude-sonnet-4-6'],
+    },
+    'glm-minimal': {
+      fallback_models: ['opencode/big-pickle'],
     },
   },
   // Tool-surface trimming — opencode ships every MCP tool's schema in every

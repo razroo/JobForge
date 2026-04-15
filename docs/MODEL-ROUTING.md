@@ -129,6 +129,45 @@ Failure pattern to watch for:
 - **All messages showing up under your primary model** (no `@general-*` titles) → orchestrator isn't delegating. Check the Pre-flight delegation rule in AGENTS.md is being followed; tighten wording if not.
 - **High cache-creation with near-zero cache-read across parallel workers** → workers aren't firing within the 5-min cache TTL, or the shared prefix isn't byte-identical (see [batch/README.md](../batch/README.md) for the prompt-cache-friendly batch pattern).
 
+## Automatic fallback on rate limits / 5xx
+
+A rate-limited or overloaded free-tier model would otherwise wedge the whole subagent flow — the delegated task errors and the orchestrator sits stuck. The harness ships with [`@razroo/opencode-model-fallback`](https://www.npmjs.com/package/@razroo/opencode-model-fallback) (added as a dependency in the scaffolder) to rotate agents through a configured `fallback_models` chain automatically.
+
+Default chains (per-agent, in `opencode.json:agent`):
+
+| Agent | Primary | Fallback chain (in order) |
+|-------|---------|---------------------------|
+| `@general-free` | `opencode/big-pickle` | `opencode/minimax-m2.5-free` → `opencode/glm-5.1` (paid escape hatch) |
+| `@general-paid` | `opencode/glm-5.1` | `anthropic/claude-sonnet-4-6` |
+| `@glm-minimal` | `opencode/minimax-m2.5-free` | `opencode/big-pickle` |
+
+Free-tier agents try the other free model first, then escalate to paid if both are rate-limited — accepting cost to unstick the flow. Paid agents fall back to a different paid provider. You can edit these chains in your project's `opencode.json` without touching the symlinked agent MD files.
+
+**When fallback fires:** the plugin pattern-matches rate-limit / 5xx / quota / "overloaded" / "insufficient credits" errors. Failed models enter a 60-second cooldown before they're retried. Every rotation logs to `~/.config/opencode/opencode-model-fallback.log` with the trigger error, original model, and target model — grep for `"Auto-retrying with fallback model"` to confirm it fired.
+
+**Customize per agent:**
+
+```json
+"agent": {
+  "general-free": {
+    "fallback_models": ["opencode/minimax-m2.5-free", "opencode/glm-5.1"]
+  }
+}
+```
+
+**Customize globally** (shared chain for agents without their own) via `.opencode/opencode-model-fallback.json`:
+
+```json
+{
+  "cooldown_seconds": 60,
+  "timeout_seconds": 30,
+  "notify_on_fallback": true,
+  "fallback_models": ["opencode/minimax-m2.5-free", "opencode/glm-5.1"]
+}
+```
+
+Disable the plugin entirely: remove `"@razroo/opencode-model-fallback"` from `opencode.json:plugin`.
+
 ## Known limitations
 
 - **opencode's 5-minute cache TTL is hardcoded.** The 1-hour cache (Anthropic beta, `extended-cache-ttl-2025-04-11`) is not plumbed through opencode as of 2026-04-15. Long batch runs (>5 min between workers) will miss cache every cycle. Upstream fix would be 2 lines in `packages/opencode/src/provider/`.
