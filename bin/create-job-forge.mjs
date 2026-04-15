@@ -110,6 +110,9 @@ const consumerPkg = {
     tokens: 'job-forge tokens',
     'tokens:today': 'job-forge tokens --days 1',
     'tokens:log': 'job-forge tokens --days 1 --append',
+    // One command to pull the latest harness (github:razroo/JobForge),
+    // refresh symlinks, and print the resolved commit SHA for verification.
+    'update-harness': 'npm update job-forge && job-forge sync && node -e "console.log(\'✅ harness at\', require(\'./package-lock.json\').packages[\'node_modules/job-forge\'].resolved)"',
   },
   dependencies: {
     'job-forge': 'github:razroo/JobForge',
