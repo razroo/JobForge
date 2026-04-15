@@ -9,7 +9,9 @@
     "gmail": {
       "type": "local",
       "command": ["npx", "-y", "@razroo/gmail-mcp"],
-      "environment": {}
+      "environment": {
+        "DISABLE_HTTP": "true"
+      }
     }
   },
   "instructions": [

@@ -161,6 +161,11 @@ const opencodeCfg = {
       type: 'local',
       command: ['npx', '-y', '@razroo/gmail-mcp'],
       enabled: true,
+      // @razroo/gmail-mcp >=1.7.9 honors DISABLE_HTTP=true to skip its
+      // Streamable HTTP listener. Opencode uses stdio transport, so
+      // the HTTP server is unused and its port (default 3000) only
+      // causes EADDRINUSE conflicts with other local processes.
+      environment: { DISABLE_HTTP: 'true' },
     },
   },
   // Restrict the primary orchestrator to dispatching only the three harness
