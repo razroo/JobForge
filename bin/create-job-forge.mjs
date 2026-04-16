@@ -110,9 +110,11 @@ const consumerPkg = {
     tokens: 'job-forge tokens',
     'tokens:today': 'job-forge tokens --days 1',
     'tokens:log': 'job-forge tokens --days 1 --append',
-    // One command to pull the latest harness (github:razroo/JobForge)
-    // and its companion plugin, refresh symlinks, and print versions.
-    'update-harness': 'npm update job-forge @razroo/opencode-model-fallback && job-forge sync && node -e "console.log(\'✅ harness at\', require(\'./package-lock.json\').packages[\'node_modules/job-forge\'].resolved)"',
+    // One command to pull the latest harness, companion plugin, and any
+    // locally-pinned MCP packages. npm update is a no-op on packages not
+    // in package.json, so listing @razroo/gmail-mcp + @geometra/mcp is
+    // safe for consumers that invoke them via `npx -y` without pinning.
+    'update-harness': 'npm update job-forge @razroo/opencode-model-fallback @razroo/gmail-mcp @geometra/mcp && job-forge sync && node -e "console.log(\'✅ harness at\', require(\'./package-lock.json\').packages[\'node_modules/job-forge\'].resolved)"',
   },
   dependencies: {
     'job-forge': 'github:razroo/JobForge',
