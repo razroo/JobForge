@@ -70,7 +70,7 @@ The default `@general-paid` is `opencode/glm-5.1`. To use Claude instead, edit `
 
 ```yaml
 ---
-model: anthropic/claude-sonnet-4-6
+model: opencode/claude-sonnet-4-6
 reasoningEffort: medium
 ---
 ```
@@ -137,11 +137,11 @@ Default chains ship upstream in each agent's YAML frontmatter (`node_modules/job
 
 | Agent | Primary | Fallback chain (in order) |
 |-------|---------|---------------------------|
-| `@general-free` | `opencode/big-pickle` | `opencode/minimax-m2.5-free` → `opencode/glm-5.1` (paid escape hatch) |
-| `@general-paid` | `opencode/glm-5.1` | `anthropic/claude-sonnet-4-6` |
+| `@general-free` | `opencode/big-pickle` | `opencode/minimax-m2.5-free` → `opencode-go/minimax-m2.7` → `opencode/glm-5.1` (paid escape hatch) |
+| `@general-paid` | `opencode/glm-5.1` | `opencode/claude-haiku-4-5` |
 | `@glm-minimal` | `opencode/minimax-m2.5-free` | `opencode/big-pickle` |
 
-Free-tier agents try the other free model first, then escalate to paid if both are rate-limited — accepting cost to unstick the flow. Paid agents fall back to a different paid provider.
+Free-tier agents exhaust free models first, then try minimax 2.7 as a cheap buffer before escalating to glm-5.1. Paid agents fall back to Haiku (cheaper unstick escape hatch). **Note:** all model IDs use the `opencode/` or `opencode-go/` prefix — the `anthropic/` prefix does not exist in opencode's model registry and will throw `ProviderModelNotFoundError`.
 
 Consumers **do not need to configure anything** to get these defaults: the chains arrive via the symlinked agent MD files, and `@razroo/opencode-model-fallback` (≥0.3.1) reads them from the `options.fallback_models` field that opencode relocates unknown frontmatter keys into. The consumer's `opencode.json` only needs `"plugin": ["@razroo/opencode-model-fallback"]` — which the scaffolder sets automatically.
 
