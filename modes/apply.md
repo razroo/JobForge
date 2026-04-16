@@ -4,9 +4,37 @@ Interactive mode for when the candidate is filling out an application form in Ch
 
 ## Session-length rule — REQUIRED
 
-**If the candidate wants to apply to more than one job**, this mode MUST delegate each application to its own subagent (parallelize up to 5, the Geometra MCP concurrency limit). Never drive 10+ applications from a single interactive session: the accumulating Geometra tool results invalidate prompt caching and each message ends up re-processing 100K+ tokens of fresh history — see "Session Hygiene" in `.opencode/skills/job-forge.md`.
+**If the candidate wants to apply to more than one job**, this mode MUST delegate each application to its own subagent with **max 2 in parallel** (Hard Limit #1 in `AGENTS.md`). For N jobs, run `ceil(N/2)` sequential rounds of 2. Never drive multi-job applications from a single interactive session: the accumulating Geometra tool results invalidate prompt caching and each message ends up re-processing 100K+ tokens of fresh history — see "Session Hygiene" in `.opencode/skills/job-forge.md`.
+
+**DO NOT dispatch 3+ `task` calls in one message.** Two is the absolute ceiling. This is non-negotiable, even when the user asks for "apply to 10 jobs" — that becomes 5 rounds of 2, not one message with 10 dispatches.
 
 For a single application interactively, carry on in the current session — the rule targets multi-job loops.
+
+### Multi-job apply runbook (follow literally when N > 1)
+
+```
+Step 1  — Build the job list (N items)
+Step 2  — Dedup: Grep data/pipeline.md + today's day file for each company+role. Drop any already APPLIED.
+Step 3  — geometra_list_sessions() + geometra_disconnect({closeBrowser: true})  [once, before loop]
+Step 4  — For round in ceil(N/2):
+            pair = jobs[round*2 : round*2 + 2]
+            # ONE message, 1 or 2 task() calls. Never 3.
+            task(apply to pair[0])
+            task(apply to pair[1])  # only if pair has 2
+            # WAIT for both returns. Do not proceed until both done.
+Step 5  — Between rounds: geometra_list_sessions() + geometra_disconnect({closeBrowser: true})
+Step 6  — Reconcile outcomes (Hard Limit #6):
+            bash: node merge-tracker.mjs       # TSVs → day file
+            bash: node verify-pipeline.mjs     # validate
+Step 7  — Summarize outcomes; do NOT auto-retry failures.
+```
+
+If a subagent fails, report it in the summary and let the user decide whether to retry. Never auto-retry in a way that could cause duplicate submissions.
+
+**Outcome routing (Hard Limit #6 in `AGENTS.md`):**
+- Subagents write `batch/tracker-additions/{num}-{slug}.tsv` — one TSV per job.
+- Orchestrator runs `node merge-tracker.mjs` once at the end to consume TSVs into the right day file.
+- **Do NOT** append APPLIED / FAILED / SKIP lines to `data/pipeline.md` — that file is the URL inbox only.
 
 ## Requirements
 
@@ -190,12 +218,31 @@ After the candidate (or Geometra) submits, many portals — Greenhouse, Workday,
 
 Full sender-to-query table and fallback patterns: see "OTP Handling via Gmail MCP" in `AGENTS.md`.
 
-## Step 7 — Post-apply (optional)
+## Step 7 — Post-apply (outcome recording)
 
-If the candidate confirms they submitted the application:
-1. Update status in the day file under `data/applications/YYYY-MM-DD.md` from "Evaluated" to "Applied"
-2. Update Section G of the report with the final answers
-3. Suggest next step: `/job-forge contact` for LinkedIn outreach — contact will automatically load this evaluation report and use the top proof points from Block B to craft targeted messages
+Two cases, two different flows — do NOT mix them:
+
+### Case A — Job already had a row in a day file (prior `Evaluated` status)
+
+The row exists. You are UPDATING an existing entry, which is allowed (Pipeline Integrity rule #2 in `AGENTS.md`):
+
+1. Find the existing row in `data/applications/YYYY-MM-DD.md` (or an older day file — use `rg` to locate it)
+2. Edit the `Status` column from `Evaluated` to `Applied` (or `FAILED` / `SKIP`)
+3. Append a confirmation note to the `Notes` column (e.g. OTP code, confirmation URL)
+4. Do NOT write a TSV. The row is already there.
+
+### Case B — Job had no prior evaluation row (fresh submission from pipeline or direct URL)
+
+The row does NOT exist yet. You MUST go through the TSV pathway (Hard Limit #6 + Pipeline Integrity rule #1):
+
+1. Write `batch/tracker-additions/{num}-{slug}.tsv` with the canonical 9-column format (see "TSV Format for Tracker Additions" in `AGENTS.md`)
+2. At the end of the apply run, the orchestrator calls `node merge-tracker.mjs`, which inserts the row into today's day file
+3. Do NOT manually add a row to the day file. Do NOT append an `APPLIED` line to `data/pipeline.md`.
+
+### Both cases
+
+- Update Section G of the report with the final answers
+- Suggest next step: `/job-forge contact` for LinkedIn outreach — contact will automatically load this evaluation report and use the top proof points from Block B to craft targeted messages
 
 ## Scroll handling
 

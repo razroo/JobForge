@@ -1,5 +1,20 @@
 # JobForge -- AI Job Search Pipeline
 
+## Hard Limits — NEVER exceed these numbers
+
+These are non-negotiable numeric rules. If you catch yourself about to violate one, STOP and restructure.
+
+1. **Max parallel subagents: 2.** Never emit 3+ `task` tool calls in a single message. For N jobs, run `ceil(N/2)` sequential rounds of 2. No exceptions — not for "urgent", not for "the user asked for 10".
+2. **Max 1 application per company+role.** Before every `task` dispatch for `apply`, Grep `data/pipeline.md` and today's `data/applications/*.md` for the URL and for `company+role`. If already APPLIED, skip that job and do not dispatch.
+3. **Always clean Geometra sessions before dispatching.** Before every round of `task` dispatches that will use Geometra, call `geometra_list_sessions` then `geometra_disconnect({closeBrowser: true})`. Every round. The disconnect is a no-op when the pool is empty.
+4. **Orchestrator does NOT fill forms.** This session MUST NOT call `geometra_fill_form`, `geometra_run_actions`, `geometra_pick_listbox_option`, or `geometra_fill_otp` when handling a multi-job request. If you need to, it means you should have delegated — `task` out the remaining work instead.
+5. **Re-dispatch only AFTER the previous subagent returns.** Never fire the same company's `task` twice while the first is still in-flight. Wait for the return value, then decide if a retry is warranted.
+6. **Application outcomes flow through TSVs, not `data/pipeline.md`.** When a subagent returns APPLIED / FAILED / SKIP, the outcome goes to `batch/tracker-additions/{num}-{slug}.tsv`. `node merge-tracker.mjs` then consumes the TSVs into the correct `data/applications/YYYY-MM-DD.md` day file. `data/pipeline.md` only tracks URL inbox state (`[ ]` pending → `[x]` processed). **NEVER append APPLIED / FAILED status lines to `pipeline.md`** — that's the day file's job, via the TSV pathway. After any multi-apply run, the orchestrator MUST run `node merge-tracker.mjs` followed by `node verify-pipeline.mjs` before ending the session.
+
+Everything below is context and rationale. These six numbers are the rules.
+
+---
+
 ## Session Hygiene — ALWAYS enforce
 
 **Multi-job workflows MUST delegate each job to its own subagent.** This rule applies even when the user does NOT explicitly invoke `/job-forge`.
@@ -7,7 +22,7 @@
 Whenever the user says any variation of "apply to N jobs", "process the pipeline", "batch evaluate", or similar phrasing that implies more than one application/evaluation in sequence:
 
 1. **Do not drive all N jobs from this session.** Repeated `geometra_fill_form` / `geometra_page_model` calls accumulate in conversation history and invalidate prompt caching — each new message ends up re-processing 100K+ tokens of fresh history instead of reading from cache.
-2. **Launch one subagent per job, in parallel batches of ≤2.** Higher parallelism blows through free-tier rate limits and each subagent requires post-cleanup. Use the `task` tool / Agent with `subagent_type="general-purpose"`, passing the single URL and the relevant mode file content.
+2. **Launch one subagent per job, in parallel batches of ≤2** (see Hard Limits #1). Higher parallelism blows through free-tier rate limits and each subagent requires post-cleanup. Use the `task` tool / Agent with `subagent_type="general-purpose"`, passing the single URL and the relevant mode file content.
 3. **This session acts as the orchestrator only**: plan, pick the jobs, dispatch subagents, aggregate results. No Geometra form-filling in this session unless it's a single one-off application.
 
 **Why:** observed on a real run — a 341-msg "apply to 20 jobs" session had `cache_read ~1.8K` on 5 messages where input ballooned to 100K-144K tokens. A 40-msg orchestrator session that delegates instead stays under 40K input max with cache reads at full 100K+. Same work, ~5× fewer effective tokens.

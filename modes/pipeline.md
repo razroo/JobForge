@@ -11,7 +11,7 @@ Processes accumulated job offer URLs from `data/pipeline.md`. The user adds URLs
    c. If the URL is not accessible → mark as `- [!]` with a note and continue
    d. **Run full auto-pipeline**: A-F Evaluation → Report .md → PDF (if score >= 3.0, per `_shared.md` thresholds) → Draft answers (if score >= 3.5) → Tracker
    e. **Move from "Pending" to "Processed"**: `- [x] #NNN | URL | Company | Role | Score/5 | PDF ✅/❌`
-3. **If there are 3+ pending URLs**, launch agents in parallel (Agent tool with `run_in_background`) to maximize speed.
+3. **Parallel dispatch — max 2 at a time** (Hard Limit #1 in `AGENTS.md`). For N pending URLs, run `ceil(N/2)` rounds of 2 `task` dispatches. Never 3+ in one message.
 4. **When finished**, display a summary table:
 
 ```
@@ -55,3 +55,29 @@ Before processing any URL, verify sync:
 node cv-sync-check.mjs
 ```
 If there is a desynchronization, warn the user before continuing.
+
+## Pipeline runbook (follow literally when N ≥ 2)
+
+```
+Step 1  — Read data/pipeline.md; collect "- [ ]" URLs into `pending = [url_1, ..., url_N]`
+Step 2  — Pre-flight cleanup (once, before loop):
+            geometra_list_sessions()
+            geometra_disconnect({ closeBrowser: true })
+Step 3  — For round in ceil(N/2):
+            pair = pending[round*2 : round*2 + 2]
+            # ONE message, 1 or 2 task() calls. Never 3.
+            task(process url pair[0])
+            task(process url pair[1])  # only if pair has 2
+            # WAIT for both returns before the next round.
+Step 4  — Between rounds: geometra_list_sessions() + geometra_disconnect({closeBrowser: true})
+Step 5  — Reconcile outcomes (Hard Limit #6):
+            bash: node merge-tracker.mjs      # TSVs → correct day file
+            bash: node verify-pipeline.mjs    # validate URL/status consistency
+Step 6  — Display summary table; flag any verify-pipeline errors.
+```
+
+**Hard rules:**
+- Max 2 `task` dispatches per message (Hard Limit #1).
+- Never re-dispatch a URL whose previous subagent is still in-flight (Hard Limit #5).
+- Orchestrator does not call `geometra_fill_form` / `geometra_page_model` in multi-URL runs (Hard Limit #4) — delegate.
+- **The only edits allowed to `data/pipeline.md` are flipping `[ ]` → `[x]`** (inbox state) (Hard Limit #6). APPLIED / FAILED / SKIP outcomes go via `batch/tracker-additions/*.tsv` into the day file. Do NOT write application status to pipeline.md.

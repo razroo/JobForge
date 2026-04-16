@@ -54,7 +54,7 @@ The levels are additive — all are executed, results are merged and deduplicate
 2. **Read history**: `data/scan-history.tsv` → previously seen URLs
 3. **Read dedup sources**: all day files in `data/applications/` + `data/pipeline.md`
 
-4. **Level 1 — Geometra scan** (parallel in batches of 3-5):
+4. **Level 1 — Geometra scan** (sequential, or ≤2 parallel via `task` subagents per Hard Limit #1 in `AGENTS.md`):
    For each company in `tracked_companies` with `enabled: true` and `careers_url` defined:
    a. `geometra_connect` to the `careers_url`
    b. `geometra_page_model` or `geometra_list_items` to read all job listings
@@ -64,13 +64,13 @@ The levels are additive — all are executed, results are merged and deduplicate
    f. Accumulate in candidates list
    g. If `careers_url` fails (404, redirect), try `scan_query` as fallback and note for URL update
 
-5. **Level 2 — Greenhouse APIs** (parallel):
+5. **Level 2 — Greenhouse APIs** (WebFetch can batch freely — it's cheap and doesn't use Geometra sessions):
    For each company in `tracked_companies` with `api:` defined and `enabled: true`:
    a. WebFetch the API URL → JSON with job list
    b. For each job extract: `{title, url, company}`
    c. Accumulate in candidates list (dedup with Level 1)
 
-6. **Level 3 — WebSearch queries** (parallel if possible):
+6. **Level 3 — WebSearch queries** (WebSearch is parallel-safe; batch freely):
    For each query in `search_queries` with `enabled: true`:
    a. Execute WebSearch with the defined `query`
    b. From each result extract: `{title, url, company}`

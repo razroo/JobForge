@@ -126,10 +126,57 @@ Long interactive sessions (>100 messages) — especially with Geometra MCP doing
 
 This applies to:
 
-- **`apply` mode with >1 job URL** → launch one subagent per URL (parallelize in batches of 5 — the Geometra MCP parallelism limit). Never run more than 1-2 applications in a single interactive session.
+- **`apply` mode with >1 job URL** → launch one subagent per URL, **max 2 in parallel** (Hard Limit #1 in `AGENTS.md`). For 10 jobs, run 5 sequential rounds of 2. Never run applications directly in this session.
 - **`batch` mode** → already uses `batch-runner.sh`'s parallel `opencode run` workers. Do not wrap `batch` in an interactive session that also does the form filling.
-- **`pipeline` mode with 3+ URLs** → split into per-URL subagents.
+- **`pipeline` mode with 3+ URLs** → split into per-URL subagents, **max 2 in parallel** (Hard Limit #1).
 - **Anything that calls `geometra_fill_form` more than twice in a row** should be split into subagents.
+
+### Apply-to-N-jobs runbook (follow literally)
+
+When the user says "apply to N jobs", "process the pipeline", or similar, execute this exact sequence. Do not improvise.
+
+```
+Step 1  — Enumerate candidates
+  - Grep data/applications/$(date +%Y-%m-%d).md and the last 3 day files for status "Evaluated"
+  - Also read data/pipeline.md for unprocessed URLs
+  - Build ordered list: candidates = [job_1, job_2, ..., job_N]
+
+Step 2  — Dedup against already-applied
+  - For each candidate, Grep data/pipeline.md + today's day file for "APPLIED" + company+role
+  - Drop any match. Never re-apply.
+
+Step 3  — Pre-flight cleanup (once, before the loop)
+  - geometra_list_sessions()
+  - geometra_disconnect({ closeBrowser: true })
+
+Step 4  — Loop in rounds of 2 (Hard Limit #1)
+  for round in ceil(len(candidates) / 2):
+    pair = candidates[round*2 : round*2 + 2]
+    # Dispatch 1 or 2 task() calls in ONE message (never 3+)
+    task(subagent_type=<tier per AGENTS.md routing>, prompt=<apply prompt for pair[0]>)
+    task(subagent_type=<tier>, prompt=<apply prompt for pair[1]>)  # only if pair has 2
+    # WAIT for both subagents to return before proceeding
+    # Read their return values, log outcomes
+
+Step 5  — Between rounds: clean sessions again
+  - geometra_list_sessions()
+  - geometra_disconnect({ closeBrowser: true })
+
+Step 6  — After all rounds: reconcile outcomes (Hard Limit #6)
+  - bash: node merge-tracker.mjs      # consumes batch/tracker-additions/*.tsv into the day file
+  - bash: node verify-pipeline.mjs    # validates URL/status consistency
+  - Review output; if verify-pipeline reports issues, fix them before ending.
+
+Step 7  — Aggregate and report
+  - Summarize: applied, skipped, failed
+  - Do NOT re-dispatch failed jobs automatically. Report them to the user.
+```
+
+**Hard rules for this runbook:**
+- Never emit 3+ `task` calls in one message. Two is the max (Hard Limit #1).
+- Never re-dispatch a company whose previous subagent hasn't returned yet (Hard Limit #5).
+- Never call `geometra_fill_form` from this session (Hard Limit #4). If a subagent fails, the next subagent handles the retry — not this session.
+- **Never append APPLIED / FAILED / SKIP lines to `data/pipeline.md`** (Hard Limit #6). Those outcomes live in `batch/tracker-additions/*.tsv` and flow to the day file via `merge-tracker.mjs`. `pipeline.md` only holds URL inbox state: `[ ]` pending or `[x]` processed.
 
 **Rationale:** A 300-message "apply to 20 jobs" session burns roughly 100K tokens of *fresh* input per message (history re-processed, cache busted). Twenty 30-message per-job subagents do the same work with each sub-session short enough that the cache actually holds — typically 5-10× lower effective token usage.
 

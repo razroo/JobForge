@@ -263,7 +263,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 |------|-----|
 | WebSearch | Comp research, trends, company culture, LinkedIn contacts, fallback for JDs |
 | WebFetch | Fallback for extracting JDs from static pages |
-| Geometra MCP | Verify offers (`geometra_page_model`), extract JDs (`geometra_connect` + `geometra_snapshot`), fill forms (`geometra_fill_form`), generate PDFs (`geometra_generate_pdf`). **Supports up to 5 parallel sessions.** Each `geometra_connect` returns a `sessionId` — pass it to all subsequent tool calls to target the right session. Omitting `sessionId` targets the most recently connected session. Use `geometra_list_sessions` to inspect active sessions. |
+| Geometra MCP | Verify offers (`geometra_page_model`), extract JDs (`geometra_connect` + `geometra_snapshot`), fill forms (`geometra_fill_form`), generate PDFs (`geometra_generate_pdf`). **The MCP server accepts up to 5 concurrent sessions, but orchestrator subagent parallelism is capped at 2** (Hard Limit #1 in `AGENTS.md`) — do not interpret the 5-session ceiling as permission to dispatch 5 subagents. Each `geometra_connect` returns a `sessionId` — pass it to all subsequent tool calls to target the right session. Omitting `sessionId` targets the most recently connected session. Use `geometra_list_sessions` to inspect active sessions. |
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | Temporary HTML for PDF, day files in `data/applications/YYYY-MM-DD.md`, reports .md |
 | Edit | Update tracker |
