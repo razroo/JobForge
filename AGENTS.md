@@ -219,43 +219,122 @@ The goal is to never waste time on closed offers, but also never silently assume
 
 ## OTP Handling via Gmail MCP -- REQUIRED
 
-**Many application portals gate submission behind an email verification code.** When the form shows an "enter the code we sent to your email" step, the Gmail MCP is the mechanism to complete it — never stop and ask the user to paste the code manually, and never mark the application as failed without checking Gmail first.
+When a form says "enter the code we sent to your email", you MUST retrieve the code from Gmail. NEVER ask the user to paste it. NEVER mark the application as failed without checking Gmail first.
 
-**Known portals that send OTP:**
+**You have exactly two Gmail tools.** There is NO `gmail_search_messages` and NO `gmail_read_message`. Use only these:
 
-| Portal | Typical sender | Gmail query |
-|--------|----------------|-------------|
-| Greenhouse | `no-reply@greenhouse.io` | `from:greenhouse newer_than:10m` |
-| Workday | `noreply@*.myworkday.com` | `from:myworkday newer_than:10m` |
-| Lever | `no-reply@hire.lever.co` | `from:lever newer_than:10m` |
-| Ashby | `notifications@ashbyhq.com` | `from:ashby newer_than:10m` |
+| Tool | What it does | Key parameter |
+|------|-------------|---------------|
+| `gmail_list_messages` | Search emails. Returns message IDs + snippets. | `q` — Gmail search query string |
+| `gmail_get_message` | Read one email by ID. Returns full headers + body. | `id` — message ID from step 1 |
 
-If the portal isn't in this table, fall back to a broad recency query (`newer_than:10m subject:(verify OR code OR confirm)`) and narrow from there.
+**Step-by-step recipe (follow exactly):**
 
-**Flow:**
+1. Reach the OTP step in the form. Do NOT close or abandon the session.
+2. Wait ~5-10 seconds for the email to arrive.
+3. Call `gmail_list_messages` with `q` set to the sender query from the table below. Example:
+   ```
+   gmail_list_messages({ q: "from:greenhouse newer_than:10m", maxResults: 5 })
+   ```
+4. Take the `id` field from the first result. Call `gmail_get_message` with that `id`. Example:
+   ```
+   gmail_get_message({ id: "19d84d63a273c271" })
+   ```
+5. Find the code in the snippet or body. It is usually 6-8 characters near words like "security code" or "verification code".
+6. Call `geometra_fill_otp` with the code. Example:
+   ```
+   geometra_fill_otp({ value: "ABC12345", sessionId: "..." })
+   ```
+7. Submit the form.
 
-1. Submit (or reach) the OTP step in the form — do NOT abandon the session
-2. Wait ~5-10 seconds for the email to arrive
-3. `gmail_list_messages` with the matching `q:` above to find the most recent verification email
-4. `gmail_get_message` to read the body and extract the code (usually 6-8 chars, often bolded or in its own line)
-5. `geometra_fill_otp` to enter it
-6. Submit the form
+**Sender lookup table:**
 
-**Always check Gmail before reporting a submission as failed.** The most common false-failure is "submit button did nothing" — that usually means the portal silently opened an OTP step that wasn't handled.
+| Portal | `q` value for `gmail_list_messages` |
+|--------|-------------------------------------|
+| Greenhouse | `from:greenhouse newer_than:10m` |
+| Workday | `from:myworkday newer_than:10m` |
+| Lever | `from:lever newer_than:10m` |
+| Ashby | `from:ashby newer_than:10m` |
+| Unknown | `newer_than:10m subject:(verify OR code OR confirm)` |
 
-Example:
+**Rules:**
+- ALWAYS check Gmail before reporting a submission as failed.
+- If "submit button did nothing", it usually means an OTP step appeared. Check Gmail.
+- If no email after 10 seconds, retry `gmail_list_messages` once more with `newer_than:5m`.
+
+---
+
+## Geometra Form-Fill Patterns
+
+### Validation State Lags Behind Actual Field State
+
+**This is a known issue across Greenhouse, Ashby, and similar ATS portals.** The frontend validation does not always update synchronously with field input. A field can be correctly filled but still show `invalid: true` or "This field is required" in the schema for several seconds — or even permanently until the user interacts with another field.
+
+**Common false-positive patterns:**
+- `set_checked` / `geometra_set_checked` sets a checkbox to `checked: true`, but the schema still shows `invalid: true` with "This field is required." This is a known lag on privacy policy / acknowledgment checkboxes.
+- A dropdown/choice field is correctly picked, but the invalid flag persists.
+- A text field is filled correctly, but validation error text remains until the user tabs or blurs the field.
+
+**Rule: Do NOT get stuck in a fill loop.** If a field value looks correct (checked=true, value="No", etc.) but `invalidCount` is unchanged:
+
+1. **Try Submit anyway.** Many portals allow submission with stale validation errors as long as the underlying value is correct.
+2. **If Submit is disabled**, try interacting with a nearby field (Tab, click another input) to force validation recalculation.
+3. **If a checkbox still shows invalid after `set_checked`**, try clicking it directly by coordinates (`geometra_click` with x,y) instead of the label-based toggle.
+4. **For combobox fields**, pick the option via `geometra_pick_listbox_option` (preferred) rather than typing — typing into comboboxes often creates a stale autocomplete overlay that blocks confirmation.
+
+**Decision tree for "field shows invalid after fill":**
+
 ```
-# Find the OTP email
-gmail_list_messages({q: "from:greenhouse newer_than:10m", maxResults: 5})
-
-# Get the OTP code from the email
-gmail_get_message({id: "19d84d63a273c271"})
-
-# Enter the OTP
-geometra_fill_otp({value: "ABC12345", sessionId: "..."})
+Is the visible value correct?
+├── YES → Try Submit (preferred action)
+│         If Submit disabled → Tab away and back, then try Submit
+│         Still blocked → try clicking a nearby field to force recalc
+└── NO → Re-fill the field using the correct field id
 ```
 
-See `modes/apply.md` for how this fits into the interactive apply flow.
+**The `invalidCount` from schema is a heuristic, not ground truth.** Always prefer direct observation of field values over the invalid count. If Submit becomes enabled, ignore any remaining invalid fields — the portal accepted the data.
+
+### Nested Scroll Containers (Greenhouse / Ashby)
+
+Many ATS portals use nested scrollable regions. A field's `visibleBounds` may show it as off-screen even when it is actually visible within a child scroll container. Geometra's `scroll_to` operates on the outermost page scroll, so it cannot reach fields in inner scroll regions.
+
+**Signs you are dealing with nested scroll:**
+- `scroll_to` reports `revealed: false` with `maxSteps` exhausted, but you can see the field in the page model
+- A field's `y` coordinate in `bounds` is far outside the viewport, yet it is visible on screen
+- Wheel events at one `y` coordinate scroll a different region than expected
+
+**Workaround:**
+1. Use `geometra_wheel` at a low `y` value (e.g., 360, near the top of the viewport) to scroll the outer container
+2. Alternatively, click directly on the element using `geometra_click` with x,y coordinates derived from the element's `visibleBounds` center
+3. Once in the correct scroll region, `scroll_to` within that region works correctly
+
+### Corrupted Fields (Text Typed Into Listbox)
+
+Sometimes text typed into the wrong field (e.g., an essay pasted into a listbox search field) corrupts the field state. The listbox shows the typed text as a search query and refuses to clear.
+
+**Recovery:**
+1. Find and click the "Clear selections" button (`role: "button"`, `name: "Clear selections"`) — this usually resets the field
+2. After clearing, use `geometra_pick_listbox_option` to select the correct value
+3. If "Clear selections" is not available, try pressing `Escape` multiple times or clicking outside the dropdown
+
+### Parallel Form Submissions — Isolated Sessions Required
+
+When running multiple application forms in parallel, each `geometra_connect` MUST use `isolated: true`. Without this flag, sessions share the Chromium browser pool and contaminate each other's localStorage, cookies, and autocomplete state — one job's email address can leak into another job's form.
+
+**Correct parallel pattern:**
+```javascript
+geometra_connect({ pageUrl: "https://...", isolated: true, headless: true, slowMo: 350 })
+```
+
+**Wrong:** running `geometra_connect` without `isolated: true` when submitting multiple forms concurrently. The forms may share state and produce incorrect submissions.
+
+### Session Reuse — When Subagents Cannot Reach Existing Sessions
+
+Subagents launched via the `task` tool start with a fresh context and cannot automatically attach to Chromium sessions spawned by a previous orchestrator session. If you dispatch a subagent to fill a form in session `s16`, but `s16` was created by a previous opencode session, the subagent's MCP calls will silently fail (returning empty results) because the subagent's MCP server has no knowledge of `s16`.
+
+**Rule:** When resuming work on forms that were opened in a previous opencode session, drive them from the current orchestrator session directly — do not delegate to a subagent.
+
+**Session IDs persist** across the same opencode session. Within one orchestrator session, `geometra_list_sessions` correctly shows all active sessions (s16, s17, etc.) and `geometra_fill_form`, `geometra_page_model`, and other tools work against those sessions. Subagents are only reliable for NEW form-fill sessions they open themselves.
 
 ---
 
