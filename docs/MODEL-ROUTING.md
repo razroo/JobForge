@@ -137,9 +137,9 @@ Default chains ship upstream in each agent's YAML frontmatter (`node_modules/job
 
 | Agent | Primary | Fallback chain (in order) |
 |-------|---------|---------------------------|
-| `@general-free` | `opencode/big-pickle` | `opencode/minimax-m2.5-free` → `opencode-go/minimax-m2.7` → `opencode/glm-5.1` (paid escape hatch) |
+| `@general-free` | `opencode/big-pickle` | `opencode/minimax-m2.5-free` → `opencode/nemotron-3-super-free` → `opencode-go/minimax-m2.7` → `opencode/glm-5.1` (paid escape hatch) |
 | `@general-paid` | `opencode/glm-5.1` | `opencode/claude-haiku-4-5` |
-| `@glm-minimal` | `opencode/minimax-m2.5-free` | `opencode/big-pickle` |
+| `@glm-minimal` | `opencode/minimax-m2.5-free` | `opencode/big-pickle` → `opencode/nemotron-3-super-free` |
 
 Free-tier agents exhaust free models first, then try minimax 2.7 as a cheap buffer before escalating to glm-5.1. Paid agents fall back to Haiku (cheaper unstick escape hatch). **Note:** all model IDs use the `opencode/` or `opencode-go/` prefix — the `anthropic/` prefix does not exist in opencode's model registry and will throw `ProviderModelNotFoundError`.
 

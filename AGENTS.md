@@ -7,7 +7,7 @@
 Whenever the user says any variation of "apply to N jobs", "process the pipeline", "batch evaluate", or similar phrasing that implies more than one application/evaluation in sequence:
 
 1. **Do not drive all N jobs from this session.** Repeated `geometra_fill_form` / `geometra_page_model` calls accumulate in conversation history and invalidate prompt caching — each new message ends up re-processing 100K+ tokens of fresh history instead of reading from cache.
-2. **Launch one subagent per job, in parallel batches of ≤5** (the Geometra MCP concurrency limit). Use the `task` tool / Agent with `subagent_type="general-purpose"`, passing the single URL and the relevant mode file content.
+2. **Launch one subagent per job, in parallel batches of ≤2.** Higher parallelism blows through free-tier rate limits and each subagent requires post-cleanup. Use the `task` tool / Agent with `subagent_type="general-purpose"`, passing the single URL and the relevant mode file content.
 3. **This session acts as the orchestrator only**: plan, pick the jobs, dispatch subagents, aggregate results. No Geometra form-filling in this session unless it's a single one-off application.
 
 **Why:** observed on a real run — a 341-msg "apply to 20 jobs" session had `cache_read ~1.8K` on 5 messages where input ballooned to 100K-144K tokens. A 40-msg orchestrator session that delegates instead stays under 40K input max with cache reads at full 100K+. Same work, ~5× fewer effective tokens.

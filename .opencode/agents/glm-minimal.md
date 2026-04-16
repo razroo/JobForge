@@ -11,6 +11,7 @@ reasoningEffort: none
 # later or escalate manually.
 fallback_models:
   - opencode/big-pickle
+  - opencode/nemotron-3-super-free
 tools:
   # Bare minimum. This agent is a pure transform: input in, structured
   # output out. Deny everything that could inflate context or enable

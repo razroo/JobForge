@@ -12,6 +12,7 @@ reasoningEffort: minimal
 # to their own opencode.json — that path wins over this frontmatter.
 fallback_models:
   - opencode/minimax-m2.5-free
+  - opencode/nemotron-3-super-free
   - opencode-go/minimax-m2.7
   - opencode/glm-5.1
 tools:
