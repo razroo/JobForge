@@ -29,7 +29,7 @@ The scaffolded `opencode.json` already has the Geometra MCP (browser automation 
 
 Then fill in `cv.md`, `config/profile.yml`, and `portals.yml` with your personal data, paste a job URL into opencode, and JobForge evaluates + tracks it.
 
-**Upgrade later:** `npm run update-harness` (pulls latest, re-syncs symlinks, prints the resolved commit)
+**Upgrade later:** `npm run update-harness` (pulls latest harness + fallback plugin, re-syncs symlinks, prints the resolved commit)
 
 Full setup guide and alternative install paths (including contributing to the harness itself): **[docs/SETUP.md](docs/SETUP.md)**.
 

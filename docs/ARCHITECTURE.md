@@ -34,7 +34,7 @@ The skill router (`.opencode/skills/job-forge.md`) loads mode and data files on 
 
 **Cost-tiered subagents** live in `.opencode/agents/` (`general-free`, `general-paid`, `glm-minimal`) — the orchestrator delegates procedural work to free-tier models and reserves paid models for quality-sensitive writing. See [MODEL-ROUTING.md](MODEL-ROUTING.md) for the routing architecture, why it exists, and how to customize.
 
-**Upgrading** the harness in a consumer project is `npm run update-harness` (fetches latest, re-runs symlink sync, prints the resolved commit SHA).
+**Upgrading** the harness in a consumer project is `npm run update-harness` — fetches the latest harness (`github:razroo/JobForge`) and `@razroo/opencode-model-fallback` plugin, re-runs symlink sync, and prints the resolved commit SHA.
 
 ## System Overview
 
