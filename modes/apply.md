@@ -123,9 +123,47 @@ geometra_run_actions({
 
 Labels are stable across DOM refreshes; IDs are not. If `fieldLabel` works, use it everywhere. Only fall back to `fieldId` when two fields share the same label (rare — add a qualifier via sibling text instead).
 
-### Rule C — If the session cycles, reconnect and retry ONCE
+### Rule C — On ANY session error, run recovery (ONCE)
 
-If Geometra returns "session expired" or "unknown session", reconnect with `geometra_connect` to the same URL, get a fresh session ID, and **re-run the same atomic `run_actions` call**. Do NOT re-fetch the form schema, do NOT re-pick field IDs — your labels haven't changed, so the same actions will still match. One retry max — if it fails again, stop and report.
+**Trigger:** you see ANY of these error strings from a Geometra call:
+- `Not connected`
+- `session expired`
+- `unknown session`
+- `Failed to connect`
+- `WebSocket` + `closed` / `error`
+
+**Recovery sequence — run these FOUR calls in this EXACT order:**
+
+```
+Call 1:  geometra_list_sessions()
+Call 2:  geometra_disconnect({ closeBrowser: true })
+Call 3:  geometra_connect({
+           pageUrl: "<the same URL as before>",
+           isolated: true,
+           headless: true,
+           slowMo: 350
+         })
+Call 4:  geometra_run_actions({
+           sessionId: "<new sessionId from Call 3>",
+           actions: [... the EXACT same actions array you used before ...]
+         })
+```
+
+### Rules for recovery
+
+1. **Always run all 4 calls.** Do not skip Call 1 or Call 2 even if Call 1 shows an empty pool.
+2. **Do not re-fetch the form schema.** Do not call `geometra_form_schema` between Call 3 and Call 4. Your labels haven't changed, so the same `actions` array still works.
+3. **Do not edit the actions array.** Copy it verbatim from your first attempt. Do not re-pick fieldIds. Do not add or remove actions. Same array in, same array out.
+4. **Only ONE retry.** If Call 4 ALSO fails, STOP. Return this exact message to the orchestrator:
+
+   ```
+   APPLY FAILED AFTER RECOVERY: <URL>
+   Error 1: <first error message>
+   Error 2: <error after recovery>
+   Recommend: re-dispatch on @general-paid
+   ```
+
+   Do NOT try a third time. Do NOT try a different approach. The orchestrator will decide whether to re-dispatch on a bigger model.
 
 ### Rule D — Never re-fetch the schema mid-flow
 

@@ -336,6 +336,60 @@ Subagents launched via the `task` tool start with a fresh context and cannot aut
 
 **Session IDs persist** across the same opencode session. Within one orchestrator session, `geometra_list_sessions` correctly shows all active sessions (s16, s17, etc.) and `geometra_fill_form`, `geometra_page_model`, and other tools work against those sessions. Subagents are only reliable for NEW form-fill sessions they open themselves.
 
+### Stale Session Cleanup — MANDATORY
+
+**Problem in one sentence:** if any previous subagent aborted (ran out of context, timed out, hit tool error), the Chromium session it opened is STUCK in the Geometra MCP pool, and the NEXT `geometra_connect` will fail with `Not connected`.
+
+**Fix in one sentence:** ALWAYS run `geometra_list_sessions` + `geometra_disconnect` BEFORE `geometra_connect`. Every time. No exceptions except the one explicit exception below.
+
+---
+
+#### Rule 1 — Orchestrator pre-dispatch cleanup (DO THIS EVERY TIME)
+
+Before dispatching ANY batch of subagents that will use Geometra (apply, scan, pipeline, batch, auto-pipeline), run these TWO tool calls IN ORDER, with these EXACT arguments:
+
+```
+Step 1:  geometra_list_sessions()
+Step 2:  geometra_disconnect({ closeBrowser: true })
+```
+
+**DO NOT** think about whether cleanup is needed. **DO NOT** check if sessions look "fine". **DO NOT** skip Step 2 if Step 1 returns an empty list. Just run both, every time, before `task` dispatch. It costs ~100 tokens and prevents cascade failures.
+
+**Then** dispatch your subagents.
+
+**Single exception:** if you (the orchestrator) opened a session earlier in THIS SAME conversation and want a subagent to attach to it, skip cleanup and pass the exact `sessionId` to the subagent. This applies to interactive single-application flows only.
+
+---
+
+#### Rule 2 — Subagent pre-flight cleanup (DO THIS EVERY TIME)
+
+Every subagent that uses Geometra must run these THREE tool calls as its FIRST three tool calls, in this order, with these EXACT arguments:
+
+```
+Step 1:  geometra_list_sessions()
+Step 2:  geometra_disconnect({ closeBrowser: true })
+Step 3:  geometra_connect({ pageUrl: "<the URL the orchestrator gave you>", isolated: true, headless: true, slowMo: 350 })
+```
+
+**DO NOT** skip Step 1 or Step 2. **DO NOT** think about whether it's needed. **DO NOT** look at `geometra_list_sessions` output and reason about it — just always call `geometra_disconnect({ closeBrowser: true })` next. The disconnect is a no-op if the pool is empty, and a poison-cure if it isn't.
+
+**Single exception:** if the orchestrator's task prompt says literally "attach to sessionId X" or "use existing session X", skip Steps 1-3 and call `geometra_page_model({ sessionId: "X" })` directly.
+
+---
+
+#### Rule 3 — Routing high-value applications
+
+When the orchestrator dispatches an `apply` (form-fill + submit), pick the subagent based on this table:
+
+| Offer score | Subagent |
+|-------------|----------|
+| 3.0-3.9/5 | `@general-free` |
+| 4.0+/5 | `@general-paid` |
+| User said "top-tier", "dream job", "high-stakes" | `@general-paid` |
+| Late-stage pipeline (already passed screens) | `@general-paid` |
+
+**Why:** form-fill flows are 6+ steps. Free-tier models have smaller context windows and sometimes abort mid-flow when the form schema is large (Greenhouse, Workday). Paid tier has more headroom. Evaluation and procedural non-apply work stay on `@general-free` — only the `apply` step gets upgraded.
+
 ---
 
 ## Stack and Conventions
