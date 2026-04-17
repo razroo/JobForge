@@ -2,13 +2,13 @@
 
 Two usage modes: **conductor** (navigates portals in real time via Geometra MCP) or **standalone** (script for already-collected URLs).
 
-## Session-length rule — REQUIRED
+## Apply The Session-Length Rule
 
 **Never run `batch` as one long interactive session.** Each offer gets its own `opencode run` worker via `batch-runner.sh` — that's the whole point of the architecture. Workers have clean ~200K-token contexts and exit after producing one report + PDF + tracker line, so prompt caching stays healthy.
 
 If you find yourself doing `geometra_fill_form` or `geometra_page_model` for the Nth time in the *same* session, stop and delegate. See "Session Hygiene" in `.opencode/skills/job-forge.md` for the full rationale (cache-bust behavior with repeated Geometra tool calls).
 
-## Architecture
+## Use This Architecture
 
 ```
 opencode Conductor (opencode --dangerously-skip-permissions)
@@ -27,7 +27,7 @@ opencode Conductor (opencode --dangerously-skip-permissions)
 
 Each worker is a child `opencode run` with a clean 200K token context. The conductor only orchestrates.
 
-## Files
+## Read These Files
 
 ```
 batch/
@@ -39,7 +39,7 @@ batch/
   tracker-additions/            # Tracker lines (gitignored)
 ```
 
-## Mode A: Conductor --chrome
+## Run Mode A Conductor --chrome
 
 1. **Read state**: `batch/batch-state.tsv` → know what has already been processed
 2. **Navigate portal**: Chrome → search URL
@@ -60,7 +60,7 @@ d. Execute via Bash:
 5. **Pagination**: If no more offers → click "Next" → repeat
 6. **End**: Merge `tracker-additions/` → `data/applications/` (via `merge-tracker.mjs`) + summary
 
-## Mode B: Standalone script
+## Run Mode B Standalone Script
 
 ```bash
 batch/batch-runner.sh [OPTIONS]
@@ -73,7 +73,7 @@ Options:
 - `--parallel N` — N workers in parallel
 - `--max-retries N` — attempts per offer (default: 2)
 
-## batch-state.tsv format
+## Read batch-state.tsv Format
 
 ```
 id	url	status	started_at	completed_at	report_num	score	error	retries
@@ -82,13 +82,13 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 3	https://...	pending	-	-	-	-	-	0
 ```
 
-## Resumability
+## Use Resumability
 
 - If it dies → re-run → reads `batch-state.tsv` → skips completed
 - Lock file (`batch-runner.pid`) prevents double execution
 - Each worker is independent: failure on offer #47 does not affect the rest
 
-## Workers (opencode run)
+## Run Workers (opencode run)
 
 Each worker receives `batch-prompt.md` as system prompt. It is self-contained.
 
@@ -98,7 +98,7 @@ The worker produces:
 3. Tracker line in `batch/tracker-additions/{id}.tsv`
 4. JSON result via stdout
 
-## Error handling
+## Apply Error Handling
 
 | Error | Recovery |
 |-------|----------|

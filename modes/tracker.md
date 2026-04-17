@@ -28,4 +28,4 @@ Also display statistics:
 If any entries look overdue for follow-up (Applied 7+ days ago, Contacted 5+ days ago, Interviewed with no update 7+ days), mention it:
 > "3 entries may need follow-up. Run `/job-forge followup` for details."
 
-This is a passive hint — it does NOT change tracker behavior or output format.
+The followup reminder above is a passive hint — it does NOT change tracker behavior or output format.

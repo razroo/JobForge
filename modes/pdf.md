@@ -20,7 +20,7 @@
 14. Run: `node generate-pdf.mjs /tmp/cv-candidate-{company}.html output/cv-candidate-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
 15. Report: PDF path, page count, keyword coverage %
 
-## ATS Rules (clean parsing)
+## Apply these ATS rules for clean parsing
 
 - Single-column layout (no sidebars, no parallel columns)
 - Standard headers: "Professional Summary", "Work Experience", "Education", "Skills", "Certifications", "Projects"
@@ -30,7 +30,7 @@
 - No nested tables
 - JD keywords distributed across: Summary (top 5), first bullet of each role, Skills section
 
-## PDF Design
+## Apply this PDF design
 
 - **Fonts**: Space Grotesk (headings, 600-700) + DM Sans (body, 400-500)
 - **Fonts self-hosted**: `fonts/`
@@ -41,7 +41,7 @@
 - **Margins**: 0.6in
 - **Background**: pure white
 
-## Section Order (optimized for "6-second recruiter scan")
+## Sort sections for the "6-second recruiter scan"
 
 1. Header (large name, gradient, contact, portfolio link)
 2. Professional Summary (3-4 lines, keyword-dense)
@@ -51,7 +51,7 @@
 6. Education & Certifications
 7. Skills (languages + technical)
 
-## Keyword Injection Strategy (ethical, truth-based)
+## Apply ethical keyword injection (truth-based)
 
 Examples of legitimate reformulation:
 - JD says "RAG pipelines" and CV says "LLM workflows with retrieval" → change to "RAG pipeline design and LLM orchestration workflows"
@@ -60,33 +60,33 @@ Examples of legitimate reformulation:
 
 **NEVER add skills the candidate does not have. Only reformulate real experience using the exact vocabulary of the JD.**
 
-## Writing Style — Anti-AI-Detection (CRITICAL)
+## Write in a style that defeats AI-detection (CRITICAL)
 
 ATS platforms (Indeed, LinkedIn, Workday) increasingly flag AI-generated CVs. The PDF generation MUST produce text that reads as human-written. This is not about deception — it's about ensuring the candidate's real experience isn't filtered out by an automated detector before a human ever sees it.
 
-### Sentence structure
+### Apply sentence-structure variations
 - **Vary sentence length deliberately.** Mix short punchy fragments ("Shipped in 3 weeks.") with longer compound sentences. AI text tends toward uniform medium-length sentences.
 - **Start bullets differently.** Don't begin every bullet with a past-tense action verb. Mix structures: "Led...", "The team needed X, so I...", "After discovering Y, rebuilt Z to..."
-- **Use the candidate's actual phrasing from cv.md when possible.** The candidate's own words have natural irregularities that AI-generated text lacks. Preserve their voice — reformulate for keywords, but don't rewrite the whole sentence.
+- **Use the candidate's actual phrasing from cv.md when possible.** The candidate's own words have idiosyncratic phrasing that AI-generated text lacks. Preserve their voice — reformulate for keywords, but don't rewrite the whole sentence.
 
-### Word choice
+### Select words carefully
 - **Avoid AI-hallmark phrases.** Never use: "leveraged", "utilized", "spearheaded", "orchestrated" (as a metaphor for "managed"), "cutting-edge", "passionate about", "drive innovation", "synergy", "holistic approach", "navigate complex", "foster collaboration". These are the first things detectors look for.
 - **Use plain, specific verbs.** "Built" not "architected". "Ran" not "orchestrated". "Fixed" not "remediated". "Cut costs by" not "optimized cost efficiency". The more specific and concrete, the more human it reads.
-- **Preserve technical jargon as-is.** Real engineers say "k8s" not "Kubernetes orchestration platform". Keep the candidate's natural shorthand.
+- **Preserve technical jargon as-is.** Real engineers say "k8s" not "Kubernetes orchestration platform". Keep the candidate's working shorthand.
 
-### Structure
+### Apply structural variations
 - **Don't over-polish.** A real CV has minor asymmetries — one job has 4 bullets, another has 3. One bullet is 2 lines, the next is 1. Don't normalize everything to uniform length.
 - **Keep the Professional Summary under 4 sentences.** AI-generated summaries tend to be dense paragraphs that try to cover everything. A human writes a tighter summary and lets the experience section do the work.
 - **Don't repeat the same metric in both the summary and a bullet.** Humans don't do this. Pick the best place for each number.
 
-### Self-check before generating HTML
-After drafting all CV content, review it once for:
+### Check the draft before generating HTML
+After drafting all CV content, review it once against these checks.
 1. Do 3+ bullets start with the same word? → Rewrite the openings.
-2. Are all bullets the same length (± 5 words)? → Vary them.
-3. Does any sentence contain 2+ words from the AI-hallmark list above? → Rewrite.
+2. Are all bullets the same length (± 25 chars)? → Vary them.
+3. Does any sentence contain 2+ words from the AI-hallmark list in "Choose words carefully"? → Rewrite.
 4. Does the summary read like a paragraph from a cover letter? → Make it more telegraphic.
 
-## HTML Template
+## Use this HTML template
 
 Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with personalized content:
 
@@ -116,6 +116,6 @@ Use the template in `cv-template.html`. Replace the `{{...}}` placeholders with 
 | `{{SECTION_SKILLS}}` | Skills / Competencias |
 | `{{SKILLS}}` | HTML for skills |
 
-## Post-Generation
+## Update the tracker post-generation
 
-Update the tracker if the offer is already registered: change PDF from ❌ to ✅.
+Update the tracker when the offer is already registered: change PDF from ❌ to ✅.

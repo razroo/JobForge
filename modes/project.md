@@ -18,12 +18,12 @@ For each approved project:
 2. **Demo**: live URL or 2-min recorded walkthrough
 3. **Postmortem**: what worked, what didn't, mitigations
 
-## 80/20 Plan
+## Apply The 80/20 Plan
 
 - Week 1 → MVP with core metric
 - Week 2 → polish + interview pack
 
-## Verdicts
+## Return One Of These Verdicts
 
 - **BUILD** → plan with weekly milestones
 - **SKIP** → why and what to do instead

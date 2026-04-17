@@ -2,12 +2,12 @@
 
 ## Hard Limits — NEVER exceed these numbers
 
-These are non-negotiable numeric rules. If you catch yourself about to violate one, STOP and restructure.
+The Hard Limits below are non-negotiable numeric rules. If you catch yourself about to violate one, STOP and restructure.
 
 1. **Max parallel subagents: 2.** Never emit 3+ `task` tool calls in a single message. For N jobs, run `ceil(N/2)` sequential rounds of 2. No exceptions — not for "urgent", not for "the user asked for 10".
 2. **Max 1 application per company+role.** Before every `task` dispatch for `apply`, Grep `data/pipeline.md` and today's `data/applications/*.md` for the URL and for `company+role`. If already APPLIED, skip that job and do not dispatch.
 3. **Always clean Geometra sessions before dispatching.** Before every round of `task` dispatches that will use Geometra, call `geometra_list_sessions` then `geometra_disconnect({closeBrowser: true})`. Every round. The disconnect is a no-op when the pool is empty.
-4. **Orchestrator does NOT fill forms.** This session MUST NOT call `geometra_fill_form`, `geometra_run_actions`, `geometra_pick_listbox_option`, or `geometra_fill_otp` when handling a multi-job request. If you need to, it means you should have delegated — `task` out the remaining work instead.
+4. **Orchestrator does NOT fill forms.** This session MUST NOT call `geometra_fill_form`, `geometra_run_actions`, `geometra_pick_listbox_option`, or `geometra_fill_otp` when handling a multi-job request. If you need to, it means you MUST have delegated — `task` out the remaining work instead.
 5. **Re-dispatch only AFTER the previous subagent returns.** Never fire the same company's `task` twice while the first is still in-flight. Wait for the return value, then decide if a retry is warranted.
 6. **Application outcomes flow through TSVs, not `data/pipeline.md`.** When a subagent returns APPLIED / FAILED / SKIP, the outcome goes to `batch/tracker-additions/{num}-{slug}.tsv`. `node merge-tracker.mjs` then consumes the TSVs into the correct `data/applications/YYYY-MM-DD.md` day file. `data/pipeline.md` only tracks URL inbox state (`[ ]` pending → `[x]` processed). **NEVER append APPLIED / FAILED status lines to `pipeline.md`** — that's the day file's job, via the TSV pathway. After any multi-apply run, the orchestrator MUST run `node merge-tracker.mjs` followed by `node verify-pipeline.mjs` before ending the session.
 
@@ -42,7 +42,7 @@ The harness ships three subagents (see `.opencode/agents/`). The orchestrator MU
 | Drive Geometra form-fill / submit (atomic `run_actions`) | `@general-free` | Procedural; label-driven; deterministic |
 | Merge TSVs, run `verify-pipeline.mjs`, dedup | `@general-free` | Script-driven; no writing quality needed |
 | OTP retrieval via Gmail MCP + `geometra_fill_otp` | `@general-free` | Fixed-shape lookup + input |
-| Scan portals, extract offer metadata, emit JSON | `@general-free` | Structured output; no judgment |
+| Scan portals, extract offer metadata, return structured records (see schema below) | `@general-free` | Structured output; no judgment |
 | Evaluation narrative — Blocks A-F per `modes/offer.md` | `@general-paid` | Judgment + writing quality |
 | Cover letter, "Why X?" answers, Section G drafts | `@general-paid` | Tone and specificity matter |
 | STAR+R interview stories, story-bank curation | `@general-paid` | Quality signals seniority |
@@ -50,7 +50,20 @@ The harness ships three subagents (see `.opencode/agents/`). The orchestrator MU
 | "Extract N fields from this text → JSON" (≤5K input) | `@glm-minimal` | One-shot transform; no context needed |
 | "Classify this JD as archetype X/Y/Z" | `@glm-minimal` | Narrow, structured output |
 
-**Rule:** when you (the orchestrator) delegate a task, pick the cheapest agent that can do it well. Do NOT route every subagent through the same tier. Auto-pipeline mode should split a single job across `@general-paid` (evaluation) and `@general-free` (PDF gen + tracker + apply), not run it all on one model.
+**Example JSON shape for the "extract / emit JSON" subagent rows above** (use this exact key set when delegating a portal-scan / extract task):
+
+```json
+{
+  "company": "Acme",
+  "role": "Senior Backend Engineer",
+  "location": "Remote (US)",
+  "comp_range_usd": "180000-220000",
+  "archetype": "backend-platform",
+  "url": "https://..."
+}
+```
+
+**Rule:** when you (the orchestrator) delegate a task, pick the cheapest agent that can do it well. Do NOT route every subagent through the same tier. Auto-pipeline mode MUST split a single job across `@general-paid` (evaluation) and `@general-free` (PDF gen + tracker + apply), not run it all on one model.
 
 **When to break this rule:** if the user explicitly asks for "quality over cost" or flags a high-stakes application (top-tier company, offer-stage negotiation, executive search), route everything through `@general-paid`. Document the exception in the session.
 
@@ -77,7 +90,7 @@ For any task that will involve **more than one tool call** — i.e., anything be
 
 AI-powered job search automation built on opencode: pipeline tracking, offer evaluation, CV generation, portal scanning, batch processing.
 
-**It will work out of the box, but it's designed to be made yours.** If the archetypes don't match your career, the modes are in the wrong language, or the scoring doesn't fit your priorities -- just ask. You (opencode) can edit any file in this system. The user says "change the archetypes to data engineering roles" and you do it. That's the whole point.
+**It will work out of the box, but it's designed to be made yours.** Ask if the archetypes don't match your career. Ask if the modes are in the wrong language. Ask if the scoring doesn't fit your priorities. You (opencode) can edit any file in this system. The user says "change the archetypes to data engineering roles" and you do it. Customization is the whole point.
 
 ### Main Files
 
@@ -124,7 +137,7 @@ If `config/profile.yml` is missing, copy from `config/profile.example.yml` and t
 >
 > I'll set everything up for you."
 
-Fill in `config/profile.yml` with their answers. For archetypes, map their target roles to the closest matches and update `modes/_shared.md` if needed.
+Fill in `config/profile.yml` with their answers. For archetypes, map their target roles to the closest matches and update `modes/_shared.md` when the existing archetypes do not cover their target roles.
 
 #### Step 3: Portals (recommended)
 If `portals.yml` is missing:
@@ -163,7 +176,7 @@ If the user accepts, use the `/loop` or `/schedule` skill (if available) to set 
 
 ### Personalization
 
-This system is designed to be customized by YOU (opencode). When the user asks you to change archetypes, translate modes, adjust scoring, add companies, or modify negotiation scripts -- do it directly. You read the same files you use, so you know exactly what to edit.
+JobForge is designed to be customized by YOU (opencode). When the user asks you to change archetypes, translate modes, adjust scoring, add companies, or modify negotiation scripts -- do it directly. You read the same files you use, so you know exactly what to edit.
 
 **Common customization requests:**
 - "Change the archetypes to [backend/frontend/data/devops] roles" → edit `modes/_shared.md`
@@ -247,7 +260,7 @@ When a form says "enter the code we sent to your email", you MUST retrieve the c
 
 1. Reach the OTP step in the form. Do NOT close or abandon the session.
 2. Wait ~5-10 seconds for the email to arrive.
-3. Call `gmail_list_messages` with `q` set to the sender query from the table below. Example:
+3. Call `gmail_list_messages` with `q` set to the sender query from the Sender Lookup Table. Example:
    ```
    gmail_list_messages({ q: "from:greenhouse newer_than:10m", maxResults: 5 })
    ```
@@ -262,7 +275,7 @@ When a form says "enter the code we sent to your email", you MUST retrieve the c
    ```
 7. Submit the form.
 
-**Sender lookup table:**
+**Sender Lookup Table:**
 
 | Portal | `q` value for `gmail_list_messages` |
 |--------|-------------------------------------|
@@ -283,16 +296,17 @@ When a form says "enter the code we sent to your email", you MUST retrieve the c
 
 ### Validation State Lags Behind Actual Field State
 
-**This is a known issue across Greenhouse, Ashby, and similar ATS portals.** The frontend validation does not always update synchronously with field input. A field can be correctly filled but still show `invalid: true` or "This field is required" in the schema for several seconds — or even permanently until the user interacts with another field.
+**This is a known issue across Greenhouse, Ashby, and similar ATS portals.** The frontend validation does not always update synchronously with field input. A field can be correctly filled but still show `invalid: true` or "This field is required" in the schema for 3-10 seconds — or even permanently until the user interacts with another field.
 
 **Common false-positive patterns:**
-- `set_checked` / `geometra_set_checked` sets a checkbox to `checked: true`, but the schema still shows `invalid: true` with "This field is required." This is a known lag on privacy policy / acknowledgment checkboxes.
+- `set_checked` / `geometra_set_checked` sets a checkbox to `checked: true`, but the schema still shows `invalid: true` with "This field is required." A known lag affects privacy policy / acknowledgment checkboxes.
 - A dropdown/choice field is correctly picked, but the invalid flag persists.
 - A text field is filled correctly, but validation error text remains until the user tabs or blurs the field.
+- Combobox / autocomplete fields show stale "invalid" overlays after correct selection (Greenhouse, Ashby, Workday, Lever) but submit successfully.
 
-**Rule: Do NOT get stuck in a fill loop.** If a field value looks correct (checked=true, value="No", etc.) but `invalidCount` is unchanged:
+**Rule: Do NOT get stuck in a fill loop.** If a field value looks correct (checked=true, value="No", "Yes") but `invalidCount` is unchanged:
 
-1. **Try Submit anyway.** Many portals allow submission with stale validation errors as long as the underlying value is correct.
+1. **Try Submit anyway.** The major portals (Greenhouse, Workday, Lever, Ashby) allow submission with stale validation errors as long as the underlying value is correct.
 2. **If Submit is disabled**, try interacting with a nearby field (Tab, click another input) to force validation recalculation.
 3. **If a checkbox still shows invalid after `set_checked`**, try clicking it directly by coordinates (`geometra_click` with x,y) instead of the label-based toggle.
 4. **For combobox fields**, pick the option via `geometra_pick_listbox_option` (preferred) rather than typing — typing into comboboxes often creates a stale autocomplete overlay that blocks confirmation.
@@ -311,7 +325,7 @@ Is the visible value correct?
 
 ### Nested Scroll Containers (Greenhouse / Ashby)
 
-Many ATS portals use nested scrollable regions. A field's `visibleBounds` may show it as off-screen even when it is actually visible within a child scroll container. Geometra's `scroll_to` operates on the outermost page scroll, so it cannot reach fields in inner scroll regions.
+The major ATS portals (Greenhouse, Workday, Lever, Ashby) use nested scrollable regions. A field's `visibleBounds` may show it as off-screen even when it is actually visible within a child scroll container. Geometra's `scroll_to` operates on the outermost page scroll, so it cannot reach fields in inner scroll regions.
 
 **Signs you are dealing with nested scroll:**
 - `scroll_to` reports `revealed: false` with `maxSteps` exhausted, but you can see the field in the page model
@@ -349,7 +363,7 @@ Subagents launched via the `task` tool start with a fresh context and cannot aut
 
 **Rule:** When resuming work on forms that were opened in a previous opencode session, drive them from the current orchestrator session directly — do not delegate to a subagent.
 
-**Session IDs persist** across the same opencode session. Within one orchestrator session, `geometra_list_sessions` correctly shows all active sessions (s16, s17, etc.) and `geometra_fill_form`, `geometra_page_model`, and other tools work against those sessions. Subagents are only reliable for NEW form-fill sessions they open themselves.
+**Session IDs persist** across the same opencode session. Within one orchestrator session, `geometra_list_sessions` correctly shows all active sessions (s16, s17, s18, and any other s-prefixed IDs from this session) and `geometra_fill_form`, `geometra_page_model`, and other tools work against those sessions. Subagents are only reliable for NEW form-fill sessions they open themselves.
 
 ### Stale Session Cleanup — MANDATORY
 

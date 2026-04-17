@@ -1,6 +1,6 @@
 # Batch evaluation
 
-This folder holds the **parallel batch runner** for processing many job URLs with headless `opencode run` workers. For how batch fits into the rest of JobForge, see [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
+The `batch/` folder holds the **parallel batch runner** for processing 10+ job URLs with headless `opencode run` workers. For how batch fits into the rest of JobForge, see [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
 ## What ships in git
 
@@ -12,7 +12,7 @@ This folder holds the **parallel batch runner** for processing many job URLs wit
 
 ## Local-only files (gitignored when present)
 
-Per [`.gitignore`](../.gitignore): `batch-input.tsv`, `batch-state.tsv`, `logs/*`, and `tracker-additions/*.tsv`. Empty dirs use `.gitkeep` where needed so the tree exists in a fresh clone.
+Per [`.gitignore`](../.gitignore): `batch-input.tsv`, `batch-state.tsv`, `logs/*`, and `tracker-additions/*.tsv`. Empty dirs (`logs/`, `tracker-additions/`) use `.gitkeep` so the tree exists in a fresh clone.
 
 ## Input: `batch-input.tsv`
 
@@ -53,8 +53,8 @@ npm run verify   # optional: pipeline health after merge (report links, statuses
 
 (`node merge-tracker.mjs` — same as `npm run merge`; see [CONTRIBUTING.md](../CONTRIBUTING.md#development).)
 
-After a successful merge, each processed file is moved to **`batch/tracker-additions/merged/`** (created as needed). `npm run verify` only looks for `*.tsv` files in the **top level** of `batch/tracker-additions/`, so rows already merged and archived under `merged/` do not trigger the “pending TSVs” warning.
+After a successful merge, each processed file is moved to **`batch/tracker-additions/merged/`** (created on first merge when the directory does not yet exist). `npm run verify` only looks for `*.tsv` files in the **top level** of `batch/tracker-additions/`, so rows already merged and archived under `merged/` do not trigger the “pending TSVs” warning.
 
 ## Prerequisites
 
-The runner expects the `opencode` CLI on `PATH` and a valid `batch-prompt.md`. It creates `reports/` and tracker paths as needed; ensure your usual JobForge setup (`cv.md`, profile, etc.) matches what `batch-prompt.md` assumes.
+The runner expects the `opencode` CLI on `PATH` and a valid `batch-prompt.md`. It creates `reports/` and tracker paths when they do not exist; ensure your usual JobForge setup (`cv.md`, `config/profile.yml`, `portals.yml`) matches what `batch-prompt.md` assumes.

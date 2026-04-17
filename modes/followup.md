@@ -17,13 +17,13 @@ Scans all day files in `data/applications/` for entries that need follow-up acti
 | Interview | 7+ days no update | Nudge recruiter: "Following up on our conversation last week" |
 | Evaluated | 14+ days | Stale evaluation. Offer may be closed — suggest verifying or archiving |
 
-## Workflow
+## Run This Workflow
 
-1. **Read** all day files in `data/applications/` — parse all entries with dates
-2. **Compute** days since the date column for each entry (using today's date)
-3. **Filter** to entries matching timing rules above
-4. **Sort** by urgency (most overdue first)
-5. **Present** action list:
+1. **Read** all day files in `data/applications/` — parse all entries with dates.
+2. **Compute** days since the date column for each entry (using today's date).
+3. **Filter** to entries matching the Timing Rules table above.
+4. **Sort** by urgency (most overdue first).
+5. **Present** action list.
 
 ```
 ## Follow-Up Actions — {today's date}
@@ -43,23 +43,26 @@ Scans all day files in `data/applications/` for entries that need follow-up acti
 
 When the user selects an entry to nudge:
 
-1. Read the existing report from `reports/`
-2. Use the **contact** mode logic to generate a follow-up message (not a first outreach)
-3. Follow-up messages are shorter and reference the application:
-   - "I applied to [role] [N days] ago and wanted to follow up..."
-   - Reference one specific proof point from Block B
-   - Keep it under 200 characters for LinkedIn
+1. Read the existing report from `reports/`.
+2. Use the **contact** mode logic to generate a follow-up message (not a first outreach).
+3. Follow-up messages are shorter and reference the application.
+   - "I applied to [role] [N days] ago and wanted to follow up...".
+<!-- isolint-disable-next-line undefined-step-reference -->
+   - Reference one specific proof point from Block B (see `modes/offer.md`).
+   - Keep it under 200 characters for LinkedIn.
 
-## Thank-You Note Generation
+## Generate Thank-You Notes
 
-After interviews, generate a thank-you note:
-1. Read the report + Block F STAR stories
-2. Reference something specific discussed in the interview (ask the user what stood out)
-3. Reinforce one proof point
-4. 3-4 sentences max, send within 24 hours
+After interviews, generate a thank-you note.
+<!-- isolint-disable-next-line undefined-step-reference -->
+1. Read the report + Block F STAR stories (Block F lives in `modes/offer.md`).
+2. Reference something specific discussed in the interview (ask the user what stood out).
+3. Reinforce one proof point.
+4. 3-4 sentences max, send within 24 hours.
 
-## Automation
+## Automate This Mode
 
-This mode works well with `/loop` or `/schedule`:
-- Run `/job-forge followup` every 2-3 days to catch nudge windows
-- Suggest this to the user after their first batch of applications
+The followup mode works well with `/loop` or `/schedule`:
+
+- Run `/job-forge followup` every 2-3 days to catch nudge windows.
+- Suggest this to the user after their first batch of applications.

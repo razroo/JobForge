@@ -16,7 +16,7 @@ Contributor workflows operate against a direct clone of the harness repo (Path B
 
 ## What to Contribute
 
-**Good first contributions:**
+**Suggested first contributions:**
 - Add companies to `templates/portals.example.yml`
 - Improve documentation (start from the [documentation index](docs/README.md) so new pages land in the right place)
 - Add example CVs for different roles (in `examples/` — see `examples/README.md`)
@@ -30,7 +30,7 @@ Contributor workflows operate against a direct clone of the harness repo (Path B
 
 ## Guidelines
 
-- Scripts should handle missing files gracefully (check `existsSync` before `readFileSync`)
+- Scripts MUST handle missing files gracefully (check `existsSync` before `readFileSync`)
 - Dashboard changes require `go build` — test with real data before submitting
 - Don't commit personal data (cv.md, profile.yml, applications.md, reports/)
 
@@ -57,7 +57,7 @@ Other npm scripts:
 | `npm run sync-check` | `cv-sync-check.mjs` | Optional setup lint: `cv.md`, `config/profile.yml`, hardcoded-metric scan; fails if those files are missing |
 | `npm run normalize` | `normalize-statuses.mjs` | Maps non-canonical statuses in tracker files; no-op if no tracker exists |
 | `npm run dedup` | `dedup-tracker.mjs` | Merges duplicate company/role rows; no-op if no tracker exists |
-| `npm run merge` | `merge-tracker.mjs` | Merges `batch/tracker-additions/*.tsv` into the tracker (day-based or single-file); no-op if no TSVs exist; creates tracker if needed |
+| `npm run merge` | `merge-tracker.mjs` | Merges `batch/tracker-additions/*.tsv` into the tracker (day-based or single-file); no-op if no TSVs exist; creates tracker when no tracker file exists yet |
 | `npm run pdf` | `generate-pdf.mjs` | Pass HTML and PDF paths after `--`, e.g. `npm run pdf -- output/cv.html output/cv.pdf`; missing parent dirs for the PDF path are created |
 
 Utility scripts `verify`, `merge`, `normalize`, `dedup`, `sync-check`, and `pdf` accept `--help` / `-h` (e.g. `npm run verify -- --help`, `npm run sync-check -- --help`, `npm run pdf -- --help`).

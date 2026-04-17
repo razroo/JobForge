@@ -2,7 +2,7 @@
 
 Processes accumulated job offer URLs from `data/pipeline.md`. The user adds URLs at any time and then runs `/job-forge pipeline` to process them all.
 
-## Workflow
+## Run This Workflow
 
 1. **Read** `data/pipeline.md` → find `- [ ]` items in the "Pending" section
 2. **For each pending URL**:
@@ -18,7 +18,7 @@ Processes accumulated job offer URLs from `data/pipeline.md`. The user adds URLs
 | # | Company | Role | Score | PDF | Recommended action |
 ```
 
-## pipeline.md Format
+## Apply pipeline.md Format
 
 ```markdown
 ## Pending
@@ -31,7 +31,7 @@ Processes accumulated job offer URLs from `data/pipeline.md`. The user adds URLs
 - [x] #144 | https://boards.greenhouse.io/xyz/jobs/012 | BigCo | SA | 2.1/5 | PDF ❌
 ```
 
-## Smart JD Detection from URL
+## Detect JD From URL
 
 1. **Geometra MCP (preferred):** `geometra_connect` + `geometra_page_model`. Works with all SPAs, uses fewer tokens than raw DOM snapshots.
 2. **WebFetch (fallback):** For static pages or when Geometra is not available.
@@ -56,7 +56,7 @@ node cv-sync-check.mjs
 ```
 If there is a desynchronization, warn the user before continuing.
 
-## Pipeline runbook (follow literally when N ≥ 2)
+## Run This Pipeline Runbook When N >= 2
 
 ```
 Step 1  — Read data/pipeline.md; collect "- [ ]" URLs into `pending = [url_1, ..., url_N]`

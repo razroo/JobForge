@@ -4,13 +4,13 @@ When the user reports a rejection, capture structured data and surface patterns 
 
 **This mode is additive.** It uses the existing notes column in tracker files (no new columns) and appends a section to existing reports (no changes to report format).
 
-## When to Trigger
+## Use These Trigger Conditions
 
-- User says "I got rejected from [company]"
-- User updates a tracker entry to Rejected
-- User runs `/job-forge rejection` to review patterns
+- User says "I got rejected from [company]".
+- User updates a tracker entry to Rejected.
+- User runs `/job-forge rejection` to review patterns.
 
-## Step 1 — Record the Rejection
+## Step 1 — Record The Rejection
 
 Update the entry in `data/applications/` (the day file where the entry exists):
 - Status → `Rejected`
@@ -39,9 +39,9 @@ Update the entry in `data/applications/` (the day file where the entry exists):
 
 Example notes: `REJ@tech:skill — failed system design round`
 
-## Step 2 — Append to Report
+## Step 2 — Append To Report
 
-If a report exists in `reports/`, append a `## Rejection` section:
+Append a `## Rejection` section to the report in `reports/` when one exists:
 
 ```markdown
 ## Rejection
@@ -51,9 +51,9 @@ If a report exists in `reports/`, append a `## Rejection` section:
 **Signal:** What this tells us about future applications for this archetype
 ```
 
-## Step 3 — Pattern Analysis
+## Step 3 — Run Pattern Analysis
 
-When the user runs `/job-forge rejection` (without a specific company), analyze ALL rejected entries:
+Run pattern analysis when the user runs `/job-forge rejection` without a specific company. Analyze ALL rejected entries:
 
 1. **Read** all day files in `data/applications/` — filter to Rejected entries
 2. **Parse** `REJ@{stage}:{reason}` from notes column
@@ -84,7 +84,7 @@ When the user runs `/job-forge rejection` (without a specific company), analyze 
 - [If comp rejections]: "Consider adjusting target range in config/profile.yml"
 ```
 
-## What This Mode Does NOT Do
+## Skip These Actions (Out Of Scope)
 
 - Does NOT change the scoring model or thresholds automatically
 - Does NOT modify reports retroactively (only appends Rejection section)

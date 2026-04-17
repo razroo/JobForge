@@ -11,13 +11,13 @@ For each course/cert the candidate asks about, evaluate across 6 dimensions:
 | Risks | Outdated content? Weak brand? Too basic? |
 | Portfolio deliverable | Does it produce a demonstrable artifact? |
 
-## Verdicts
+## Return One Of These Verdicts
 
 - **DO IT** → 4-12 week plan with weekly deliverables and scoreboard
 - **DON'T DO IT** → better alternative with justification
 - **DO IT WITH TIMEBOX** (max X weeks) → condensed plan, essentials only
 
-## Priority
+## Apply This Priority Order
 
 Training that improves credibility in "production-grade AI":
 1. Evals and LLM testing

@@ -14,32 +14,33 @@ Agent(
 )
 ```
 
-## Configuration
+## Read This Configuration
 
 Read `portals.yml` which contains:
 - `search_queries`: List of WebSearch queries with `site:` filters per portal (broad discovery)
 - `tracked_companies`: Specific companies with `careers_url` for direct navigation
 - `title_filter`: Positive/negative/seniority_boost keywords for title filtering
 
-## Discovery Strategy (3 levels)
+## Apply This Discovery Strategy (3 levels)
 
-### Level 1 — Direct Geometra (PRIMARY)
+### Use Level 1 — Direct Geometra (PRIMARY)
 
-**For each company in `tracked_companies`:** Connect to its `careers_url` with Geometra MCP (`geometra_connect` + `geometra_page_model` / `geometra_list_items`), read ALL visible job listings, and extract the title + URL of each one. This is the most reliable method because:
-- It sees the page in real time (not cached Google results)
-- It works with SPAs (Ashby, Lever, Workday)
-- It detects new offers instantly
-- It doesn't depend on Google indexing
+**For each company in `tracked_companies`:** Connect to its `careers_url` with Geometra MCP (`geometra_connect` + `geometra_page_model` / `geometra_list_items`), read ALL visible job listings, and extract the title + URL of each one. Direct Geometra is the most reliable method because:
+
+- It sees the page in real time (not cached Google results).
+- It works with SPAs (Ashby, Lever, Workday).
+- It detects new offers instantly.
+- It doesn't depend on Google indexing.
 
 **Every company MUST have a `careers_url` in portals.yml.** If it doesn't, search for it once, save it, and use it in future scans.
 
-### Level 2 — Greenhouse API (COMPLEMENTARY)
+### Use Level 2 — Greenhouse API (COMPLEMENTARY)
 
 For companies using Greenhouse, the JSON API (`boards-api.greenhouse.io/v1/boards/{slug}/jobs`) returns clean structured data. Use as a quick complement to Level 1 — it's faster than Geometra but only works with Greenhouse.
 
-### Level 3 — WebSearch queries (BROAD DISCOVERY)
+### Use Level 3 — WebSearch Queries (BROAD DISCOVERY)
 
-The `search_queries` with `site:` filters cover portals broadly (all Ashby, all Greenhouse, etc.). Useful for discovering NEW companies not yet in `tracked_companies`, but results may be outdated.
+The `search_queries` with `site:` filters cover portals broadly (all Ashby boards, all Greenhouse boards, all Lever boards, all Workday boards). Useful for discovering NEW companies not yet in `tracked_companies`, but results may be outdated.
 
 **Execution priority:**
 1. Level 1: Geometra → all `tracked_companies` with `careers_url`
@@ -48,7 +49,7 @@ The `search_queries` with `site:` filters cover portals broadly (all Ashby, all 
 
 The levels are additive — all are executed, results are merged and deduplicated.
 
-## Workflow
+## Run This Workflow
 
 1. **Read configuration**: `portals.yml`
 2. **Read history**: `data/scan-history.tsv` → previously seen URLs
@@ -108,7 +109,7 @@ The levels are additive — all are executed, results are merged and deduplicate
 10. **Duplicate offers (URL-exact)**: record with status `skipped_dup`
 11. **Duplicate offers (fuzzy repost)**: record with status `skipped_repost` and note `repost of #{original_entry_num}`
 
-## Title and Company Extraction from WebSearch Results
+## Extract Title And Company From WebSearch Results
 
 WebSearch results come in the format: `"Job Title @ Company"` or `"Job Title | Company"` or `"Job Title — Company"`.
 
@@ -119,7 +120,7 @@ Extraction patterns by portal:
 
 Generic regex: `(.+?)(?:\s*[@|—–-]\s*|\s+at\s+)(.+?)$`
 
-## Private URLs
+## Resolve Private URLs
 
 If a publicly inaccessible URL is found:
 1. Save the JD to `jds/{company}-{role-slug}.md`
@@ -153,9 +154,9 @@ New added to pipeline.md: N
 → Run /job-forge pipeline to evaluate the new offers.
 ```
 
-## Managing careers_url
+## Update careers_url
 
-Each company in `tracked_companies` should have a `careers_url` — the direct URL to its job listings page. This avoids searching for it every time.
+Each company in `tracked_companies` MUST have a `careers_url` — the direct URL to its job listings page. The stored URL avoids searching for it every time.
 
 **Known patterns by platform:**
 - **Ashby:** `https://jobs.ashbyhq.com/{slug}`
@@ -174,7 +175,7 @@ Each company in `tracked_companies` should have a `careers_url` — the direct U
 2. Try scan_query as fallback
 3. Flag for manual update
 
-## Maintaining portals.yml
+## Update portals.yml
 
 - **ALWAYS save `careers_url`** when adding a new company
 - Add new queries as interesting portals or roles are discovered

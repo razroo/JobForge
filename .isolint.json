@@ -1,0 +1,22 @@
+{
+  "extends": ["recommended"],
+  "rules": {
+    "missing-file-reference": "off",
+    "stale-link-reference": "off"
+  },
+  "options": {
+    "context-budget.info_words": 3000,
+    "context-budget.warn_words": 5000
+  },
+  "ignore": [
+    "node_modules/**",
+    "**/node_modules/**",
+    "output/**",
+    "reports/**",
+    "data/**",
+    "jds/**",
+    "interview-prep/**",
+    "demo/**",
+    "examples/**"
+  ]
+}

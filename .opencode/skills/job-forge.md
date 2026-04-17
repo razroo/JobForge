@@ -37,7 +37,7 @@ If `{{mode}}` is not a sub-command AND doesn't look like a JD, show discovery.
 
 ---
 
-## Discovery Mode (no arguments)
+## Run Discovery Mode (no arguments)
 
 Show this menu:
 
@@ -72,23 +72,23 @@ Token usage check (terminal, outside opencode):
 
 ---
 
-## Context Loading by Mode
+## Load Context by Mode
 
 **IMPORTANT: Only load files needed for the active mode.** Do NOT pre-load all data or mode files. This keeps token usage low.
 
 After determining the mode, Read the necessary files before executing:
 
-### Modes that require `_shared.md` + their mode file:
+### Read `_shared.md` Plus Mode File For These Modes
 Read `modes/_shared.md` + `modes/{mode}.md`
 
 Applies to: `auto-pipeline`, `offer`, `compare`, `pdf`, `contact`, `apply`, `pipeline`, `scan`, `batch`
 
-### Standalone modes (only their mode file):
+### Read Only Mode File For Standalone Modes
 Read `modes/{mode}.md`
 
 Applies to: `tracker`, `deep`, `training`, `project`, `followup`, `rejection`, `negotiation`
 
-### Data files — load only when the mode needs them:
+### Load Data Files Only When Mode Needs Them
 
 | File | Load when mode is... |
 |------|---------------------|
@@ -103,7 +103,7 @@ Applies to: `tracker`, `deep`, `training`, `project`, `followup`, `rejection`, `
 
 **Do NOT read `data/scan-history.tsv` (70KB+), `portals.yml` (100KB+), or `data/applications.md` (grows over time) unless the mode explicitly needs them.**
 
-### Modes delegated to subagent:
+### Delegate These Modes To Subagent
 For `scan`, `apply` (with Geometra MCP), and `pipeline` (3+ URLs): launch as Agent with the content of `_shared.md` + `modes/{mode}.md` injected into the subagent prompt.
 
 ```
@@ -118,18 +118,18 @@ Execute the instructions from the loaded mode file.
 
 ---
 
-## Session Hygiene — REQUIRED for keeping token usage low
+## Apply Session Hygiene To Keep Token Usage Low
 
 **Rule: multi-job workflows MUST delegate each job to its own subagent.**
 
 Long interactive sessions (>100 messages) — especially with Geometra MCP doing repeated `geometra_fill_form` / `geometra_page_model` calls — accumulate conversation history that the model has to re-read on every turn. Tool results from Geometra disrupt prompt caching, so the full history is re-processed as *fresh* input tokens instead of cache reads. Observed symptom: `cache_read` drops to ~2K while `input_tokens` climbs to 100K+ per message.
 
-This applies to:
+The session-hygiene rule applies to:
 
 - **`apply` mode with >1 job URL** → launch one subagent per URL, **max 2 in parallel** (Hard Limit #1 in `AGENTS.md`). For 10 jobs, run 5 sequential rounds of 2. Never run applications directly in this session.
 - **`batch` mode** → already uses `batch-runner.sh`'s parallel `opencode run` workers. Do not wrap `batch` in an interactive session that also does the form filling.
 - **`pipeline` mode with 3+ URLs** → split into per-URL subagents, **max 2 in parallel** (Hard Limit #1).
-- **Anything that calls `geometra_fill_form` more than twice in a row** should be split into subagents.
+- **Anything that calls `geometra_fill_form` more than twice in a row** MUST be split into subagents.
 
 ### Apply-to-N-jobs runbook (follow literally)
 

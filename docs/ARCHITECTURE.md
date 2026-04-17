@@ -101,13 +101,13 @@ For customization (archetypes, weights, tone), start with `_shared.md` and [CUST
 1. **Input**: User pastes JD text or URL
 2. **Extract**: Geometra MCP/WebFetch extracts JD from URL
 3. **Classify**: Detect archetype (one row from the archetype table in `modes/_shared.md`)
-4. **Evaluate**: 6 blocks (A-F):
-   - A: Role summary
-   - B: CV match (gaps + mitigation)
-   - C: Level strategy
-   - D: Comp research (WebSearch)
-   - E: CV personalization plan
-   - F: Interview prep (STAR stories)
+4. **Evaluate**: 6 blocks (A-F).
+   - A: Role summary.
+   - B: CV match (gaps + mitigation).
+   - C: Level strategy.
+   - D: Comp research (WebSearch).
+   - E: CV personalization plan.
+   - F: Interview prep (STAR stories).
 5. **Score**: Weighted average across 10 dimensions (1-5)
 6. **Report**: Save as `reports/{num}-{company}-{date}.md`
 7. **PDF**: Generate ATS-optimized CV (`generate-pdf.mjs`)
@@ -132,7 +132,7 @@ Each worker is a headless opencode instance (`opencode run`) that receives the f
 
 The orchestrator manages parallelism, state, retries, and resume.
 
-**Local batch artifacts:** `batch/batch-input.tsv`, `batch/batch-state.tsv`, `batch/logs/`, and `batch/tracker-additions/*.tsv` are created when you run the runner; they are gitignored (with `.gitkeep` where needed). A fresh clone ships `batch/batch-runner.sh` and `batch/batch-prompt.md` only until you add an input file — see [`batch/README.md`](../batch/README.md) and `batch/batch-runner.sh --help` for the TSV layout and workflow.
+**Local batch artifacts:** `batch/batch-input.tsv`, `batch/batch-state.tsv`, `batch/logs/`, and `batch/tracker-additions/*.tsv` are created when you run the runner; they are gitignored (with `.gitkeep` in `batch/logs/` and `batch/tracker-additions/`). A fresh clone ships `batch/batch-runner.sh` and `batch/batch-prompt.md` only until you add an input file — see [`batch/README.md`](../batch/README.md) and `batch/batch-runner.sh --help` for the TSV layout and workflow.
 
 ## Data Flow
 
@@ -169,13 +169,13 @@ From the project root, `npx job-forge verify` (or `npm run verify`) runs `verify
 5. Table data rows have enough pipe-delimited columns.
 6. No unmerged `batch/tracker-additions/*.tsv` files (warns if any remain).
 7. Score column has no markdown bold.
-8. Warn when state ids in `templates/states.yml` drift from the script’s built-in fallback list (or when the file exists but ids could not be parsed).
+8. Warn when state ids in `templates/states.yml` drift from the script’s built-in fallback list (or when the file exists but ids failed to parse).
 
 When the tracker file is missing, checks 1–5 and 7 are skipped; checks 6 and 8 still run.
 
 ## Contributing touchpoints
 
-Prefer one focused change per pull request: a single mode under `modes/`, one repository-root `.mjs` utility, documentation under `docs/`, fictional samples under [`examples/`](../examples/README.md), templates such as [`templates/portals.example.yml`](../templates/portals.example.yml), the batch flow described in [`batch/README.md`](../batch/README.md), or the Go TUI under `dashboard/` — not a repo-wide refactor across several of those at once. Branch workflow, the verify + dashboard build gate, and starter ideas are in [CONTRIBUTING.md](../CONTRIBUTING.md) (**What to Contribute** and **Development**). To look for in-repo `TODO`, `FIXME`, or `HACK` markers before choosing a task, use the `rg` one-liner in [CONTRIBUTING.md — Optional: scripted agent iterations](../CONTRIBUTING.md#optional-scripted-agent-iterations). Upstream PRs should stay generic: do not commit real candidate data (`cv.md`, `config/profile.yml`, personalized `portals.yml`, `data/applications.md`, `reports/`, or similar paths called out in CONTRIBUTING and `.gitignore`).
+Prefer one focused change per pull request: a single mode under `modes/`, one repository-root `.mjs` utility, documentation under `docs/`, fictional samples under [`examples/`](../examples/README.md), templates such as [`templates/portals.example.yml`](../templates/portals.example.yml), the batch flow described in [`batch/README.md`](../batch/README.md), or the Go TUI under `dashboard/` — not a repo-wide refactor across 3+ of those at once. Branch workflow, the verify + dashboard build gate, and starter ideas are in [CONTRIBUTING.md](../CONTRIBUTING.md) (**What to Contribute** and **Development**). To look for in-repo `TODO`, `FIXME`, or `HACK` markers before choosing a task, use the `rg` one-liner in [CONTRIBUTING.md — Optional: scripted agent iterations](../CONTRIBUTING.md#optional-scripted-agent-iterations). Upstream PRs MUST stay generic: do not commit real candidate data (`cv.md`, `config/profile.yml`, personalized `portals.yml`, `data/applications.md`, `reports/`, or similar paths called out in CONTRIBUTING and `.gitignore`).
 
 **PR / maintainer gate:** Before opening a pull request against `razroo/JobForge`, run `npm run verify` and `npm run build:dashboard` (or `(cd dashboard && go build .)`) from the harness repo root (same as [CONTRIBUTING.md](../CONTRIBUTING.md#development)). For optional scripted iterations that repeat that gate and commit one small change per pass, see [`scripts/cursor-agent-loop.sh`](../scripts/cursor-agent-loop.sh) (environment variables and usage in the script header; overview in [CONTRIBUTING.md](../CONTRIBUTING.md#optional-scripted-agent-iterations)).
 

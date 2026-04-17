@@ -15,14 +15,15 @@
 
 ## Profile (config/profile.yml)
 
-This is the single source of truth for your identity. All modes read from here.
+The `config/profile.yml` file is the single source of truth for your identity. All modes read from here.
 
 Key sections:
-- **candidate**: Name, email, phone, location, LinkedIn, portfolio
-- **target_roles**: Your North Star roles and archetypes
-- **narrative**: Your headline, exit story, superpowers, proof points
-- **compensation**: Target range, minimum, currency
-- **location**: Country, timezone, visa status, on-site availability
+
+- **candidate**: Name, email, phone, location, LinkedIn, portfolio.
+- **target_roles**: Your North Star roles and archetypes.
+- **narrative**: Your headline, exit story, superpowers, proof points.
+- **compensation**: Target range, minimum, currency.
+- **location**: Country, timezone, visa status, on-site availability.
 
 ## Target Roles (modes/_shared.md)
 
@@ -97,4 +98,4 @@ The canonical states rarely need changing. Since `templates/` is a symlink into 
 2. `normalize-statuses.mjs` (alias mappings)
 3. `modes/_shared.md` (any references)
 4. `merge-tracker.mjs` — TSV merges validate the status column against labels in `templates/states.yml`; extend the parser or built-in fallbacks there if you add states before running `npx job-forge merge` / `npm run merge`; see [batch/README.md](../batch/README.md)
-5. `verify-pipeline.mjs` — extend `CANONICAL_STATUSES` (and `ALIASES` if needed) so the health check stays aligned with `states.yml`; see [Architecture — Pipeline Integrity](ARCHITECTURE.md#pipeline-integrity)
+5. `verify-pipeline.mjs` — extend `CANONICAL_STATUSES` (and `ALIASES` when you add new status aliases) so the health check stays aligned with `states.yml`; see [Architecture — Pipeline Integrity](ARCHITECTURE.md#pipeline-integrity)

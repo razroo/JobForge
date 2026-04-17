@@ -25,42 +25,45 @@ Classify the offer into one of the 6 archetypes (see `_shared.md`). If it's a hy
 
 ## Block A — Role Summary
 
-Table with:
-- Detected archetype
-- Domain (platform/agentic/LLMOps/ML/enterprise)
-- Function (build/consult/manage/deploy)
-- Seniority
-- Remote (full/hybrid/onsite)
-- Team size (if mentioned)
-- TL;DR in 1 sentence
+Build a table with these rows.
 
-## Block B — CV Match
+- Detected archetype.
+- Domain (platform/agentic/LLMOps/ML/enterprise).
+- Function (build/consult/manage/deploy).
+- Seniority.
+- Remote (full/hybrid/onsite).
+- Team size (if mentioned).
+- TL;DR in 1 sentence.
 
-**cv.md is already in your context** (via opencode.json:instructions) — use it directly, don't Read it again. Create a table with each JD requirement mapped to exact lines from the CV.
+## Match the CV (Block B)
 
-**Adapted to the archetype:**
-- If FDE → prioritize proof points about fast delivery and client-facing work
-- If SA → prioritize system design and integrations
-- If PM → prioritize product discovery and metrics
-- If LLMOps → prioritize evals, observability, pipelines
-- If Agentic → prioritize multi-agent, HITL, orchestration
-- If Transformation → prioritize change management, adoption, scaling
+**cv.md is already in your context** (via opencode.json:instructions) — use it directly, don't Read it again. Build a table mapping each JD requirement to exact lines from the CV.
 
-**Gaps** section with a mitigation strategy for each one. For each gap:
-1. Is it a hard blocker or a nice-to-have?
-2. Can the candidate demonstrate adjacent experience?
-3. Is there a portfolio project that covers this gap?
-4. Concrete mitigation plan (phrase for cover letter, quick project, etc.)
+**Adapt the proof points to the archetype.**
 
-## Block C — Level and Strategy
+- For FDE: prioritize proof points about fast delivery and client-facing work.
+- For SA: prioritize system design and integrations.
+- For PM: prioritize product discovery and metrics.
+- For LLMOps: prioritize evals, observability, pipelines.
+- For Agentic: prioritize multi-agent, HITL, orchestration.
+- For Transformation: prioritize change management, adoption, scaling.
 
-1. **Detected level** in the JD vs **candidate's natural level for that archetype**
-2. **"Sell senior without lying" plan**: specific phrases adapted to the archetype, concrete achievements to highlight, how to position founder experience as an advantage
-3. **"If I get downleveled" plan**: accept if comp is fair, negotiate 6-month review, clear promotion criteria
+**Gaps** section with a mitigation strategy for each one. For each gap, answer in order.
 
-## Block D — Comp and Demand
+1. Classify it as a hard blocker or an optional requirement.
+2. Identify any adjacent experience the candidate can demonstrate.
+3. Identify any portfolio project that covers the gap.
+4. Write a concrete mitigation plan (a cover-letter phrase or a quick project).
 
-**First check:** If `reports/deep-{company-slug}-*.md` exists, read it — deep research may already have comp data, funding info, and hiring signals. Use it as a starting point instead of duplicating WebSearch effort.
+## Compute level and strategy (Block C)
+
+1. **Compare detected level** in the JD against the candidate's calibrated level for that archetype.
+2. **"Sell senior without lying" plan**: specific phrases adapted to the archetype, concrete achievements to highlight, how to position founder experience as an advantage.
+3. **"If I get downleveled" plan**: accept if comp is fair, negotiate 6-month review, clear promotion criteria.
+
+## Compute comp and demand (Block D)
+
+**Check first:** If `reports/deep-{company-slug}-*.md` exists, read it — deep research may already have comp data, funding info, and hiring signals. Use it as a starting point instead of duplicating WebSearch effort.
 
 Use WebSearch for:
 - Current salaries for the role (Glassdoor, Levels.fyi, Blind)
@@ -69,7 +72,9 @@ Use WebSearch for:
 
 Table with data and cited sources. If no data is available, say so instead of making things up.
 
-## Block E — Customization Plan
+## List the customization plan (Block E)
+
+Build a table with these columns: # | Section | Current State | Proposed Change | Why.
 
 | # | Section | Current State | Proposed Change | Why |
 |---|---------|---------------|-----------------|-----|
@@ -78,9 +83,9 @@ Table with data and cited sources. If no data is available, say so instead of ma
 
 Top 5 changes to the CV + Top 5 changes to LinkedIn to maximize match.
 
-## Block F — Interview Prep Plan
+## List interview-prep stories (Block F)
 
-6-10 STAR+R stories mapped to JD requirements (STAR + **Reflection**):
+Map 6-10 STAR+R stories to JD requirements (STAR + **Reflection**).
 
 | # | JD Requirement | STAR+R Story | S | T | A | R | Reflection |
 |---|----------------|--------------|---|---|---|---|------------|
@@ -92,19 +97,20 @@ The **Reflection** column captures what was learned or what would be done differ
 1. **Check for existing stories** that cover the same theme (e.g., "technical leadership", "delivery under pressure"). Use the `**Best for questions about:**` tags to match.
 2. **If a new story covers the same theme as an existing one**, compare them. Keep the one with stronger quantified results and broader applicability. Update the match count on the keeper. Remove the weaker one.
 3. **If a new story covers a NEW theme**, append it.
-4. **Update match counts**: Each story should have a `**Matched N evaluations:**` line listing which reports used it (e.g., `Matched 5 evaluations: #012, #045, #078, #102, #115`). Stories that match many JDs are the most versatile — they should be practiced first.
-5. **Cap at 10-12 stories max.** If adding a new story would exceed 12, retire the story with the fewest matches and narrowest applicability. Move retired stories to a `## Retired` section at the bottom (don't delete — they might be useful for niche roles).
-6. **Tag archetypes**: Each story should have `**Archetypes:**` listing which role archetypes it's strongest for (e.g., `LLMOps, Platform`).
+4. **Update match counts**: Each story MUST have a `**Matched N evaluations:**` line listing which reports used it (e.g., `Matched 5 evaluations: #012, #045, #078, #102, #115`). Stories with 5+ matches are the most versatile — practice them first.
+5. **Cap at 10-12 stories max.** If adding a new story would exceed 12, retire the story with the fewest matches and narrowest applicability. Move retired stories to a `## Retired` section at the bottom (don't delete — keep them for niche roles).
+6. **Tag archetypes**: Each story MUST have `**Archetypes:**` listing which role archetypes it's strongest for (e.g., `LLMOps, Platform`).
 
 The goal is a curated bank of 10 versatile stories, not an ever-growing log.
 
-**Selected and framed according to the archetype:**
-- FDE → emphasize delivery speed and client-facing work
-- SA → emphasize architecture decisions
-- PM → emphasize discovery and trade-offs
-- LLMOps → emphasize metrics, evals, production hardening
-- Agentic → emphasize orchestration, error handling, HITL
-- Transformation → emphasize adoption, organizational change
+**Frame story selection by archetype.**
+
+- FDE: emphasize delivery speed and client-facing work.
+- SA: emphasize architecture decisions.
+- PM: emphasize discovery and trade-offs.
+- LLMOps: emphasize metrics, evals, production hardening.
+- Agentic: emphasize orchestration, error handling, HITL.
+- Transformation: emphasize adoption, organizational change.
 
 Also include:
 - 1 recommended case study (which of their projects to present and how)
@@ -112,11 +118,11 @@ Also include:
 
 ---
 
-## Post-Evaluation
+## Run post-evaluation steps
 
 **ALWAYS** after generating blocks A-F:
 
-### 1. Save report .md
+### Save the report .md (step 1)
 
 Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
@@ -174,7 +180,7 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 
 **Use the Canonical Scoring Model from `modes/_shared.md`.** The per-dimension breakdown lives in the JSON block (`## Score` section of the report). Don't repeat it as a prose table — that's the duplication we're eliminating. If you need to reference a specific dimension in the narrative, quote its score and rationale from the JSON inline: *"Seniority fit (3/5 — Senior IC, no formal mgmt) is the main gap."*
 
-### 2. Register in tracker
+### Append to the tracker (step 2)
 
 **ALWAYS** register in `data/applications/` (the day file for the current date, e.g., `data/applications/2026-04-13.md`):
 - Next sequential number

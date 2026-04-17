@@ -107,11 +107,12 @@ Classify the offer into one of the 6 archetypes. If it's a hybrid, indicate the 
 | Forward Deployed Engineer | Fast delivery, client-facing, prototype → prod | cv.md + article-digest.md |
 | AI Transformation Lead | Change management, team enablement, adoption | cv.md + article-digest.md |
 
-**Cross-cutting advantage**: Frame the candidate's profile as a **"Technical builder"** who adapts their framing to the role:
-- For PM: "builder who reduces uncertainty with prototypes and then productionizes with discipline"
-- For FDE: "builder who delivers fast with observability and metrics from day 1"
-- For SA: "builder who designs end-to-end systems with real integration experience"
-- For LLMOps: "builder who puts AI into production with closed-loop quality systems — read metrics from article-digest.md"
+**Cross-cutting advantage**: Frame the candidate's profile as a **"Technical builder"** who adapts their framing to the role.
+
+- For PM: "builder who reduces uncertainty with prototypes and then productionizes with discipline".
+- For FDE: "builder who delivers fast with observability and metrics from day 1".
+- For SA: "builder who designs end-to-end systems with real integration experience".
+- For LLMOps: "builder who puts AI into production with closed-loop quality systems — read metrics from article-digest.md".
 
 Turn "builder" into a professional signal, not a "hobby maker" label. The framing changes, the truth stays the same.
 
@@ -124,22 +125,23 @@ Table with: Detected archetype, Domain, Function, Seniority, Remote, Team size, 
 `cv.md` is already in context (via `instructions`) — use it directly, do NOT Read it again. Table with each JD requirement mapped to exact CV lines or i18n.ts keys.
 
 **Adapted to archetype:**
-- FDE → prioritize fast delivery and client-facing
-- SA → prioritize system design and integrations
-- PM → prioritize product discovery and metrics
-- LLMOps → prioritize evals, observability, pipelines
-- Agentic → prioritize multi-agent, HITL, orchestration
-- Transformation → prioritize change management, adoption, scaling
+
+- FDE → prioritize fast delivery and client-facing.
+- SA → prioritize system design and integrations.
+- PM → prioritize product discovery and metrics.
+- LLMOps → prioritize evals, observability, pipelines.
+- Agentic → prioritize multi-agent, HITL, orchestration.
+- Transformation → prioritize change management, adoption, scaling.
 
 **Gaps** section with mitigation strategy for each one:
-1. Is it a hard blocker or nice-to-have?
+1. Is it a hard blocker or a preference-only requirement?
 2. Can the candidate demonstrate adjacent experience?
 3. Is there a portfolio project that covers this gap?
 4. Concrete mitigation plan
 
 #### Block C — Level and Strategy
 
-1. **Detected level** in the JD vs **candidate's natural level**
+1. **Detected level** in the JD vs **candidate's current level** (staff / senior / mid, based on title history in cv.md)
 2. **"Sell senior without lying" plan**: specific phrases, concrete achievements, founder experience as an advantage
 3. **"If I get downleveled" plan**: accept if comp is fair, 6-month review, clear criteria
 
@@ -274,7 +276,7 @@ node generate-pdf.mjs \
 **Writing style — Anti-AI-detection (CRITICAL):**
 ATS platforms (Indeed, LinkedIn, Workday) flag AI-generated CVs. All generated text MUST read as human-written:
 - **Vary sentence length.** Mix short fragments with longer sentences. Don't make every bullet the same length.
-- **Start bullets differently.** Not every bullet should begin with a past-tense action verb.
+- **Start bullets differently.** Bullets MUST NOT all begin with a past-tense action verb — mix in noun-led and metric-led openings.
 - **Use the candidate's own phrasing from cv.md when possible.** Reformulate for keywords, but preserve their voice.
 - **NEVER use these AI-hallmark words:** "leveraged", "utilized", "spearheaded", "orchestrated" (as metaphor), "cutting-edge", "passionate about", "drive innovation", "synergy", "holistic approach", "navigate complex", "foster collaboration".
 - **Use plain, specific verbs.** "Built" not "architected". "Ran" not "orchestrated". "Fixed" not "remediated".
@@ -343,9 +345,9 @@ Where `{next_num}` is calculated by reading all entries across day files in `dat
 
 ### Step 6 — Final Output
 
-When finished, print a JSON summary to stdout for the orchestrator to parse:
+When finished, print a JSON summary to stdout for the orchestrator to parse (template uses `{{ID}}` / `{company}` placeholders — substitute before emitting):
 
-```json
+```
 {
   "status": "completed",
   "id": "{{ID}}",
@@ -360,7 +362,7 @@ When finished, print a JSON summary to stdout for the orchestrator to parse:
 ```
 
 If something fails:
-```json
+```
 {
   "status": "failed",
   "id": "{{ID}}",

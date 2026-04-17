@@ -2,7 +2,7 @@
 
 **Uses the Canonical Scoring Model from `modes/_shared.md`** — the same 10 weighted dimensions used in `offer`, `auto-pipeline`, and `batch` evaluations. This means scores from prior evaluations are directly comparable. No need to re-score unless the user explicitly requests it.
 
-## Workflow
+## Run This Workflow
 
 1. **Gather offers**: Ask the user for offers if not in context. Can be text, URLs, or references to already-evaluated offers in the tracker.
 2. **Score each offer**: If an offer was already evaluated (has a report in `reports/`), read the existing per-dimension scores from the report. If not yet evaluated, score using the full Canonical Scoring Model.
@@ -20,4 +20,4 @@
 | **Weighted total** | **X.X** | **X.X** | **X.X** |
 ```
 
-Then: narrative recommendation explaining which offer to prioritize and why, considering both score and practical factors (timeline, leverage for negotiation, etc.).
+Then: narrative recommendation explaining which offer to prioritize and why, considering both score and practical factors (timeline, negotiation leverage, start-date flexibility, competing offer stages).

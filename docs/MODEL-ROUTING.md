@@ -4,7 +4,7 @@ JobForge routes each piece of work to the cheapest model that can do it well, in
 
 ## Why routing matters (the cost math)
 
-A two-day trace early in development showed `$48` in spend, with **84% coming from GLM 5.1** despite most of the work being procedural (form fills, tracker updates, OTP retrieval). The root cause:
+A two-day trace early in development showed `$48` in spend, with **84% coming from GLM 5.1** despite the majority of the work being procedural (form fills, tracker updates, OTP retrieval). The root cause:
 
 - **GLM 5.1's provider doesn't discount cache reads.** On Anthropic, a 10K-token cached prefix costs ~$0.03. On GLM 5.1 it bills near-full input rate (~$0.35). Every session that re-loads the prefix pays full price.
 - **Procedural work is the high-volume work.** 1000+ messages per day go to form filling, TSV merges, scan dedup. Running that on GLM 5.1 is ~10× more expensive than running it on a free-tier model that can handle the task just fine.
@@ -75,7 +75,7 @@ reasoningEffort: medium
 ---
 ```
 
-That file is a symlink into `node_modules/job-forge/` by default. To customize locally without modifying the harness: delete the symlink and create a real file with the same name — `job-forge sync` will skip it on future updates. Or override in `opencode.json` under `agent.general-paid.model`.
+The `.opencode/agents/general-paid.md` file is a symlink into `node_modules/job-forge/` by default. To customize locally without modifying the harness: delete the symlink and create a real file with the same name — `job-forge sync` will skip it on future updates. Or override in `opencode.json` under `agent.general-paid.model`.
 
 ### Swap the free tier
 
@@ -86,12 +86,14 @@ Same idea — edit `.opencode/agents/general-free.md`'s `model:` field. `opencod
 Create `.opencode/agents/my-agent.md` with the same frontmatter shape, then allow-list it in `opencode.json:permission.task`:
 
 ```json
-"permission": {
-  "task": {
-    "general-free": "allow",
-    "general-paid": "allow",
-    "glm-minimal": "allow",
-    "my-agent": "allow"
+{
+  "permission": {
+    "task": {
+      "general-free": "allow",
+      "general-paid": "allow",
+      "glm-minimal": "allow",
+      "my-agent": "allow"
+    }
   }
 }
 ```

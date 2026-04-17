@@ -6,7 +6,7 @@
 
 ---
 
-**Use these reference profiles to anchor scores and prevent drift over time.** When evaluating an offer, mentally compare it to these anchors before assigning a final score. Scores should be relative to the candidate's actual profile, not absolute.
+**Use these reference profiles to anchor scores and prevent drift over time.** When evaluating an offer, mentally compare it to these anchors before assigning a final score. Scores MUST be relative to the candidate's actual profile, not absolute.
 
 <!-- [CUSTOMIZE] Replace these with real offers you've evaluated, or archetypes
      that represent clear score levels for YOUR situation. The examples below
@@ -17,7 +17,7 @@
 |-------|--------------------|----------------|
 | **5.0** | Dream role. Exact archetype, 90%+ CV match, top-quartile comp, remote, strong brand, fast process. You'd accept immediately. | _Replace with your highest-scored report once you have one_ |
 | **4.0** | Strong match. Right archetype, 75%+ match, fair comp, minor gaps that are easy to frame. Worth a tailored application. | _Replace with a real ~4.0 report_ |
-| **3.0** | Moderate match. Adjacent archetype, 50-60% match, some hard gaps, comp unknown or median. Worth evaluating but not a priority. | _Replace with a real ~3.0 report_ |
+| **3.0** | Moderate match. Adjacent archetype, 50-60% match, 2-4 hard gaps, comp unknown or median. Worth evaluating but not a priority. | _Replace with a real ~3.0 report_ |
 | **2.0** | Weak match. Wrong seniority or archetype, major gaps, below-market comp signals. Discourage unless specific reason. | _Replace with a real ~2.0 report_ |
 | **1.0** | No fit. Unrelated domain, entry-level, relocation-only, or red flags. Skip. | _Replace with a real ~1.0 report_ |
 

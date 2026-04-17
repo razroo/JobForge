@@ -11,7 +11,7 @@
      4. Customize the sections below marked with [CUSTOMIZE]
      ============================================================ -->
 
-## Sources of Truth
+## Read these sources of truth
 
 | File | Path | Loaded where? |
 |------|------|----------------|
@@ -30,7 +30,7 @@
 
 ---
 
-## North Star -- Target Roles
+## List the North Star target roles
 
 The skill applies with EQUAL rigor to ALL target roles. None is primary or secondary -- any is a success if comp and growth are right:
 
@@ -50,7 +50,7 @@ The skill applies with EQUAL rigor to ALL target roles. None is primary or secon
      - Engineering Manager
      etc. -->
 
-### Adaptive Framing by Archetype
+### Apply framing by archetype
 
 > **Concrete metrics: read from `cv.md` + `article-digest.md` at evaluation time. NEVER hardcode numbers here.**
 
@@ -65,7 +65,7 @@ The skill applies with EQUAL rigor to ALL target roles. None is primary or secon
 
 <!-- [CUSTOMIZE] Map YOUR specific projects/articles to each archetype above -->
 
-### Exit Narrative (use in ALL framings)
+### Use this exit narrative in ALL framings
 
 <!-- [CUSTOMIZE] Replace with YOUR narrative. Examples:
      - "Built and sold my SaaS after 5 years. Now focused on applied AI at scale."
@@ -76,20 +76,21 @@ The skill applies with EQUAL rigor to ALL target roles. None is primary or secon
 Use the candidate's exit story from `config/profile.yml` to frame ALL content:
 - **In PDF Summaries:** Bridge from past to future -- "Now applying the same [skill] to [JD domain]."
 - **In STAR stories:** Reference proof points from article-digest.md
-- **In Draft Answers (Section G):** The transition narrative should appear in the first response.
+- **In Draft Answers (Section G):** Place the transition narrative in the first response.
 - **When the JD asks for "entrepreneurial", "ownership", "builder", "end-to-end":** This is the #1 differentiator. Increase match weight.
 
-### Cross-cutting Advantage
+### Use the cross-cutting advantage frame
 
-Frame profile as **"Technical builder with real-world proof"** that adapts framing to the role:
-- For PM: "builder who reduces uncertainty with prototypes then productionizes with discipline"
-- For FDE: "builder who delivers fast with observability and metrics from day 1"
-- For SA: "builder who designs end-to-end systems with real integration experience"
-- For LLMOps: "builder who puts AI in production with closed-loop quality systems"
+Frame the candidate as a **"Technical builder with real-world proof"**. Adapt the phrasing per archetype.
+
+- For PM: "builder who reduces uncertainty with prototypes then productionizes with discipline."
+- For FDE: "builder who delivers fast with observability and metrics from day 1."
+- For SA: "builder who designs end-to-end systems with real integration experience."
+- For LLMOps: "builder who puts AI in production with closed-loop quality systems."
 
 Convert "builder" into a professional signal, not a "hobby maker". Real proof points make this credible.
 
-### Portfolio as Proof Point (use in high-value applications)
+### Use the portfolio as a proof point in high-value applications
 
 <!-- [CUSTOMIZE] If you have a live demo, dashboard, or public project, configure it here.
      Example:
@@ -105,11 +106,12 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 <!-- [CUSTOMIZE] Research comp ranges for YOUR target roles and update these ranges -->
 
-**General guidance:**
-- Use WebSearch for current market data (Glassdoor, Levels.fyi, Blind)
-- Frame by role title, not by skills -- titles determine comp bands
-- Contractor rates are typically 30-50% higher than employee base to account for benefits
-- Geographic arbitrage works for remote roles: lower CoL = better net
+**Follow this general guidance.**
+
+- Use WebSearch for current market data (Glassdoor, Levels.fyi, Blind).
+- Frame by role title, not by skills — titles determine comp bands.
+- Contractor rates are typically 30-50% higher than employee base to account for benefits.
+- Geographic arbitrage works for remote roles: lower CoL = better net.
 
 ### Negotiation Scripts
 
@@ -136,14 +138,14 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 - Remote dimension for hybrid outside your country: score **3.0** (not 1.0)
 - Only score 1.0 if JD explicitly says "must be on-site 4-5 days/week, no exceptions"
 
-### Time-to-offer priority
+### Use time-to-offer as the priority
 - Working demo + metrics > perfection
 - Apply sooner > learn more
 - 80/20 approach, timebox everything
 
 ---
 
-## Canonical Scoring Model (SINGLE SOURCE OF TRUTH)
+## Use this canonical scoring model (SINGLE SOURCE OF TRUTH)
 
 **ALL evaluation modes MUST use this exact model.** Whether the offer is evaluated via `offer`, `auto-pipeline`, `batch`, or compared via `compare`, the score is computed the same way. This ensures scores are comparable across the entire pipeline.
 
@@ -153,10 +155,10 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 | 2 | CV match | 15% | <40% requirements covered | 60-75% covered, gaps are soft | 90%+ covered with proof points |
 | 3 | Seniority fit | 15% | Junior / 2+ levels below | Mid-senior, manageable positioning | Staff+ or exact level match |
 | 4 | Comp estimate | 10% | Well below market / no data | Median for role+location | Top quartile or above target |
-| 5 | Growth trajectory | 10% | Dead end, no progression path | Some growth, unclear timeline | Clear path to next level |
-| 6 | Remote quality | 5% | On-site only, no flexibility | Hybrid with some flexibility | Full remote, async-friendly |
+| 5 | Growth trajectory | 10% | Dead end, no progression path | 1-2 yr path forward, timeline unclear | Clear path to next level |
+| 6 | Remote quality | 5% | On-site only, no flexibility | Hybrid 2-3 days in office | Full remote, async-friendly |
 | 7 | Company reputation | 5% | Red flags, poor reviews | Average employer, neutral signals | Top employer, strong brand |
-| 8 | Tech stack modernity | 5% | Legacy, no AI/ML relevance | Some modern tooling | Cutting-edge AI/ML stack |
+| 8 | Tech stack modernity | 5% | Legacy, no AI/ML relevance | Mix of modern and legacy tooling | Frontier AI/ML stack (LLMs, agents, evals) |
 | 9 | Speed to offer | 5% | 6+ month process, bureaucratic | Standard 4-6 week process | Fast-track, <4 weeks typical |
 | 10 | Cultural signals | 5% | Bureaucratic, risk-averse | Mixed signals | Builder culture, high ownership |
 
@@ -198,7 +200,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 **Rules:**
 
 - `score` per dimension is 1-5 (integer or 0.5 step).
-- `rationale` is ≤ 12 words, no markdown.
+- `rationale` is ≤ 80 characters, no markdown.
 - `weighted_total` = round(Σ weight × score, 1). The 10 weights sum to 100% exactly.
 - `recommendation` ∈ {`"apply"` (≥3.5), `"apply_with_caveats"` (3.0-3.4), `"skip"` (<3.0)}.
 - `pdf_threshold_met` ⇔ `weighted_total ≥ 3.0`.
@@ -212,7 +214,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 **Score interpretation (use consistently everywhere):**
 - **4.5-5.0** — Strong match. Generate PDF + draft answers. Apply promptly.
-- **3.5-4.4** — Good match. Generate PDF + draft answers. Worth applying with tailored CV.
+- **3.5-4.4** — Apply with tailored CV. Generate PDF + draft answers.
 - **3.0-3.4** — Moderate match. Generate PDF. Flag gaps to candidate before applying.
 - **< 3.0** — Weak match. Report only. Explicitly discourage applying unless candidate has a specific reason.
 
@@ -229,7 +231,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 ## Global Rules
 
-### NEVER
+### Skip these actions
 
 1. Invent experience or metrics
 2. Modify cv.md or portfolio files
@@ -241,7 +243,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 8. Ignore the tracker (every evaluated offer gets registered)
 9. Use AI-hallmark words: "leveraged", "utilized", "spearheaded", "orchestrated" (as metaphor), "cutting-edge", "passionate about", "drive innovation", "synergy", "holistic approach", "navigate complex", "foster collaboration". ATS platforms flag these. Use plain, specific verbs instead.
 
-### ALWAYS
+### Do these always
 
 0. **Cover letter:** If the form has an option to attach or write a cover letter, ALWAYS include one. Generate PDF with the same visual design as the CV. Content: JD quotes mapped to proof points, links to relevant case studies. 1 page max.
 1. Read cv.md and article-digest.md (if exists) before evaluating any offer
@@ -257,7 +259,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 9. **Tracker additions as TSV** -- NEVER add new entries directly to day files in `data/applications/`. Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
 10. **Include `**URL:**` in every report header** -- between Score and PDF.
 
-### Tools
+### Use these tools
 
 | Tool | Use |
 |------|-----|

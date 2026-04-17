@@ -4,7 +4,7 @@ When the user pastes a JD (text or URL) without an explicit sub-command, execute
 
 ## Step 0 — Extract JD
 
-If the input is a **URL** (not pasted JD text), fetch the content **once** using exactly ONE of the methods below. **Do NOT chain methods as redundant fallbacks** — each method re-pulls the same 3-5K tokens into context.
+Fetch the JD content once. If the input is a **URL** (not pasted JD text), fetch the content **once** using exactly ONE of the methods below. **Do NOT chain methods as redundant fallbacks** — each method re-pulls the same 3-5K tokens into context.
 
 **Pick exactly one method, in this priority order:**
 
@@ -18,7 +18,7 @@ If the input is a **URL** (not pasted JD text), fetch the content **once** using
 
 **If the input is JD text** (not a URL): use it directly, no fetching needed.
 
-## Step 1 — Evaluation A-F
+## Step 1 — Run Evaluation A-F
 Execute exactly as in the `offer` mode (read `modes/offer.md` for all blocks A-F).
 
 ## Step 2 — Save Report .md
@@ -27,43 +27,44 @@ Save the complete evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (
 ## Step 3 — Generate PDF
 Execute the full `pdf` pipeline (read `modes/pdf.md`).
 
-## Step 4 — Draft Application Answers (if score >= 3.5)
+## Step 4 — Generate Application Answers When Score >= 3.5
 
-If the final score is >= 3.5 (per Canonical Scoring Model thresholds in `_shared.md`), generate draft answers for the application form:
+Generate draft answers for the application form when the final score is >= 3.5. If the final score is >= 3.5 (per Canonical Scoring Model thresholds in `_shared.md`), generate draft answers for the application form:
 
 1. **Extract form questions**: Use Geometra MCP (`geometra_connect` + `geometra_form_schema`) to discover all form fields. If questions cannot be extracted, use the generic questions.
 2. **Generate answers** following the tone guidelines (see below).
 3. **Save in the report** as a `## G) Draft Application Answers` section.
 
-### Generic questions (use if they cannot be extracted from the form)
+### Use Generic Questions When Form Extraction Fails
 
 - Why are you interested in this role?
 - Why do you want to work at [Company]?
-- Tell us about a relevant project or achievement
-- What makes you a good fit for this position?
+- Tell us about a relevant project or achievement.
+- What makes you a strong fit for this position?
 - How did you hear about this role?
 
-### Tone for Form Answers
+### Apply This Tone For Form Answers
 
 **Position: "I'm choosing you."** The candidate has options and is choosing this company for concrete reasons.
 
 **Tone rules:**
-- **Confident without arrogance**: "I've spent the past year building production AI agent systems — your role is where I want to apply that experience next"
-- **Selective without pretentiousness**: "I've been intentional about finding a team where I can contribute meaningfully from day one"
-- **Specific and concrete**: Always reference something REAL from the JD or the company, and something REAL from the candidate's experience
-- **Direct, no fluff**: 2-4 sentences per answer. No "I'm passionate about..." or "I would love the opportunity to..."
-- **The hook is the proof, not the claim**: Instead of "I'm great at X", say "I built X that does Y"
+
+- **Confident without arrogance**: "I've spent the past year building production AI agent systems — your role is where I want to apply that experience next".
+- **Selective without overstatement**: "I've been intentional about finding a team where I can contribute meaningfully from day one".
+- **Specific and concrete**: Always reference something REAL from the JD or the company, and something REAL from the candidate's experience.
+- **Direct, no fluff**: 2-4 sentences per answer. No "I'm passionate about..." or "I would love the opportunity to...".
+- **The hook is the proof, not the claim**: Instead of "I'm great at X", say "I built X that does Y".
 
 **Framework per question:**
 - **Why this role?** → "Your [specific thing] maps directly to [specific thing I built]."
 - **Why this company?** → Mention something concrete about the company. "I've been using [product] for [time/purpose]."
 - **Relevant experience?** → A quantified proof point. "Built [X] that [metric]. Sold the company in 2025."
-- **Good fit?** → "I sit at the intersection of [A] and [B], which is exactly where this role lives."
+- **Strong fit?** → "I sit at the intersection of [A] and [B], which is exactly where this role lives."
 - **How did you hear?** → Honest: "Found through [portal/scan], evaluated against my criteria, and it scored highest."
 
 **Language**: Always in the language of the JD (EN default). Apply `/tech-translate`.
 
 ## Step 5 — Update Tracker
-Record in the current day file `data/applications/YYYY-MM-DD.md` with all columns including Report and PDF marked as ✅.
+Update the current day file `data/applications/YYYY-MM-DD.md` with all columns including Report and PDF marked as ✅.
 
 **If any step fails**, continue with the remaining steps and mark the failed step as pending in the tracker.
