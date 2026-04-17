@@ -20,6 +20,7 @@
     "tokens:log": "node scripts/token-usage-report.mjs --days 1 --append",
     "build:config": "iso-harness build --source iso --out .",
     "prepack": "iso-harness build --source iso --out .",
+    "release:check-source": "node ./scripts/release/check-source.mjs",
     "postinstall": "node bin/sync.mjs"
   },
   "files": [

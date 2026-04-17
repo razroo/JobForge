@@ -1,0 +1,49 @@
+name: Quality checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build iso-harness configs
+        run: npm run build:config
+
+      - name: Verify expected generated files exist
+        run: |
+          set -e
+          for f in \
+            CLAUDE.md \
+            AGENTS.md \
+            .mcp.json \
+            .codex/config.toml \
+            .cursor/mcp.json \
+            .cursor/rules/main.mdc \
+            opencode.json \
+            .opencode/agents/general-free.md \
+            .opencode/agents/general-paid.md \
+            .opencode/agents/glm-minimal.md \
+            .opencode/skills/job-forge.md
+          do
+            if [ ! -f "$f" ]; then
+              echo "::error::missing expected iso-harness output: $f"
+              exit 1
+            fi
+          done
+          echo "All 11 expected iso-harness outputs present."
+
+      - name: Dry-run npm pack
+        run: npm pack --dry-run
