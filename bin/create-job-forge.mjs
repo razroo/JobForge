@@ -117,7 +117,7 @@ const consumerPkg = {
     'update-harness': 'npm update job-forge @razroo/opencode-model-fallback @razroo/gmail-mcp @geometra/mcp && job-forge sync && node -e "console.log(\'✅ harness at\', require(\'./package-lock.json\').packages[\'node_modules/job-forge\'].resolved)"',
   },
   dependencies: {
-    'job-forge': 'github:razroo/JobForge',
+    'job-forge': '^2.0.0',
     // Model-fallback plugin: rotates agents through their fallback_models
     // chain on rate-limit / 5xx errors so a rate-limited free-tier model
     // doesn't wedge the whole flow. The chains live upstream in each

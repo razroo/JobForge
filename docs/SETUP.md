@@ -10,16 +10,22 @@
 
 ### Path A — Scaffold a personal project (recommended)
 
-JobForge is distributed as an installable npm package. Use the scaffolder to create a new project that keeps only your personal data (CV, profile, portals, tracker) while the harness (modes, skills, scripts) lives in `node_modules/job-forge` and updates with one command.
+JobForge is published on npm as [`job-forge`](https://www.npmjs.com/package/job-forge). Use the scaffolder to create a new project that keeps only your personal data (CV, profile, portals, tracker) while the harness (modes, skills, scripts, per-harness configs) lives in `node_modules/job-forge` and updates with one command.
 
 ```bash
 # 1. Scaffold
-npx github:razroo/JobForge create-job-forge my-job-search
+npx --package=job-forge create-job-forge my-job-search
 cd my-job-search
 
-# 2. Install the harness (pulls razroo/JobForge from GitHub; postinstall
-#    creates symlinks for modes/, templates/, .opencode/skills/job-forge.md,
-#    and batch/{batch-prompt.md,batch-runner.sh,README.md})
+# 2. Install the harness. `npm install` fetches job-forge@^2.0.0 from npm;
+#    its postinstall hook creates symlinks into your project root for:
+#      .opencode/{skills/job-forge.md, agents/}
+#      .cursor/mcp.json, .cursor/rules/main.mdc
+#      .mcp.json                       (Claude Code MCP config)
+#      .codex/config.toml              (Codex MCP config)
+#      AGENTS.harness.md, CLAUDE.harness.md
+#      modes/, templates/
+#      batch/{batch-prompt.md, batch-runner.sh, README.md}
 npm install
 
 # 3. Fill in personal files
@@ -41,18 +47,25 @@ Paste a job URL or run `/job-forge` to see the command menu.
 To **upgrade the harness** later:
 
 ```bash
-npm update job-forge       # pulls latest razroo/JobForge
+npm update job-forge       # pulls latest job-forge from the npm registry
 npx job-forge sync         # refresh symlinks if anything drifted
 ```
 
+Or simpler, via the scaffolded script: `npm run update-harness` (also refreshes the fallback plugin + pinned MCPs, reprints the resolved version).
+
 ### Path B — Clone the harness directly
 
-Use this if you want to hack on the harness itself (add modes, tune the scoring model, contribute back). Personal files are gitignored.
+Use this if you want to hack on the harness itself (edit `iso/`, tune the scoring model, add modes, contribute back). Personal files are gitignored.
 
 ```bash
 git clone https://github.com/razroo/JobForge.git
 cd JobForge
 npm install
+npm run build:config   # regenerate per-harness trees from iso/ (CLAUDE.md,
+                       # AGENTS.md, .mcp.json, .codex/, .cursor/, .opencode/,
+                       # opencode.json) — these are gitignored but materialized
+                       # locally so OpenCode/Cursor/Claude Code/Codex can read
+                       # them while you develop
 
 # Add personal files the same way as Path A
 cp config/profile.example.yml config/profile.yml
@@ -60,7 +73,7 @@ cp templates/portals.example.yml portals.yml
 # Create cv.md in the project root
 ```
 
-When you're inside this repo, the `postinstall` symlink step is a no-op (detected and skipped). All npm scripts run the harness code directly. The repo's `opencode.json` at the project root registers the same Geometra + Gmail MCPs as the scaffolder ships to consumers.
+When you're inside this repo, the `postinstall` symlink step is a no-op (detected and skipped). All npm scripts run the harness code directly. The repo's generated `opencode.json` at the project root registers the same Geometra + Gmail MCPs as the scaffolder ships to consumers. Re-run `npm run build:config` any time you edit something under `iso/`; `prepack` runs the same build automatically at publish time so tarballs always match `iso/`.
 
 ## Personalization
 

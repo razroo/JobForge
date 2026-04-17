@@ -4,12 +4,12 @@ Guides for installing JobForge, understanding how pieces fit together, and tailo
 
 ## Install paths
 
-JobForge ships as an installable package (v2.0.0+). Pick the path that matches your goal:
+JobForge ships on npm as [`job-forge`](https://www.npmjs.com/package/job-forge) (v2.0.0+). Pick the path that matches your goal:
 
 | Path | Who it's for | How |
 |------|--------------|-----|
-| **A — Scaffold a personal project** | Most users. You want a job search project with the harness in `node_modules`, updatable via `npm update job-forge`. | `npx github:razroo/JobForge create-job-forge my-search && cd my-search && npm install` |
-| **B — Clone the harness directly** | Contributors and hackers working on modes, scripts, or the scoring model. Personal files are gitignored. | `git clone https://github.com/razroo/JobForge.git && cd JobForge && npm install` |
+| **A — Scaffold a personal project** | Most users. You want a job search project with the harness in `node_modules`, updatable via `npm update job-forge`. | `npx --package=job-forge create-job-forge my-search && cd my-search && npm install` |
+| **B — Clone the harness directly** | Contributors and hackers working on `iso/`, modes, scripts, or the scoring model. Personal files are gitignored. | `git clone https://github.com/razroo/JobForge.git && cd JobForge && npm install && npm run build:config` |
 
 See [SETUP.md](SETUP.md) for both paths.
 

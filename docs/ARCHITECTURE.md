@@ -2,31 +2,42 @@
 
 ## Package architecture (v2.0.0+)
 
-JobForge ships as an npm package. There are two kinds of repo involved:
+JobForge ships as an npm package at [`job-forge`](https://www.npmjs.com/package/job-forge). There are two kinds of repo involved:
 
-- **Harness** — this repo, `razroo/JobForge`. Installable via `github:razroo/JobForge` (no npm registry). Contains modes, scripts, skill router, templates, fonts, dashboard, and bin entries.
-- **Consumer project** — what users interact with day-to-day. Scaffolded via `npx create-job-forge <dir>`, or hand-authored with `job-forge` listed in `package.json` dependencies.
+- **Harness** — this repo, `razroo/JobForge`. Published to npm. Contains `iso/` (single source of truth), modes, scripts, skill router, templates, fonts, dashboard, and bin entries. Per-harness config trees are **generated** from `iso/` by [`@razroo/iso-harness`](https://www.npmjs.com/package/@razroo/iso-harness) — gitignored here, baked into the tarball by `prepack` at publish time, and landed in consumer projects via symlinks.
+- **Consumer project** — what users interact with day-to-day. Scaffolded via `npx --package=job-forge create-job-forge <dir>`, or hand-authored with `job-forge` listed in `package.json` dependencies.
 
-The consumer's project root contains only personal data:
+The consumer's project root contains personal data plus symlinks into `node_modules/job-forge/`:
 
 ```
 my-search/
-├── package.json                 # depends on "job-forge"
-├── opencode.json                # instructions: ["templates/states.yml"]
-├── cv.md                        # personal
-├── config/profile.yml           # personal
-├── portals.yml                  # personal
-├── data/                        # personal (gitignored)
-├── reports/                     # personal (gitignored)
-├── modes/                       # → symlink to node_modules/job-forge/modes/
-├── templates/                   # → symlink to node_modules/job-forge/templates/
-├── .opencode/skills/job-forge.md # → symlink
-├── batch/batch-prompt.md        # → symlink
-├── batch/batch-runner.sh        # → symlink
-└── node_modules/job-forge/      # harness, fetched from github
+├── package.json                      # depends on "job-forge": "^2.0.0"
+├── opencode.json                     # instructions: ["templates/states.yml"]
+├── cv.md                             # personal
+├── config/profile.yml                # personal
+├── portals.yml                       # personal
+├── data/                             # personal (gitignored)
+├── reports/                          # personal (gitignored)
+├── AGENTS.md                         # personal overrides (opencode + codex)
+├── CLAUDE.md                         # personal overrides (Claude Code); @-imports CLAUDE.harness.md
+│
+│ # ↓ symlinks regenerated on every `npm install` by bin/sync.mjs
+├── AGENTS.harness.md                 # → node_modules/job-forge/AGENTS.md
+├── CLAUDE.harness.md                 # → node_modules/job-forge/CLAUDE.md
+├── .mcp.json                         # → Claude Code MCP config
+├── .codex/config.toml                # → Codex MCP config
+├── .cursor/mcp.json                  # → Cursor MCP config
+├── .cursor/rules/main.mdc            # → Cursor always-apply rule
+├── .opencode/skills/job-forge.md     # → skill router
+├── .opencode/agents/                 # → @general-free, @general-paid, @glm-minimal
+├── modes/                            # → mode files
+├── templates/                        # → states.yml, portals.example.yml, cv-template.html
+├── batch/batch-prompt.md             # → batch worker prompt
+├── batch/batch-runner.sh             # → parallel orchestrator
+└── node_modules/job-forge/           # harness, installed from npm
 ```
 
-Symlinks are created by the harness's `postinstall` hook (`bin/sync.mjs`) on every `npm install`. They are gitignored in the scaffolder template. Real files at those paths are preserved — if a user locally customizes a mode file, the sync skips that symlink and warns.
+Symlinks are created by the harness's `postinstall` hook (`bin/sync.mjs`) on every `npm install`. Real files at those paths are preserved — if a user locally customizes a mode file, the sync skips that symlink and warns.
 
 The consumer's `opencode.json` loads a small set of stable files as always-present instructions: `AGENTS.harness.md` (harness operational rules), `templates/states.yml` (canonical application states), `modes/_shared.md` (scoring model), and `cv.md` (the candidate's CV). Caching these in the prefix means agents never Read them as tool calls. Churning content (score calibration anchors, specific mode files) stays out of `instructions` and is Read on demand.
 
@@ -34,7 +45,9 @@ The skill router (`.opencode/skills/job-forge.md`) loads mode and data files on 
 
 **Cost-tiered subagents** live in `.opencode/agents/` (`general-free`, `general-paid`, `glm-minimal`) — the orchestrator delegates procedural work to free-tier models and reserves paid models for quality-sensitive writing. See [MODEL-ROUTING.md](MODEL-ROUTING.md) for the routing architecture, why it exists, and how to customize.
 
-**Upgrading** the harness in a consumer project is `npm run update-harness` — fetches the latest harness (`github:razroo/JobForge`) and `@razroo/opencode-model-fallback` plugin, re-runs symlink sync, and prints the resolved commit SHA.
+**Multi-harness support.** Because `iso/` is the single source of truth, publishing ships config for OpenCode, Cursor, Claude Code, and Codex in one tarball. Consumers run any of `opencode`, `cursor`, `claude`, or `codex` in the project and each picks up the shared MCP config + instructions via the symlinks above.
+
+**Upgrading** the harness in a consumer project is `npm run update-harness` — pulls the latest `job-forge` from npm, refreshes the fallback plugin + pinned MCPs, re-runs symlink sync, and prints the resolved version.
 
 ## System Overview
 
