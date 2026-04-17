@@ -19,12 +19,20 @@
     "tokens:today": "node scripts/token-usage-report.mjs --days 1",
     "tokens:log": "node scripts/token-usage-report.mjs --days 1 --append",
     "build:config": "iso-harness build --source iso --out .",
+    "prepack": "iso-harness build --source iso --out .",
     "postinstall": "node bin/sync.mjs"
   },
   "files": [
     "bin/",
+    "iso/",
     ".cursor/mcp.json",
+    ".cursor/rules/",
     ".opencode/",
+    ".codex/",
+    ".mcp.json",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "opencode.json",
     "modes/",
     "templates/",
     "config/profile.example.yml",
@@ -41,7 +49,6 @@
     "normalize-statuses.mjs",
     "generate-pdf.mjs",
     "cv-sync-check.mjs",
-    "AGENTS.md",
     "README.md",
     "LICENSE"
   ],

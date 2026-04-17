@@ -2,15 +2,11 @@
 /**
  * sync.mjs — Create/refresh harness symlinks in the consumer's project.
  *
- * When job-forge is installed as an npm dependency, opencode needs to see
- * certain files at the *consumer project root* (not inside node_modules):
- *
- *   .opencode/skills/job-forge.md   ← opencode loads skills from here
- *   modes/                           ← skill router Read's modes/{mode}.md
- *   templates/                       ← opencode.json instructions reference it
- *   batch/batch-prompt.md            ← batch worker prompt template
- *   batch/batch-runner.sh            ← batch orchestrator
- *   .cursor/mcp.json                 ← Cursor MCP config (Geometra + Gmail)
+ * When job-forge is installed as an npm dependency, opencode / cursor /
+ * claude code / codex need to see certain files at the *consumer project
+ * root* (not inside node_modules). All of these are generated at publish
+ * time by iso-harness from the harness's iso/ source; this script mirrors
+ * them into the consumer's layout via symlinks.
  *
  * This script creates symlinks to the harness copies. Idempotent:
  *   - If the symlink already points to the harness, skip.
@@ -57,23 +53,38 @@ if (PROJECT_DIR === PKG_ROOT) {
 
 // Each entry: { source (inside harness), target (inside consumer project) }
 const links = [
-  // Cursor IDE: MCP servers (Geometra + Gmail) — mirrors opencode.json mcp entries
-  { src: '.cursor/mcp.json', dst: '.cursor/mcp.json' },
-  { src: '.opencode/skills/job-forge.md', dst: '.opencode/skills/job-forge.md' },
-  // Subagent definitions (general-free, general-paid, glm-minimal) that the
-  // orchestrator can delegate to for cost-aware model routing. See each
-  // agent's frontmatter for its role. Users can override individually by
-  // replacing the symlink with a local file.
+  // Cursor: MCP servers + always-apply rule (harness-level). Consumers can
+  // add their own rules in .cursor/rules/ alongside this one.
+  { src: '.cursor/mcp.json',               dst: '.cursor/mcp.json' },
+  { src: '.cursor/rules/main.mdc',         dst: '.cursor/rules/main.mdc' },
+
+  // Claude Code: MCP config (.mcp.json is what claude-code reads for
+  // project-scoped MCP). No subagents/commands emitted because iso/agents/
+  // and iso/commands/ are flagged claude: skip.
+  { src: '.mcp.json',                      dst: '.mcp.json' },
+
+  // Codex: MCP config.
+  { src: '.codex/config.toml',             dst: '.codex/config.toml' },
+
+  // OpenCode: skill router + subagent definitions. Users can override any
+  // single subagent by replacing its symlink with a local file.
+  { src: '.opencode/skills/job-forge.md',  dst: '.opencode/skills/job-forge.md' },
   { src: '.opencode/agents',               dst: '.opencode/agents' },
+
+  // Shared content directories referenced by opencode.json instructions +
+  // skill router (Read's modes/{mode}.md, etc).
   { src: 'modes',                          dst: 'modes' },
   { src: 'templates',                      dst: 'templates' },
   { src: 'batch/batch-prompt.md',          dst: 'batch/batch-prompt.md' },
   { src: 'batch/batch-runner.sh',          dst: 'batch/batch-runner.sh' },
   { src: 'batch/README.md',                dst: 'batch/README.md' },
-  // Harness AGENTS.md surfaced at project root as AGENTS.harness.md so
-  // opencode.json:instructions can reference it. The consumer's own
-  // AGENTS.md stays fully personal; opencode combines both into context.
+
+  // Top-level instructions surfaced at project root with a `.harness`
+  // suffix so the consumer's own AGENTS.md / CLAUDE.md stay fully personal.
+  // The consumer's opencode.json / CLAUDE.md / AGENTS.md references the
+  // .harness.md variants to pull in shared context.
   { src: 'AGENTS.md',                      dst: 'AGENTS.harness.md' },
+  { src: 'CLAUDE.md',                      dst: 'CLAUDE.harness.md' },
 ];
 
 let created = 0, skipped = 0, warned = 0;
