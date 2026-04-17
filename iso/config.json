@@ -1,0 +1,7 @@
+{
+  "targets": {
+    "opencode": {
+      "instructions": ["templates/states.yml"]
+    }
+  }
+}

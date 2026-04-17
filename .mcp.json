@@ -14,7 +14,7 @@
         "@razroo/gmail-mcp"
       ],
       "env": {
-        "PORT": "3847"
+        "DISABLE_HTTP": "true"
       }
     }
   }

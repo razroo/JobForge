@@ -1,21 +1,26 @@
 ---
 description: Narrow-scope extractor on free-tier model. Use for single-purpose tasks where the orchestrator passes the exact input and expects a small, structured output — e.g., "extract these 8 fields from this JD text" or "parse this form schema into a label→type map". NOT for multi-step workflows.
-mode: subagent
-model: opencode/minimax-m2.5-free
-tools:
-  geometra_*: false
-  gmail_*: false
-  bash: false
-  write: false
-  edit: false
-  webfetch: false
-  websearch: false
-  task: false
-temperature: 0
-reasoningEffort: none
-fallback_models:
-  - opencode/big-pickle
-  - opencode/nemotron-3-super-free
+targets:
+  claude: skip
+  cursor: skip
+  codex: skip
+  opencode:
+    mode: subagent
+    model: opencode/minimax-m2.5-free
+    temperature: 0
+    reasoningEffort: none
+    fallback_models:
+      - opencode/big-pickle
+      - opencode/nemotron-3-super-free
+    tools:
+      geometra_*: false
+      gmail_*: false
+      bash: false
+      write: false
+      edit: false
+      webfetch: false
+      websearch: false
+      task: false
 ---
 
 You are the @glm-minimal subagent. You handle narrow, one-shot extractions where the orchestrator has pre-digested the context and just needs you to do a specific transform.

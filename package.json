@@ -18,6 +18,7 @@
     "tokens": "node scripts/token-usage-report.mjs",
     "tokens:today": "node scripts/token-usage-report.mjs --days 1",
     "tokens:log": "node scripts/token-usage-report.mjs --days 1 --append",
+    "build:config": "iso-harness build --source iso --out .",
     "postinstall": "node bin/sync.mjs"
   },
   "files": [
@@ -44,7 +45,13 @@
     "README.md",
     "LICENSE"
   ],
-  "keywords": ["ai", "job-search", "opencode", "career", "automation"],
+  "keywords": [
+    "ai",
+    "job-search",
+    "opencode",
+    "career",
+    "automation"
+  ],
   "author": "Charlie Greenman",
   "repository": {
     "type": "git",
@@ -56,5 +63,8 @@
   },
   "dependencies": {
     "playwright": "^1.58.1"
+  },
+  "devDependencies": {
+    "@razroo/iso-harness": "^0.1.2"
   }
 }

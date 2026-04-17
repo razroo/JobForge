@@ -3,12 +3,20 @@
   "mcp": {
     "geometra": {
       "type": "local",
-      "command": ["npx", "-y", "@geometra/mcp"],
+      "command": [
+        "npx",
+        "-y",
+        "@geometra/mcp"
+      ],
       "environment": {}
     },
     "gmail": {
       "type": "local",
-      "command": ["npx", "-y", "@razroo/gmail-mcp"],
+      "command": [
+        "npx",
+        "-y",
+        "@razroo/gmail-mcp"
+      ],
       "environment": {
         "DISABLE_HTTP": "true"
       }

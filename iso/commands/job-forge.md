@@ -1,8 +1,11 @@
 ---
-name: job-forge
 description: AI job search command center -- evaluate offers, generate CVs, scan portals, track applications
 user_invocable: true
 args: mode
+targets:
+  claude: skip
+  cursor: skip
+  codex: skip
 ---
 
 # job-forge -- Router

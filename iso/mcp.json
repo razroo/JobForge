@@ -1,0 +1,20 @@
+{
+  "servers": {
+    "geometra": {
+      "command": "npx",
+      "args": ["-y", "@geometra/mcp"]
+    },
+    "gmail": {
+      "command": "npx",
+      "args": ["-y", "@razroo/gmail-mcp"],
+      "env": {
+        "DISABLE_HTTP": "true"
+      },
+      "targets": {
+        "cursor": {
+          "env": { "PORT": "3847" }
+        }
+      }
+    }
+  }
+}

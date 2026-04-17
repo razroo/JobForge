@@ -1,14 +1,19 @@
 ---
 description: Quality-sensitive worker on paid model. Use for offer evaluation narratives (Blocks A-F), cover letter generation, "Why X?" form answers, interview STAR stories, and other tasks where writing quality and judgment matter.
-mode: subagent
-model: opencode/glm-5.1
-tools:
-  geometra_*: false
-  gmail_*: false
-temperature: 0.3
-reasoningEffort: medium
-fallback_models:
-  - opencode/claude-haiku-4-5
+targets:
+  claude: skip
+  cursor: skip
+  codex: skip
+  opencode:
+    mode: subagent
+    model: opencode/glm-5.1
+    temperature: 0.3
+    reasoningEffort: medium
+    fallback_models:
+      - opencode/claude-haiku-4-5
+    tools:
+      geometra_*: false
+      gmail_*: false
 ---
 
 You are the @general-paid subagent. The orchestrator delegated this task to you because it requires quality writing or judgment — the kind of work `@general-free` isn't well-suited for.

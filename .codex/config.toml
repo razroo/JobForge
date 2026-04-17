@@ -1,0 +1,8 @@
+[mcp_servers.geometra]
+command = "npx"
+args = ["-y", "@geometra/mcp"]
+
+[mcp_servers.gmail]
+command = "npx"
+args = ["-y", "@razroo/gmail-mcp"]
+env = { DISABLE_HTTP = "true" }
