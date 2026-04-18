@@ -10,8 +10,17 @@ The Hard Limits below are non-negotiable numeric rules. If you catch yourself ab
 4. **Orchestrator does NOT fill forms.** This session MUST NOT call `geometra_fill_form`, `geometra_run_actions`, `geometra_pick_listbox_option`, or `geometra_fill_otp` when handling a multi-job request. If you need to, it means you MUST have delegated — `task` out the remaining work instead.
 5. **Re-dispatch only AFTER the previous subagent returns.** Never fire the same company's `task` twice while the first is still in-flight. Wait for the return value, then decide if a retry is warranted.
 6. **Application outcomes flow through TSVs, not `data/pipeline.md`.** When a subagent returns APPLIED / FAILED / SKIP, the outcome goes to `batch/tracker-additions/{num}-{slug}.tsv`. `node merge-tracker.mjs` then consumes the TSVs into the correct `data/applications/YYYY-MM-DD.md` day file. `data/pipeline.md` only tracks URL inbox state (`[ ]` pending → `[x]` processed). **NEVER append APPLIED / FAILED status lines to `pipeline.md`** — that's the day file's job, via the TSV pathway. After any multi-apply run, the orchestrator MUST run `node merge-tracker.mjs` followed by `node verify-pipeline.mjs` before ending the session.
+7. **URLs passed to downstream subagents must come from a file, not from a prior subagent's prose.** When an orchestrator dispatches a subagent with a URL (for evaluation, apply, verification, etc.), the URL MUST originate from:
+   - `data/pipeline.md`
+   - `data/scan-history.tsv`
+   - `batch/scan-output-*.md` or similar structured output file
+   - A report file (`reports/{num}-*.md`) with an authoritative `**URL:**` header
 
-Everything below is context and rationale. These six numbers are the rules.
+   URLs mentioned in a subagent's return message are NOT trustworthy by default — they may be hallucinated or reconstructed. Before passing any URL from a subagent report to another subagent, cross-check it exists in one of the authoritative files above, OR instruct the dispatching subagent to write its output to a structured file and re-read from that file.
+
+   **Why**: a scan subagent once reported 30 plausible-looking Greenhouse IDs in its return message that did not exist in the Greenhouse API. The orchestrator dispatched 30 downstream subagents that all failed verification. Trusting prose-form URLs cost ~2 hours of wasted work and corrupted the tracker.
+
+Everything below is context and rationale. These seven numbers are the rules.
 
 ---
 

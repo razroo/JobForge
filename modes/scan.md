@@ -68,8 +68,12 @@ The levels are additive — all are executed, results are merged and deduplicate
 5. **Level 2 — Greenhouse APIs** (WebFetch can batch freely — it's cheap and doesn't use Geometra sessions):
    For each company in `tracked_companies` with `api:` defined and `enabled: true`:
    a. WebFetch the API URL → JSON with job list
-   b. For each job extract: `{title, url, company}`
-   c. Accumulate in candidates list (dedup with Level 1)
+   b. For each job extract: `{title, url, company, gh_slug, gh_id, updated_at}`
+      - **`url`**: ALWAYS record the canonical Greenhouse URL: `https://job-boards.greenhouse.io/{gh_slug}/jobs/{gh_id}`. Do **NOT** use `absolute_url` when it points to a customer-skinned front-end (e.g. `pinterestcareers.com/jobs/?gh_jid=N`, `okta.com/company/careers/opportunity/N`, `samsara.com/company/careers/roles/N`, `zoominfo.com/careers?gh_jid=N`, `collibra.com/.../?gh_jid=N`, `careers.toasttab.com/jobs?gh_jid=N`, `careers.airbnb.com/positions/N`, `coinbase.com/careers/positions/N`, `instacart.careers/job/?gh_jid=N`, `pinterestcareers.com/jobs/?gh_jid=N`). These customer front-ends return shells or 403 to bots and cause downstream WebFetch-based verification to wrongly mark the role CLOSED.
+      - **`gh_slug`**: the Greenhouse board slug (from the API URL that was fetched).
+      - **`gh_id`**: `jobs[].id` from the API response.
+      - **`updated_at`**: `jobs[].updated_at` — record for staleness detection (skip if older than 90 days, flag if older than 30).
+   c. Accumulate in candidates list (dedup with Level 1). The pipeline.md entry MUST carry `| gh={gh_slug}/{gh_id}` at the end of the metadata so downstream evaluators can fall back to `https://boards-api.greenhouse.io/v1/boards/{gh_slug}/jobs/{gh_id}` when the canonical URL renders as a shell.
 
 6. **Level 3 — WebSearch queries** (WebSearch is parallel-safe; batch freely):
    For each query in `search_queries` with `enabled: true`:
@@ -102,7 +106,7 @@ The levels are additive — all are executed, results are merged and deduplicate
    - When a fuzzy match is found but the URL is new, log it as `skipped_repost` (not `skipped_dup`) with a note referencing the original entry number.
 
 8. **For each new offer that passes filters**:
-   a. Add to `pipeline.md` section "Pending": `- [ ] {url} | {company} | {title}`
+   a. Add to `pipeline.md` section "Pending": `- [ ] {url} | {company} | {title}` — append `| gh={gh_slug}/{gh_id}` when the offer came from the Greenhouse API (Level 2) so downstream verification can hit the JSON endpoint.
    b. Record in `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
 
 9. **Offers filtered by title**: record in `scan-history.tsv` with status `skipped_title`
@@ -137,6 +141,30 @@ https://...	2026-02-10	Greenhouse — SA	Junior Dev	BigCo	skipped_title
 https://...	2026-02-10	Ashby — AI PM	SA AI	OldCo	skipped_dup
 ```
 
+## Structured Output — Required for Downstream Dispatch
+
+Scan mode MUST write its ranked candidate list to a file, not just return it in prose. Downstream subagents (evaluators, applyers) must read URLs from this file, not from the scan subagent's return message. This prevents any hallucinated URL or ID from propagating.
+
+**File location**: `batch/scan-output-{YYYY-MM-DD}.md`
+
+**Format**: one markdown table per scan run, ordered by archetype-fit rank:
+
+| rank | company | role | gh_slug | gh_id | url | updated_at |
+|------|---------|------|---------|-------|-----|------------|
+| 1    | Webflow | Lead AI Engineer | webflow | 7689676 | https://job-boards.greenhouse.io/webflow/jobs/7689676 | 2026-04-14 |
+| ... | ... | ... | ... | ... | ... | ... |
+
+Every row MUST have:
+- `gh_slug` and `gh_id` copied verbatim from the Greenhouse API response (not reconstructed)
+- `url` in the canonical form `https://job-boards.greenhouse.io/{gh_slug}/jobs/{gh_id}` (matching the suffix in `data/pipeline.md`)
+- `updated_at` in `YYYY-MM-DD` form (the most recent `updated_at` in the API response)
+
+The scan subagent's return message MUST:
+- Reference the file path (so orchestrators know where to read)
+- Omit the ranked URL list from prose entirely (summary counts only)
+
+**Rationale**: in a prior run, a scan subagent returned correct IDs in `scan-history.tsv` but hallucinated plausible-looking fake IDs in its prose-form top-30 list. The orchestrator trusted prose and dispatched 30 downstream subagents against fake URLs. File-based handoff prevents this class of error.
+
 ## Output Summary
 
 ```
@@ -148,11 +176,26 @@ Filtered by title: N relevant
 Duplicates: N (already evaluated or in pipeline)
 New added to pipeline.md: N
 
-  + {company} | {title} | {query_name}
-  ...
-
-→ Run /job-forge pipeline to evaluate the new offers.
+NEXT STEP RECOMMENDATION:
+- Structured candidate list written to: batch/scan-output-{YYYY-MM-DD}.md
+- Downstream subagents MUST read URLs from that file, not from this return message
+- Run /job-forge pipeline to evaluate the new offers.
 ```
+
+## Verify Before Marking CLOSED (downstream rule)
+
+**DO NOT mark a Greenhouse offer CLOSED based on a WebFetch/Geometra result alone.** Customer-skinned careers pages (`pinterestcareers.com`, `okta.com`, `samsara.com`, `zoominfo.com`, `collibra.com`, `careers.toasttab.com`, `careers.airbnb.com`, `coinbase.com`, `instacart.careers`, etc.) serve bot-hostile shells — a 403, a navbar-only response, or a client-side-only render. WebFetch sees "no JD" and mis-classifies as CLOSED.
+
+**Correct verification order for any Greenhouse-sourced URL** (identified by a `| gh={slug}/{id}` suffix in `pipeline.md` or a `boards-api.greenhouse.io` / `job-boards.greenhouse.io` / `boards.greenhouse.io` host):
+
+1. Try `https://boards-api.greenhouse.io/v1/boards/{slug}/jobs/{id}`. This is the authoritative source.
+   - **200 + JSON with `title` and `content`** → offer is LIVE. Use the JSON content as the JD. Do not mark CLOSED.
+   - **404** → offer is genuinely closed. Mark CLOSED.
+   - **Other non-2xx** → treat as transient (network/rate-limit); retry once. If still failing, mark `**Verification: unconfirmed**` and continue evaluation from whatever text is available. Do NOT mark CLOSED.
+2. Only then fall back to WebFetch of the canonical `job-boards.greenhouse.io/{slug}/jobs/{id}` URL.
+3. Only then fall back to Geometra on the same canonical URL.
+
+**Rule of thumb:** Greenhouse postings with valid `gh_slug`/`gh_id` should be verified via the API first. A WebFetch failure on a customer-skinned domain is NOT evidence the role is closed.
 
 ## Update careers_url
 

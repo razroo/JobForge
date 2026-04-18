@@ -8,9 +8,12 @@ Fetch the JD content once. If the input is a **URL** (not pasted JD text), fetch
 
 **Pick exactly one method, in this priority order:**
 
-1. **Geometra MCP (preferred):** Most job portals (Lever, Ashby, Greenhouse, Workday) are SPAs. Use `geometra_connect` + `geometra_page_model` to render and read the JD. **If this returns non-empty JD text, STOP — do not WebFetch the same URL.**
-2. **WebFetch (only if Geometra is unavailable OR returned only a shell with no JD text):** For static pages (ZipRecruiter, WeLoveProduct, company career pages).
-3. **WebSearch (only if methods 1 AND 2 both failed):** Search for the role title + company on secondary portals that index the JD in static HTML.
+1. **Greenhouse JSON API (first try, if the URL is Greenhouse-backed):** If the pipeline.md entry carries `| gh={slug}/{id}` OR the URL host matches `*.greenhouse.io` / a known Greenhouse customer front-end (`*.pinterestcareers.com`, `okta.com/company/careers/opportunity/*`, `samsara.com/company/careers/roles/*`, `zoominfo.com/careers?gh_jid=*`, `collibra.com/.../?gh_jid=*`, `careers.toasttab.com/jobs?gh_jid=*`, `careers.airbnb.com/positions/*?gh_jid=*`, `coinbase.com/careers/positions/*?gh_jid=*`, `instacart.careers/job/?gh_jid=*`), extract `slug` and `id` and WebFetch `https://boards-api.greenhouse.io/v1/boards/{slug}/jobs/{id}`. 200 + JSON with `content` is the authoritative JD. 404 = genuinely closed (mark CLOSED and stop). **If 200, STOP — do not fall back to Geometra or WebFetch of the front-end.** The API is faster, cheaper (no Geometra session), and never returns a bot-shell.
+2. **Geometra MCP:** Most non-Greenhouse job portals (Lever, Ashby, Workday) are SPAs. Use `geometra_connect` + `geometra_page_model` to render and read the JD. **If this returns non-empty JD text, STOP — do not WebFetch the same URL.**
+3. **WebFetch (only if Geometra is unavailable OR returned only a shell with no JD text):** For static pages (ZipRecruiter, WeLoveProduct, company career pages).
+4. **WebSearch (only if methods 1–3 all failed):** Search for the role title + company on secondary portals that index the JD in static HTML.
+
+**Do NOT mark a Greenhouse-sourced offer CLOSED based on a WebFetch shell or a 403 from a customer-skinned careers domain.** Pinterest, Okta, Samsara, ZoomInfo, Collibra, Toast, Airbnb, Coinbase, Instacart all serve bot-hostile fronts. The Greenhouse JSON API (step 1) is the ground truth for their offer state. A previous scan run fed 60 live Greenhouse URLs through WebFetch-only verification and 100% of them were wrongly marked CLOSED; if you see a high stale rate, you are skipping step 1.
 
 **Rule:** Each URL gets fetched at most once per session. If you already have the JD text in context — from Geometra, a previous WebFetch, or pasted by the candidate — do not fetch again.
 
