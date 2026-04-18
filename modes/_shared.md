@@ -247,7 +247,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 0. **Cover letter:** If the form has an option to attach or write a cover letter, ALWAYS include one. Generate PDF with the same visual design as the CV. Content: JD quotes mapped to proof points, links to relevant case studies. 1 page max.
 1. Read cv.md and article-digest.md (if exists) before evaluating any offer
-1b. **First evaluation of each session:** Run `node cv-sync-check.mjs` with Bash. If it reports warnings, notify the candidate before continuing
+1b. **First evaluation of each session:** Run `npx job-forge sync-check` with Bash. If it reports warnings, notify the candidate before continuing
 2. Detect the role archetype and adapt framing
 3. Cite exact lines from CV when matching
 4. Use WebSearch for comp and company data
@@ -269,4 +269,4 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 | Read | cv.md, article-digest.md, cv-template.html |
 | Write | Temporary HTML for PDF, day files in `data/applications/YYYY-MM-DD.md`, reports .md |
 | Edit | Update tracker |
-| Bash | `node generate-pdf.mjs` |
+| Bash | `npx job-forge pdf` |

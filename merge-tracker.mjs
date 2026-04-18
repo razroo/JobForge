@@ -26,6 +26,9 @@ import {
   usesDayFiles, ensureDayDir, getHeader, formatAppLine, parseAppLine,
   readAllEntries, writeToDayFiles, listDayFiles, dayFilePath,
 } from './tracker-lib.mjs';
+import {
+  DEFAULT_STATES, loadCanonicalStates, buildStatusDetectionRegex,
+} from './lib/canonical-states.mjs';
 
 const ADDITIONS_DIR = join(PROJECT_DIR, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
@@ -54,26 +57,8 @@ Run from the repository root.`);
   process.exit(0);
 }
 
-const STATES_FILE = existsSync(join(PROJECT_DIR, 'templates/states.yml'))
-  ? join(PROJECT_DIR, 'templates/states.yml')
-  : join(PROJECT_DIR, 'states.yml');
-
-function loadCanonicalLabelsFromStatesYaml(filePath) {
-  if (!existsSync(filePath)) return null;
-  const text = readFileSync(filePath, 'utf-8');
-  const labels = [];
-  for (const line of text.split('\n')) {
-    const m = line.match(/^\s+label:\s*(.+)$/);
-    if (!m) continue;
-    let v = m[1].trim().replace(/^['"]|['"]$/g, '');
-    if (v) labels.push(v);
-  }
-  return labels.length > 0 ? labels : null;
-}
-
-const CANONICAL_STATES = loadCanonicalLabelsFromStatesYaml(STATES_FILE) || [
-  'Evaluated', 'Applied', 'Contacted', 'Responded', 'Interview', 'Offer', 'Rejected', 'Discarded', 'SKIP',
-];
+const CANONICAL_STATES = loadCanonicalStates(PROJECT_DIR) || DEFAULT_STATES;
+const STATUS_DETECT_RE = buildStatusDetectionRegex(CANONICAL_STATES);
 
 function validateStatus(status) {
   const clean = status.replace(/\*\*/g, '').replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
@@ -156,8 +141,8 @@ function parseTsvContent(content, filename) {
     const col5 = parts[5].trim();
     const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
     const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
-    const col4LooksLikeStatus = /^(evaluated|applied|contacted|responded|interview|offer|rejected|discarded|skip|duplicate|repost|hold)/i.test(col4);
-    const col5LooksLikeStatus = /^(evaluated|applied|contacted|responded|interview|offer|rejected|discarded|skip|duplicate|repost|hold)/i.test(col5);
+    const col4LooksLikeStatus = STATUS_DETECT_RE.test(col4);
+    const col5LooksLikeStatus = STATUS_DETECT_RE.test(col5);
 
     let statusCol, scoreCol;
     if (col4LooksLikeStatus && !col4LooksLikeScore) {

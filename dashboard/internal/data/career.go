@@ -517,8 +517,14 @@ func ComputeMetrics(apps []model.CareerApplication) model.PipelineMetrics {
 	return m
 }
 
+// KEEP IN SYNC WITH templates/states.yml — full codegen from YAML is a
+// follow-up; update this switch and StatusPriority below and the sibling
+// lists in dashboard/internal/ui/screens/pipeline.go (statusOptions,
+// statusGroupOrder, statusLabel) whenever a state is added or removed.
+// The JS side (merge-tracker.mjs, normalize-statuses.mjs) reads states.yml
+// via lib/canonical-states.mjs.
+//
 // NormalizeStatus normalizes raw status text to a canonical form.
-// Aliases match states.yml -- keep in sync with templates/states.yml
 func NormalizeStatus(raw string) string {
 	// Strip markdown bold and trailing dates
 	s := strings.ReplaceAll(raw, "**", "")
@@ -543,6 +549,8 @@ func NormalizeStatus(raw string) string {
 		return "rejected"
 	case strings.Contains(s, "discarded") || strings.HasPrefix(s, "dup"):
 		return "discarded"
+	case strings.Contains(s, "failed"):
+		return "failed"
 	case strings.Contains(s, "evaluated") || s == "hold":
 		return "evaluated"
 	default:
@@ -666,6 +674,7 @@ func cleanTableCell(s string) string {
 	return strings.TrimSpace(s)
 }
 
+// KEEP IN SYNC WITH templates/states.yml — see note above NormalizeStatus.
 // StatusPriority returns the sort priority for a status (lower = higher priority).
 func StatusPriority(status string) int {
 	switch NormalizeStatus(status) {
@@ -685,7 +694,9 @@ func StatusPriority(status string) int {
 		return 6
 	case "discarded":
 		return 7
-	default:
+	case "failed":
 		return 8
+	default:
+		return 9
 	}
 }

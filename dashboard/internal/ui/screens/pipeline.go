@@ -83,10 +83,16 @@ var pipelineTabs = []pipelineTab{
 
 var sortCycle = []string{sortScore, sortDate, sortCompany, sortStatus}
 
-var statusOptions = []string{"Evaluated", "Applied", "Responded", "Interview", "Offer", "Rejected", "Discarded", "SKIP"}
+// KEEP IN SYNC WITH templates/states.yml — full codegen from YAML is a
+// follow-up; update this list and the sibling lists in career.go
+// (NormalizeStatus, StatusPriority) and the statusLabel switch below
+// whenever a state is added or removed. The JS side (merge-tracker.mjs,
+// normalize-statuses.mjs) reads states.yml via lib/canonical-states.mjs.
+var statusOptions = []string{"Evaluated", "Applied", "Responded", "Interview", "Offer", "Rejected", "Discarded", "Failed", "SKIP"}
 
 // statusGroupOrder defines display order for grouped view.
-var statusGroupOrder = []string{"interview", "offer", "responded", "applied", "evaluated", "skip", "rejected", "discarded"}
+// KEEP IN SYNC WITH templates/states.yml — see note above statusOptions.
+var statusGroupOrder = []string{"interview", "offer", "responded", "applied", "evaluated", "skip", "failed", "rejected", "discarded"}
 
 // PipelineModel implements the career pipeline dashboard screen.
 type PipelineModel struct {
@@ -847,6 +853,9 @@ func (m PipelineModel) countByNormStatus(status string) int {
 	return count
 }
 
+// KEEP IN SYNC WITH templates/states.yml — see note above statusOptions.
+// Full codegen from YAML is a follow-up; update this switch whenever a
+// state is added or removed.
 func statusLabel(norm string) string {
 	switch norm {
 	case "interview":
@@ -865,6 +874,8 @@ func statusLabel(norm string) string {
 		return "Rejected"
 	case "discarded":
 		return "Discarded"
+	case "failed":
+		return "Failed"
 	default:
 		return norm
 	}

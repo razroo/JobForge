@@ -7,7 +7,7 @@
  *   - Single-file: data/applications.md or applications.md (legacy)
  *
  * Maps all non-canonical statuses to canonical ones per templates/states.yml:
- *   Evaluated, Applied, Responded, Contacted, Interview, Offer, Rejected, Discarded, SKIP
+ *   Evaluated, Applied, Responded, Contacted, Interview, Offer, Rejected, Discarded, Failed, SKIP
  *
  * Also strips markdown bold (**) and dates from the status field,
  * moving DUPLICADO info to the notes column.
@@ -23,6 +23,9 @@ import {
   usesDayFiles, ensureDayDir, parseAppLine, formatAppLine,
   readAllEntries, writeToDayFiles, listDayFiles,
 } from './tracker-lib.mjs';
+import { DEFAULT_STATES, loadCanonicalStates } from './lib/canonical-states.mjs';
+
+const CANONICAL_STATES = loadCanonicalStates(PROJECT_DIR) || DEFAULT_STATES;
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
@@ -61,11 +64,7 @@ function normalizeStatus(raw) {
 
   if (s === '—' || s === '-' || s === '') return { status: 'Discarded' };
 
-  const canonical = [
-    'Evaluated', 'Applied', 'Contacted', 'Responded', 'Interview',
-    'Offer', 'Rejected', 'Discarded', 'SKIP',
-  ];
-  for (const c of canonical) {
+  for (const c of CANONICAL_STATES) {
     if (lower === c.toLowerCase()) return { status: c };
   }
 

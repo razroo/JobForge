@@ -166,8 +166,8 @@ Step 5  — Between rounds: clean sessions again
   - geometra_disconnect({ closeBrowser: true })
 
 Step 6  — After all rounds: reconcile outcomes (Hard Limit #6)
-  - bash: node merge-tracker.mjs      # consumes batch/tracker-additions/*.tsv into the day file
-  - bash: node verify-pipeline.mjs    # validates URL/status consistency
+  - bash: npx job-forge merge      # consumes batch/tracker-additions/*.tsv into the day file
+  - bash: npx job-forge verify     # validates URL/status consistency
   - Review output; if verify-pipeline reports issues, fix them before ending.
 
 Step 7  — Aggregate and report

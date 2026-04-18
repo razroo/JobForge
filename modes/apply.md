@@ -10,6 +10,54 @@ Interactive mode for when the candidate is filling out an application form in Ch
 
 For a single application interactively, carry on in the current session — the rule targets multi-job loops.
 
+## Apply Preflight — Location Filter (orchestrator runs before dispatch)
+
+Before dispatching any batch of apply subagents, cross-check each candidate's location against `config/profile.yml`. **Prefer the structured `location_constraints` block** (deterministic match). Fall back to the prose `location.*` / `compensation.location_flexibility` fields only when `location_constraints` is absent (legacy profiles).
+
+### Preferred path — structured `location_constraints` (deterministic)
+
+1. Read `config/profile.yml → location_constraints`. If present, use the structured fields:
+
+   ```yaml
+   location_constraints:
+     remote_us: true | false
+     remote_global: true | false
+     hybrid_cities: [san-francisco, ...]
+     blocked_cities: [new-york, ...]
+     authorized_countries: [US, ...]       # ISO-3166 alpha-2
+     requires_visa_sponsorship: true | false
+   ```
+
+2. For each candidate, open its evaluation report (`reports/{num}-*.md`) and read the Location / Block A content. Extract: `mode ∈ {remote, hybrid, onsite}`, `city` (lowercase hyphenated), `country` (ISO-3166 alpha-2 when derivable).
+
+3. Apply the filter (decision table):
+
+   | Role shape | Rule | Outcome |
+   |---|---|---|
+   | Remote, country ∈ authorized_countries (typically US) | `remote_us == true` → COMPATIBLE | dispatch |
+   | Remote, country ∉ authorized_countries | `remote_global == true` AND (`requires_visa_sponsorship == false` OR JD mentions sponsorship) → COMPATIBLE | dispatch / else skip |
+   | Hybrid, `city ∈ hybrid_cities` | COMPATIBLE | dispatch |
+   | Hybrid or Onsite, `city ∈ blocked_cities` | INCOMPATIBLE | mark `Discarded`, note `location mismatch: blocked_city=X` |
+   | Hybrid or Onsite, `city` not in `hybrid_cities` and not in `blocked_cities` | INCOMPATIBLE by default (hybrid is opt-in per city) | mark `Discarded`, note `location mismatch: city=X not in hybrid_cities` |
+   | Location unclear / ambiguous | dispatch with a prompt flag instructing the apply subagent to verify the JD location first and Discard early if confirmed incompatible | dispatch-with-flag |
+
+4. Country/visa: if `requires_visa_sponsorship == false` AND `country ∉ authorized_countries` AND the JD does NOT explicitly offer sponsorship → INCOMPATIBLE, do NOT dispatch.
+
+### Fallback path — prose fields (legacy profiles with no `location_constraints`)
+
+When `location_constraints` is absent, use the prose fields:
+
+1. Read `config/profile.yml` for `location` (country, city), `compensation.location_flexibility`, and `visa_status`.
+2. For each candidate, open its evaluation report (`reports/{num}-*.md`) and read the Location / Block A content.
+3. Apply the filter:
+   - If the report says "Remote (US)" / "Remote" / "fully remote" — COMPATIBLE, dispatch.
+   - If the report says "Hybrid N days in {city}" AND {city} matches `location.city` OR `location_flexibility` says "open to hybrid in {city}" — COMPATIBLE, dispatch.
+   - If the report says "Hybrid" or "Onsite" at a city NOT in the profile's location set AND `location_flexibility` says Remote-preferred — INCOMPATIBLE, do NOT dispatch. Mark the tracker entry `Discarded` directly with note `location mismatch: profile=X, role=Y`.
+   - If unclear or ambiguous — dispatch with a prompt flag telling the apply subagent to verify the JD location first and Discard early if confirmed incompatible.
+4. Country/visa: if `visa_status: "No sponsorship needed"` and the role is outside the authorized country — INCOMPATIBLE, do NOT dispatch.
+
+**Why**: on 2026-04-18, 5 of 7 candidates dispatched for apply turned out location-incompatible. Each burned an apply-subagent round. The prose-field path reached the right call but cost interpretation cycles per dispatch; the structured path is O(1) field lookup and removes LLM-interpretation risk.
+
 ### Run this multi-job apply runbook literally when N > 1
 
 ```
@@ -24,8 +72,8 @@ Step 4  — For round in ceil(N/2):
             # WAIT for both returns. Do not proceed until both done.
 Step 5  — Between rounds: geometra_list_sessions() + geometra_disconnect({closeBrowser: true})
 Step 6  — Reconcile outcomes (Hard Limit #6):
-            bash: node merge-tracker.mjs       # TSVs → day file
-            bash: node verify-pipeline.mjs     # validate
+            bash: npx job-forge merge       # TSVs → day file
+            bash: npx job-forge verify      # validate
 Step 7  — Summarize outcomes; do NOT auto-retry failures.
 ```
 
@@ -33,7 +81,7 @@ If a subagent fails, report it in the summary and let the user decide whether to
 
 **Outcome routing (Hard Limit #6 in `AGENTS.md`):**
 - Subagents write `batch/tracker-additions/{num}-{slug}.tsv` — one TSV per job.
-- Orchestrator runs `node merge-tracker.mjs` once at the end to consume TSVs into the right day file.
+- Orchestrator runs `npx job-forge merge` once at the end to consume TSVs into the right day file.
 - **Do NOT** append APPLIED / FAILED / SKIP lines to `data/pipeline.md` — that file is the URL inbox only.
 
 ## Verify these requirements
@@ -214,13 +262,28 @@ Specific portals — Workday "parse my resume", iCIMS multi-step, SAP SuccessFac
 Check for an OTP gate after the candidate (or Geometra) submits — the major portals (Greenhouse, Workday, Lever, Ashby) gate submission behind an email verification code. When an OTP step appears, do this.
 
 1. **Do NOT stop and ask the candidate to paste the code manually.** Use the Gmail MCP.
-2. Wait ~5-10 seconds for the email, then `gmail_list_messages` with a sender-scoped recency query (e.g. `from:greenhouse newer_than:10m`).
-3. `gmail_get_message` on the most recent match, extract the code from the body.
-4. `geometra_fill_otp` to enter it, then submit.
+2. **Pick the Gmail sender query from the ATS recorded at scan time.** The scan subagent records the ATS type in `batch/scan-output-{YYYY-MM-DD}.md` (`ats` column) and in `data/pipeline.md` (`| ats={type}` suffix). Read that value first — do NOT re-infer the ATS from the URL host when it's already recorded.
+3. Map the `ats` value to the Gmail sender query (table below). Wait ~5-10 seconds for the email, then call `gmail_list_messages` with the matching query.
+4. `gmail_get_message` on the most recent match, extract the code from the body.
+5. `geometra_fill_otp` to enter it, then submit.
+
+**ATS → Gmail sender query lookup** (use the `ats` value recorded at scan time):
+
+| `ats` value | `q` for `gmail_list_messages` |
+|-------------|-------------------------------|
+| `greenhouse` | `from:greenhouse newer_than:10m` |
+| `workday`    | `from:myworkday newer_than:10m` |
+| `lever`      | `from:lever newer_than:10m` |
+| `ashby`      | `from:ashby newer_than:10m` |
+| `workable`   | `from:workable newer_than:10m` |
+| `builtin`    | `from:builtin newer_than:10m` |
+| `custom` / `unknown` / missing | `newer_than:10m subject:(verify OR code OR confirm)` |
+
+**Fallback when `ats` is missing** (legacy pipeline entries with no `| ats=` suffix, or scan-output without an `ats` column): infer from the URL host — `*.greenhouse.io` → `greenhouse`; `jobs.ashbyhq.com` → `ashby`; `jobs.lever.co` → `lever`; `*.myworkdayjobs.com` → `workday`; `apply.workable.com` / `jobs.workable.com` → `workable`; `builtin.com` → `builtin`; otherwise use the generic `verify OR code OR confirm` subject query.
 
 **Before reporting the submission as failed, always check Gmail.** A "submit did nothing" outcome usually means a silent OTP step — not a real failure.
 
-Full sender-to-query table and fallback patterns: see "OTP Handling via Gmail MCP" in `AGENTS.md`.
+Full OTP recipe and fallback patterns: see "OTP Handling via Gmail MCP" in `AGENTS.md`.
 
 ## Step 7 — Update outcomes after submission
 
@@ -240,7 +303,7 @@ The row exists. You are UPDATING an existing entry, which is allowed (Pipeline I
 The row does NOT exist yet. You MUST go through the TSV pathway (Hard Limit #6 + Pipeline Integrity rule #1):
 
 1. Write `batch/tracker-additions/{num}-{slug}.tsv` with the canonical 9-column format (see "TSV Format for Tracker Additions" in `AGENTS.md`)
-2. At the end of the apply run, the orchestrator calls `node merge-tracker.mjs`, which inserts the row into today's day file
+2. At the end of the apply run, the orchestrator calls `npx job-forge merge`, which inserts the row into today's day file
 3. Do NOT manually add a row to the day file. Do NOT append an `APPLIED` line to `data/pipeline.md`.
 
 ### Apply to both cases

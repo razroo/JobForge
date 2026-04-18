@@ -51,7 +51,7 @@ npm run merge
 npm run verify   # optional: pipeline health after merge (report links, statuses, pending TSVs)
 ```
 
-(`node merge-tracker.mjs` — same as `npm run merge`; see [CONTRIBUTING.md](../CONTRIBUTING.md#development).)
+(`npx job-forge merge` — same as `npm run merge`; see [CONTRIBUTING.md](../CONTRIBUTING.md#development).)
 
 After a successful merge, each processed file is moved to **`batch/tracker-additions/merged/`** (created on first merge when the directory does not yet exist). `npm run verify` only looks for `*.tsv` files in the **top level** of `batch/tracker-additions/`, so rows already merged and archived under `merged/` do not trigger the “pending TSVs” warning.
 

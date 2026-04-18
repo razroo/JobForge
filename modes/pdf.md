@@ -17,7 +17,7 @@
 11. Inject keywords naturally into existing achievements (NEVER fabricate)
 12. Generate complete HTML from template + personalized content
 13. Write HTML to `/tmp/cv-candidate-{company}.html`
-14. Run: `node generate-pdf.mjs /tmp/cv-candidate-{company}.html output/cv-candidate-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
+14. Run: `npx job-forge pdf /tmp/cv-candidate-{company}.html output/cv-candidate-{company}-{YYYY-MM-DD}.pdf --format={letter|a4}`
 15. Report: PDF path, page count, keyword coverage %
 
 ## Apply these ATS rules for clean parsing

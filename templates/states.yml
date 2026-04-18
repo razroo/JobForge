@@ -55,6 +55,12 @@ states:
     description: Discarded by candidate or offer closed
     dashboard_group: discarded
 
+  - id: failed
+    label: Failed
+    aliases: []
+    description: Submission attempted but blocked by portal (spam-filter, anti-bot, broken form). May be recoverable via manual retry.
+    dashboard_group: failed
+
   - id: skip
     label: SKIP
     aliases: [skip]

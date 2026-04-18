@@ -106,7 +106,10 @@ The levels are additive — all are executed, results are merged and deduplicate
    - When a fuzzy match is found but the URL is new, log it as `skipped_repost` (not `skipped_dup`) with a note referencing the original entry number.
 
 8. **For each new offer that passes filters**:
-   a. Add to `pipeline.md` section "Pending": `- [ ] {url} | {company} | {title}` — append `| gh={gh_slug}/{gh_id}` when the offer came from the Greenhouse API (Level 2) so downstream verification can hit the JSON endpoint.
+   a. Add to `pipeline.md` section "Pending": `- [ ] {url} | {company} | {title} | ats={ats}` — the `| ats={type}` suffix is REQUIRED for every entry (values: `greenhouse`, `ashby`, `workable`, `lever`, `workday`, `builtin`, `custom`, `unknown`). When the offer came from the Greenhouse API (Level 2), ALSO append `| gh={gh_slug}/{gh_id}` so downstream verification can hit the JSON endpoint. Example entries:
+      - `- [ ] https://job-boards.greenhouse.io/webflow/jobs/7689676 | Webflow | Lead AI Engineer | ats=greenhouse | gh=webflow/7689676`
+      - `- [ ] https://jobs.ashbyhq.com/everai/abc-123 | EverAI | Senior AI PM | ats=ashby`
+      - `- [ ] https://jobs.lever.co/temporal/xyz | Temporal | Product Manager - AI | ats=lever`
    b. Record in `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
 
 9. **Offers filtered by title**: record in `scan-history.tsv` with status `skipped_title`
@@ -149,21 +152,27 @@ Scan mode MUST write its ranked candidate list to a file, not just return it in 
 
 **Format**: one markdown table per scan run, ordered by archetype-fit rank:
 
-| rank | company | role | gh_slug | gh_id | url | updated_at |
-|------|---------|------|---------|-------|-----|------------|
-| 1    | Webflow | Lead AI Engineer | webflow | 7689676 | https://job-boards.greenhouse.io/webflow/jobs/7689676 | 2026-04-14 |
-| ... | ... | ... | ... | ... | ... | ... |
+| rank | company | ats | role | gh_slug | gh_id | url | updated_at |
+|------|---------|-----|------|---------|-------|-----|------------|
+| 1    | Webflow | greenhouse | Lead AI Engineer | webflow | 7689676 | https://job-boards.greenhouse.io/webflow/jobs/7689676 | 2026-04-14 |
+| 2    | EverAI  | ashby      | Senior AI PM     | -       | -       | https://jobs.ashbyhq.com/everai/abc-123 | 2026-04-15 |
+| ... | ... | ... | ... | ... | ... | ... | ... |
+
+**`ats` values** (one of): `greenhouse`, `ashby`, `workable`, `lever`, `workday`, `builtin`, `custom`, `unknown`. Every row MUST populate this column — it's what the apply subagent uses to pick the correct Gmail OTP sender query.
 
 Every row MUST have:
-- `gh_slug` and `gh_id` copied verbatim from the Greenhouse API response (not reconstructed)
-- `url` in the canonical form `https://job-boards.greenhouse.io/{gh_slug}/jobs/{gh_id}` (matching the suffix in `data/pipeline.md`)
-- `updated_at` in `YYYY-MM-DD` form (the most recent `updated_at` in the API response)
+- `ats` — the ATS platform hosting the posting. Inferred from the canonical URL host (e.g. `boards-api.greenhouse.io` / `job-boards.greenhouse.io` → `greenhouse`; `jobs.ashbyhq.com` → `ashby`; `jobs.lever.co` → `lever`; `myworkdayjobs.com` / `.wd5.myworkdayjobs.com` → `workday`; `apply.workable.com` / `jobs.workable.com` → `workable`; `builtin.com/jobs/` → `builtin`; company-own domains → `custom`; anything indeterminate → `unknown`).
+- `url` in canonical form. For Greenhouse use `https://job-boards.greenhouse.io/{gh_slug}/jobs/{gh_id}` (matching the suffix in `data/pipeline.md`). For other ATSes use the platform's native URL (do not rewrite).
+- `updated_at` in `YYYY-MM-DD` form (the most recent `updated_at` in the API response, or scan date when the source has no such field).
+
+Additional columns — REQUIRED when available, `-` (dash) when not applicable:
+- `gh_slug`, `gh_id` — Greenhouse-only. Copied verbatim from the Greenhouse API response (not reconstructed). For non-Greenhouse rows, emit `-` in both columns; `ats` + `url` are sufficient.
 
 The scan subagent's return message MUST:
 - Reference the file path (so orchestrators know where to read)
 - Omit the ranked URL list from prose entirely (summary counts only)
 
-**Rationale**: in a prior run, a scan subagent returned correct IDs in `scan-history.tsv` but hallucinated plausible-looking fake IDs in its prose-form top-30 list. The orchestrator trusted prose and dispatched 30 downstream subagents against fake URLs. File-based handoff prevents this class of error.
+**Rationale**: in a prior run, a scan subagent returned correct IDs in `scan-history.tsv` but hallucinated plausible-looking fake IDs in its prose-form top-30 list. The orchestrator trusted prose and dispatched 30 downstream subagents against fake URLs. File-based handoff prevents this class of error. Recording `ats` at scan time (rather than having the apply subagent infer it from the URL host) saves downstream re-parsing and keeps the OTP sender lookup deterministic.
 
 ## Output Summary
 

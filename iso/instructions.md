@@ -9,16 +9,17 @@ The Hard Limits below are non-negotiable numeric rules. If you catch yourself ab
 3. **Always clean Geometra sessions before dispatching.** Before every round of `task` dispatches that will use Geometra, call `geometra_list_sessions` then `geometra_disconnect({closeBrowser: true})`. Every round. The disconnect is a no-op when the pool is empty.
 4. **Orchestrator does NOT fill forms.** This session MUST NOT call `geometra_fill_form`, `geometra_run_actions`, `geometra_pick_listbox_option`, or `geometra_fill_otp` when handling a multi-job request. If you need to, it means you MUST have delegated — `task` out the remaining work instead.
 5. **Re-dispatch only AFTER the previous subagent returns.** Never fire the same company's `task` twice while the first is still in-flight. Wait for the return value, then decide if a retry is warranted.
-6. **Application outcomes flow through TSVs, not `data/pipeline.md`.** When a subagent returns APPLIED / FAILED / SKIP, the outcome goes to `batch/tracker-additions/{num}-{slug}.tsv`. `node merge-tracker.mjs` then consumes the TSVs into the correct `data/applications/YYYY-MM-DD.md` day file. `data/pipeline.md` only tracks URL inbox state (`[ ]` pending → `[x]` processed). **NEVER append APPLIED / FAILED status lines to `pipeline.md`** — that's the day file's job, via the TSV pathway. After any multi-apply run, the orchestrator MUST run `node merge-tracker.mjs` followed by `node verify-pipeline.mjs` before ending the session.
-7. **URLs passed to downstream subagents must come from a file, not from a prior subagent's prose.** When an orchestrator dispatches a subagent with a URL (for evaluation, apply, verification, etc.), the URL MUST originate from:
-   - `data/pipeline.md`
-   - `data/scan-history.tsv`
-   - `batch/scan-output-*.md` or similar structured output file
-   - A report file (`reports/{num}-*.md`) with an authoritative `**URL:**` header
+6. **Application outcomes flow through TSVs, not `data/pipeline.md`.** When a subagent returns APPLIED / FAILED / SKIP, the outcome goes to `batch/tracker-additions/{num}-{slug}.tsv`. `npx job-forge merge` then consumes the TSVs into the correct `data/applications/YYYY-MM-DD.md` day file. `data/pipeline.md` only tracks URL inbox state (`[ ]` pending → `[x]` processed). **NEVER append APPLIED / FAILED status lines to `pipeline.md`** — that's the day file's job, via the TSV pathway. After any multi-apply run, the orchestrator MUST run `npx job-forge merge` followed by `npx job-forge verify` before ending the session.
+7. **Load-bearing facts passed to downstream subagents must come from a file, not from a prior subagent's prose.** A URL, score, email ID, confirmation page snippet, JD salary range, exact answer submitted to a form question, or any other specific value that a downstream subagent will act on MUST originate from one of:
+   - `data/pipeline.md` (URL inbox state)
+   - `data/scan-history.tsv` (scan provenance)
+   - `batch/scan-output-*.md` (scan-ranked candidates)
+   - A report file (`reports/{num}-*.md`) with authoritative headers (`**URL:**`, `**Score:**`, etc.)
+   - A TSV in `batch/tracker-additions/` (per-apply outcomes)
 
-   URLs mentioned in a subagent's return message are NOT trustworthy by default — they may be hallucinated or reconstructed. Before passing any URL from a subagent report to another subagent, cross-check it exists in one of the authoritative files above, OR instruct the dispatching subagent to write its output to a structured file and re-read from that file.
+   **Not trustworthy by default**: anything quoted from a subagent's return message, any ID or score the orchestrator "remembers" from prose, any page-content snippet reproduced from a subagent's narrative. Subagents can hallucinate plausible-looking IDs, scores, and confirmation text. Before passing any such fact to another subagent, cross-check it exists in one of the authoritative files above, OR instruct the dispatching subagent to write its output to a structured file and re-read from that file.
 
-   **Why**: a scan subagent once reported 30 plausible-looking Greenhouse IDs in its return message that did not exist in the Greenhouse API. The orchestrator dispatched 30 downstream subagents that all failed verification. Trusting prose-form URLs cost ~2 hours of wasted work and corrupted the tracker.
+   **Why**: on 2026-04-18, a scan subagent returned 30 fabricated Greenhouse IDs in prose (correct role titles, plausible-looking invented IDs that didn't exist in the API). The orchestrator dispatched 30 downstream subagents that all hit 404s. Verification rules downstream (Hard Limit #6, API-first verify) caught the symptom. This rule prevents the *shape* of the bug — hallucinations propagating through prose handoffs — across all quantitative / identifier / specific-fact claims, not just URLs.
 
 Everything below is context and rationale. These seven numbers are the rules.
 
@@ -39,6 +40,8 @@ Whenever the user says any variation of "apply to N jobs", "process the pipeline
 **Verify after running:** `npx job-forge tokens --session <id>` — any message with `cache_read < 5K` and `input > 50K` is a cache-bust; next time split that work across subagents.
 
 **Exception:** evaluation-only or tracker-only work (no Geometra, no repeated tool calls) can proceed in a single session. The rule targets tool-heavy multi-step loops.
+
+**Before any batch-apply dispatch, run the Apply Preflight location filter from `modes/apply.md`** to exclude location-incompatible candidates. Catches the common case where an evaluated role has the right role-shape but a deal-breaking location that profile.yml already rules out.
 
 ---
 
@@ -466,7 +469,7 @@ To check or modify MCP settings, edit `opencode.json` in the project root.
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
 - Batch in `batch/` (gitignored except scripts and prompt)
 - Report numbering: sequential 3-digit zero-padded, max existing + 1
-- **RULE: After each batch of evaluations, run `node merge-tracker.mjs`** to merge tracker additions and avoid duplications.
+- **RULE: After each batch of evaluations, run `npx job-forge merge`** to merge tracker additions and avoid duplications.
 - **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
 - **RULE: NEVER attribute commits to opencode (no `Co-Authored-By: opencode` or similar).** All commits must be attributed solely to the person making the commit (e.g., CharlieGreenman).
 
@@ -493,13 +496,13 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 
 ### Pipeline Integrity
 
-1. **NEVER edit day files in `data/applications/` to ADD new entries** -- Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
+1. **NEVER edit day files in `data/applications/` to ADD new entries** -- Write TSV in `batch/tracker-additions/` and `npx job-forge merge` handles the merge.
 2. **YES you can edit day files in `data/applications/` to UPDATE status/notes of existing entries.**
 3. All reports MUST include `**URL:**` in the header (between Score and PDF).
 4. All statuses MUST be canonical (see `templates/states.yml`).
-5. Health check: `node verify-pipeline.mjs`
-6. Normalize statuses: `node normalize-statuses.mjs`
-7. Dedup: `node dedup-tracker.mjs`
+5. Health check: `npx job-forge verify`
+6. Normalize statuses: `npx job-forge normalize`
+7. Dedup: `npx job-forge dedup`
 
 ### Canonical States (applications day files)
 
@@ -515,6 +518,7 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 | `Offer` | Offer received |
 | `Rejected` | Rejected by company |
 | `Discarded` | Discarded by candidate or offer closed |
+| `Failed` | Submission attempted but blocked by portal (spam-filter, anti-bot, broken form). May be recoverable via manual retry. |
 | `SKIP` | Doesn't fit, don't apply |
 
 **RULES:**

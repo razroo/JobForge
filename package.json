@@ -43,6 +43,7 @@
     "batch/batch-runner.sh",
     "batch/README.md",
     "docs/",
+    "lib/",
     "tracker-lib.mjs",
     "merge-tracker.mjs",
     "dedup-tracker.mjs",

@@ -53,7 +53,7 @@ Processes accumulated job offer URLs from `data/pipeline.md`. The user adds URLs
 
 Before processing any URL, verify sync:
 ```bash
-node cv-sync-check.mjs
+npx job-forge sync-check
 ```
 If there is a desynchronization, warn the user before continuing.
 
@@ -72,8 +72,8 @@ Step 3  — For round in ceil(N/2):
             # WAIT for both returns before the next round.
 Step 4  — Between rounds: geometra_list_sessions() + geometra_disconnect({closeBrowser: true})
 Step 5  — Reconcile outcomes (Hard Limit #6):
-            bash: node merge-tracker.mjs      # TSVs → correct day file
-            bash: node verify-pipeline.mjs    # validate URL/status consistency
+            bash: npx job-forge merge      # TSVs → correct day file
+            bash: npx job-forge verify     # validate URL/status consistency
 Step 6  — Display summary table; flag any verify-pipeline errors.
 ```
 

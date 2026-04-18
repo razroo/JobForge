@@ -243,7 +243,7 @@ Where `{company-slug}` is the company name in lowercase, no spaces, with hyphens
 12. Write HTML to `/tmp/cv-candidate-{company-slug}.html`
 13. Run:
 ```bash
-node generate-pdf.mjs \
+npx job-forge pdf \
   /tmp/cv-candidate-{company-slug}.html \
   output/cv-candidate-{company-slug}-{{DATE}}.pdf \
   --format={letter|a4}

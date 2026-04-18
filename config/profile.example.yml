@@ -65,3 +65,24 @@ location:
   visa_status: "No sponsorship needed"
   # For remote roles outside your country:
   # onsite_availability: "1 week/month in any city"
+
+# Structured location constraints — consumed by the Apply Preflight location
+# filter in modes/apply.md. The prose fields above (compensation.location_flexibility,
+# location.*) remain for human readability and LLM narrative context; the fields
+# below govern automated, deterministic compatibility checks before dispatching
+# an apply subagent.
+#
+# City names are lowercase, hyphenated (e.g. "san-francisco", "new-york").
+# Country codes are ISO-3166 alpha-2 uppercase (e.g. "US", "CA", "GB").
+location_constraints:
+  remote_us: true                      # open to US-remote roles
+  remote_global: false                 # open to non-US remote (visa / timezone permitting)
+  hybrid_cities:                       # cities where hybrid N-days-in-office is acceptable
+    - san-francisco
+  blocked_cities:                      # cities that are a hard No for relocation (even if hybrid)
+    - new-york
+    - london
+  authorized_countries:                # countries where the candidate has right-to-work
+    - US
+  requires_visa_sponsorship: false     # true → roles in non-authorized countries are blocked unless
+                                       # the JD explicitly mentions visa sponsorship
