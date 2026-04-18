@@ -276,10 +276,12 @@ Check for an OTP gate after the candidate (or Geometra) submits — the major po
 | `lever`      | `from:lever newer_than:10m` |
 | `ashby`      | `from:ashby newer_than:10m` |
 | `workable`   | `from:workable newer_than:10m` |
+| `smartrecruiters` | `from:smartrecruiters newer_than:10m` |
+| `wwr` / `remoteok` | Follow the apply redirect to the underlying ATS, re-detect the host, then use that row's query. Aggregators do not send OTP emails themselves. |
 | `builtin`    | `from:builtin newer_than:10m` |
 | `custom` / `unknown` / missing | `newer_than:10m subject:(verify OR code OR confirm)` |
 
-**Fallback when `ats` is missing** (legacy pipeline entries with no `| ats=` suffix, or scan-output without an `ats` column): infer from the URL host — `*.greenhouse.io` → `greenhouse`; `jobs.ashbyhq.com` → `ashby`; `jobs.lever.co` → `lever`; `*.myworkdayjobs.com` → `workday`; `apply.workable.com` / `jobs.workable.com` → `workable`; `builtin.com` → `builtin`; otherwise use the generic `verify OR code OR confirm` subject query.
+**Fallback when `ats` is missing** (legacy pipeline entries with no `| ats=` suffix, or scan-output without an `ats` column): infer from the URL host — `*.greenhouse.io` → `greenhouse`; `jobs.ashbyhq.com` → `ashby`; `jobs.lever.co` → `lever`; `*.myworkdayjobs.com` → `workday`; `apply.workable.com` / `jobs.workable.com` → `workable`; `api.smartrecruiters.com` / `jobs.smartrecruiters.com` → `smartrecruiters`; `weworkremotely.com` → `wwr`; `remoteok.com` → `remoteok`; `builtin.com` → `builtin`; otherwise use the generic `verify OR code OR confirm` subject query.
 
 **Before reporting the submission as failed, always check Gmail.** A "submit did nothing" outcome usually means a silent OTP step — not a real failure.
 

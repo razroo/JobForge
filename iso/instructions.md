@@ -295,6 +295,8 @@ When a form says "enter the code we sent to your email", you MUST retrieve the c
 | Workday | `from:myworkday newer_than:10m` |
 | Lever | `from:lever newer_than:10m` |
 | Ashby | `from:ashby newer_than:10m` |
+| SmartRecruiters | `from:smartrecruiters newer_than:10m` |
+| Aggregator redirect (WeWorkRemotely / RemoteOK) | Detect the underlying ATS from the post-redirect URL, then use that row's sender query |
 | Unknown | `newer_than:10m subject:(verify OR code OR confirm)` |
 
 **Rules:**

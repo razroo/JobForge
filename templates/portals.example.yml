@@ -406,6 +406,36 @@ search_queries:
 # Companies whose career pages are checked directly.
 # scan_method: geometra (default), websearch, greenhouse_api
 # For Greenhouse companies, add api: field for faster structured JSON access.
+#
+# Per-ATS api: field shapes (see modes/scan.md for full endpoint docs):
+#
+#   Greenhouse:     api: https://boards-api.greenhouse.io/v1/boards/{slug}/jobs
+#   Ashby:          api: https://api.ashbyhq.com/posting-api/job-board/{slug}?includeCompensation=true
+#   Lever:          api: https://api.lever.co/v0/postings/{slug}?mode=json
+#   SmartRecruiters: api: https://api.smartrecruiters.com/v1/companies/{company}/postings
+#   Workday:        api_type: workday  (requires workday_subdomain, workday_pod, workday_tenant, workday_site)
+#
+# Workday schema (finicky — POST with JSON body, tenant + site vary per company):
+#   - name: NVIDIA
+#     careers_url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+#     api_type: workday
+#     workday_subdomain: nvidia                  # hostname prefix
+#     workday_pod: wd5                           # data-center pod (wd1/wd3/wd5/...)
+#     workday_tenant: nvidia                     # usually same as subdomain
+#     workday_site: NVIDIAExternalCareerSite     # public site name — read from careers_url path
+#     tags: ["chips", "ai-lab", "us"]
+#     enabled: true
+#
+#   Built API URL: https://{subdomain}.{pod}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs
+#   POST body:     {"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": ""}
+#
+# SmartRecruiters schema (simple GET):
+#   - name: Visa
+#     careers_url: https://careers.smartrecruiters.com/Visa1
+#     api: https://api.smartrecruiters.com/v1/companies/Visa1/postings
+#     ats: smartrecruiters
+#     tags: ["fintech", "enterprise", "us"]
+#     enabled: true
 
 tracked_companies:
 
@@ -3137,4 +3167,81 @@ tracked_companies:
     careers_url: https://jobs.ashbyhq.com/drizzle
     notes: "TypeScript ORM. Remote."
     tags: ["developer-tools", "open-source", "remote-first"]
+    enabled: true
+
+# -- Cross-company aggregator feeds --
+# Aggregator boards that expose a single feed covering hundreds of companies.
+# Unlike tracked_companies, these are NOT per-company — the scanner pulls the
+# whole feed, applies a pre-filter (category / tags), then runs each posting
+# through the global title_filter above.
+#
+# Types:
+#   - weworkremotely  → RSS 2.0 XML per category
+#   - remoteok        → JSON array, first element is a legal disclaimer (skipped)
+#
+# See modes/scan.md → "Level 2 — ATS / Aggregator APIs" for full shape docs.
+
+cross_company_feeds:
+
+  # -- We Work Remotely (RSS per category) --
+  # Feed IDs map to https://weworkremotely.com/categories/{id}.rss
+  - name: WeWorkRemotely — Programming
+    type: weworkremotely
+    feed: remote-programming-jobs
+    url: https://weworkremotely.com/categories/remote-programming-jobs.rss
+    # Optional pre-filter applied BEFORE title_filter. Drops obviously
+    # off-target entries without cluttering scan-history.
+    category_filter:
+      positive: []   # empty = accept all from this feed
+      negative: ["WordPress", "PHP", "Shopify Theme"]
+    enabled: true
+
+  - name: WeWorkRemotely — DevOps & SysAdmin
+    type: weworkremotely
+    feed: remote-devops-sysadmin-jobs
+    url: https://weworkremotely.com/categories/remote-devops-sysadmin-jobs.rss
+    enabled: true
+
+  - name: WeWorkRemotely — Product
+    type: weworkremotely
+    feed: remote-product-jobs
+    url: https://weworkremotely.com/categories/remote-product-jobs.rss
+    enabled: true
+
+  - name: WeWorkRemotely — All Other
+    type: weworkremotely
+    feed: all-other-remote-jobs
+    url: https://weworkremotely.com/categories/all-other-remote-jobs.rss
+    # This category is very broad — start disabled, enable if signal is good.
+    enabled: false
+
+  # -- RemoteOK (single JSON feed, filter by tags) --
+  # One endpoint, 100 newest postings. Filter by tags BEFORE title_filter,
+  # otherwise you burn the title_filter pass on ~80% irrelevant rows.
+  - name: RemoteOK — AI & Engineering
+    type: remoteok
+    url: https://remoteok.com/api
+    # Required — RemoteOK returns 403 without a browser-like UA.
+    user_agent: "Mozilla/5.0 (compatible; JobForgeScanner/1.0; +https://github.com/razroo/JobForge)"
+    # Pre-filter on entry.tags (case-insensitive substring match against the
+    # array). Row passes if ANY positive matches AND NO negative matches.
+    tag_filter:
+      positive:
+        - "engineer"
+        - "engineering"
+        - "ai"
+        - "ml"
+        - "llm"
+        - "python"
+        - "golang"
+        - "typescript"
+        - "devops"
+        - "platform"
+        - "product manager"
+      negative:
+        - "wordpress"
+        - "php"
+        - "marketing"
+        - "sales"
+        - "customer support"
     enabled: true
