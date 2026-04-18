@@ -53,8 +53,8 @@ The skill router (`.opencode/skills/job-forge.md`) loads mode and data files on 
 
 ```
                     ┌─────────────────────────────────┐
-                    │         opencode Agent        │
-                    │   (reads OPENCODE.md + modes/*.md) │
+                    │            Agent                │
+                    │   (reads AGENTS.md + modes/*.md) │
                     └──────────┬──────────────────────┘
                                │
             ┌──────────────────┼──────────────────────┐
@@ -85,7 +85,7 @@ The skill router (`.opencode/skills/job-forge.md`) loads mode and data files on 
 
 ## Modes (`modes/`)
 
-Markdown mode files in `modes/` define how the opencode workflow behaves together with the root `OPENCODE.md`. **`_shared.md`** is the shared layer (archetypes, scoring dimensions, negotiation scaffolding); the rest align with `/job-forge` command entry points listed in `OPENCODE.md`.
+Markdown mode files in `modes/` define how the workflow behaves together with the root `AGENTS.md`. **`_shared.md`** is the shared layer (archetypes, scoring dimensions, negotiation scaffolding); the rest align with `/job-forge` command entry points listed in `AGENTS.md`.
 
 | File | Focus |
 |------|--------|
@@ -124,7 +124,7 @@ For customization (archetypes, weights, tone), start with `_shared.md` and [CUST
 5. **Score**: Weighted average across 10 dimensions (1-5)
 6. **Report**: Save as `reports/{num}-{company}-{date}.md`
 7. **PDF**: Generate ATS-optimized CV (`generate-pdf.mjs`)
-8. **Track**: Write one TSV per evaluation under `batch/tracker-additions/` (see [OPENCODE.md](../OPENCODE.md) TSV layout); fold rows into `data/applications.md` with `npm run merge` / `merge-tracker.mjs` when you are ready (not automatic in every workflow)
+8. **Track**: Write one TSV per evaluation under `batch/tracker-additions/` (see [AGENTS.md](../AGENTS.md) TSV layout); fold rows into `data/applications.md` with `npm run merge` / `merge-tracker.mjs` when you are ready (not automatic in every workflow)
 
 ## Batch Processing
 

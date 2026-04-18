@@ -1,9 +1,9 @@
 # Modes
 
-Markdown prompts used with opencode together with the root [`OPENCODE.md`](../OPENCODE.md). Each file aligns with a `/job-forge …` entry point or shared behavior described there.
+Markdown prompts used together with the root [`AGENTS.md`](../AGENTS.md). Each file aligns with a `/job-forge …` entry point or shared behavior described there.
 
 - **`_shared.md`** — Archetypes, scoring dimensions, negotiation scaffolding. Edit this first when you change how offers are classified or weighted.
-- **Per-command files** — Each `*.md` here pairs with a `/job-forge …` entry in [`OPENCODE.md`](../OPENCODE.md). How modes connect to batch, tracker, and scripts is spelled out in [**Architecture — Modes**](../docs/ARCHITECTURE.md#modes-modes).
+- **Per-command files** — Each `*.md` here pairs with a `/job-forge …` entry in [`AGENTS.md`](../AGENTS.md). How modes connect to batch, tracker, and scripts is spelled out in [**Architecture — Modes**](../docs/ARCHITECTURE.md#modes-modes).
 
 | File | Role |
 |------|------|
