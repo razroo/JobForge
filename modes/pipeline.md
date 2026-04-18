@@ -6,7 +6,7 @@ Processes accumulated job offer URLs from `data/pipeline.md`. The user adds URLs
 
 1. **Read** `data/pipeline.md` → find `- [ ]` items in the "Pending" section
 2. **For each pending URL**:
-   a. Calculate the next sequential `REPORT_NUM` (read `reports/`, take the highest number + 1)
+   a. Calculate the next sequential `REPORT_NUM` by running `npx job-forge next-num` (scans `reports/`, day file `#` columns, and `batch/tracker-additions/` — do NOT derive from `reports/` alone)
    b. **Extract JD** using Geometra MCP (geometra_connect + geometra_page_model) → WebFetch → WebSearch
    c. If the URL is not accessible → mark as `- [!]` with a note and continue
    d. **Run full auto-pipeline**: A-F Evaluation → Report .md → PDF (if score >= 3.0, per `_shared.md` thresholds) → Draft answers (if score >= 3.5) → Tracker
@@ -45,9 +45,13 @@ Processes accumulated job offer URLs from `data/pipeline.md`. The user adds URLs
 
 ## Automatic Numbering
 
-1. List all files in `reports/`
-2. Extract the number from the prefix (e.g., `142-medispend...` → 142)
-3. New number = highest found + 1
+Run `npx job-forge next-num` — returns the next 3-digit zero-padded report number. The CLI scans:
+
+1. `reports/*.md` filename prefixes
+2. The `#` column of every `data/applications/*.md` day file
+3. The `{num}` prefix of every `batch/tracker-additions/*.tsv` (pending + merged)
+
+Takes the max across all three sources and adds 1. Do NOT derive from any single source — prior-day SKIPs and other non-report tracker entries advance the counter but never write to `reports/`, so `ls reports/` alone misses them.
 
 ## Source Synchronization
 

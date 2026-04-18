@@ -5,7 +5,13 @@
 The Hard Limits below are non-negotiable numeric rules. If you catch yourself about to violate one, STOP and restructure.
 
 1. **Max parallel subagents: 2.** Never emit 3+ `task` tool calls in a single message. For N jobs, run `ceil(N/2)` sequential rounds of 2. No exceptions — not for "urgent", not for "the user asked for 10".
-2. **Max 1 application per company+role.** Before every `task` dispatch for `apply`, Grep `data/pipeline.md` and today's `data/applications/*.md` for the URL and for `company+role`. If already APPLIED, skip that job and do not dispatch.
+2. **Max 1 application per company+role.** Before every `task` dispatch for `apply`, Grep ALL of the following for the URL and for `company+role`:
+   - `data/pipeline.md`
+   - all `data/applications/*.md` day files (not just today's — prior-day Applies count too)
+   - `batch/tracker-additions/*.tsv` (pending outcomes not yet merged)
+   - `batch/tracker-additions/merged/*.tsv` (outcomes already consumed into day files — catches same-day earlier-batch Applies that merge collapsed into an existing row)
+
+   If any source shows an APPLIED / Applied outcome for this URL or company+role, skip that job and do not dispatch. **Why merged/ matters**: when two batches in the same day target the same role, `npx job-forge merge` updates the existing day-file row instead of creating a new one — so `grep data/applications/*.md` for the higher report number misses the earlier apply. The merged TSV is the only place the newer attempt's breadcrumb remains.
 3. **Always clean Geometra sessions before dispatching.** Before every round of `task` dispatches that will use Geometra, call `geometra_list_sessions` then `geometra_disconnect({closeBrowser: true})`. Every round. The disconnect is a no-op when the pool is empty.
 4. **Orchestrator does NOT fill forms.** This session MUST NOT call `geometra_fill_form`, `geometra_run_actions`, `geometra_pick_listbox_option`, or `geometra_fill_otp` when handling a multi-job request. If you need to, it means you MUST have delegated — `task` out the remaining work instead.
 5. **Re-dispatch only AFTER the previous subagent returns.** Never fire the same company's `task` twice while the first is still in-flight. Wait for the return value, then decide if a retry is warranted.
@@ -470,7 +476,7 @@ To check or modify MCP settings, edit `opencode.json` in the project root.
 - Output in `output/` (gitignored), Reports in `reports/`
 - JDs in `jds/` (referenced as `local:jds/{file}` in pipeline.md)
 - Batch in `batch/` (gitignored except scripts and prompt)
-- Report numbering: sequential 3-digit zero-padded, max existing + 1
+- Report numbering: sequential 3-digit zero-padded. **Always use `npx job-forge next-num` to get the next number** — do NOT derive it yourself from `ls reports/`. The CLI scans all sources: `reports/*.md`, the `#` column of every `data/applications/*.md` day file, and pending + merged `batch/tracker-additions/*.tsv`. Deriving from `reports/` alone misses numbers assigned by prior-day tracker additions that were never written as report files (e.g., `SKIP` entries), which causes ID collisions downstream.
 - **RULE: After each batch of evaluations, run `npx job-forge merge`** to merge tracker additions and avoid duplications.
 - **RULE: NEVER create new entries in applications.md if company+role already exists.** Update the existing entry.
 - **RULE: NEVER attribute commits to opencode (no `Co-Authored-By: opencode` or similar).** All commits must be attributed solely to the person making the commit (e.g., CharlieGreenman).
