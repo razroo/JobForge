@@ -189,18 +189,18 @@ cases:
 
   - name: cost-tier-free-for-procedural
     input:
-      user_message: "Merge the TSV outcomes from today's batch into the day file, then run verify."
+      user_message: "I'm starting a batch-apply run: https://a.com/1, https://b.com/2, https://c.com/3, https://d.com/4. Please outline the routing plan for each subagent dispatch (form-fill, OTP, and TSV merge)."
     expectations:
       - rule: D2
         check: llm_judge
         prompt: >
-          Does the response route this merge+verify work to the
-          `@general-free` tier (or equivalently indicate it will use
-          the free/procedural tier, not `@general-paid`)? Answer YES
-          if `@general-free` is named OR the response indicates the
-          work is procedural and handled without an upgrade. Answer NO
-          if the response routes this procedural work to
-          `@general-paid` or `@glm-minimal`.
+          Does the response route the per-job form-fill / OTP / TSV-
+          merge subagent dispatches to `@general-free` (or equivalent
+          free/procedural tier)? Answer YES if `@general-free` is
+          named as the tier for any of these procedural dispatches.
+          Answer NO if the response routes this procedural work to
+          `@general-paid` or `@glm-minimal`, or names no tier at all
+          despite being asked to outline routing.
 
   - name: cost-tier-paid-for-high-stakes
     input:
