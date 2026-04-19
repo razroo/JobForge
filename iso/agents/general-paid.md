@@ -1,16 +1,14 @@
 ---
 description: Quality-sensitive worker on paid model. Use for offer evaluation narratives (Blocks A-F), cover letter generation, "Why X?" form answers, interview STAR stories, and other tasks where writing quality and judgment matter.
 targets:
-  # Claude Code / Cursor / Codex: no inline override — iso-route's resolved
-  # role map stamps model from models.yaml (role name = filename slug).
-  # OpenCode keeps its provider-specific model identifier inline.
+  # No inline model: iso-route 0.2.0+ stamps provider/model from the
+  # per-target resolution in models.yaml (role = filename slug). Claude
+  # Code reads .claude/iso-route.resolved.json; OpenCode reads
+  # opencode.json's agent.<slug>.model (iso-harness 0.6.0+).
   opencode:
     mode: subagent
-    model: opencode/glm-5.1
     temperature: 0.3
     reasoningEffort: medium
-    fallback_models:
-      - opencode/claude-haiku-4-5
     tools:
       geometra_*: false
       gmail_*: false

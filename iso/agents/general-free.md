@@ -1,19 +1,14 @@
 ---
 description: Procedural worker on free-tier model. Use for form filling via Geometra, tracker updates, TSV merges, scan dedup, OTP retrieval, and other mechanical/scripted tasks where quality-sensitive text generation is NOT required.
 targets:
-  # Claude Code / Cursor / Codex: no inline override — iso-route's resolved
-  # role map stamps model from models.yaml (role name = filename slug).
-  # OpenCode keeps its provider-specific model identifier inline.
+  # No inline model: iso-route 0.2.0+ stamps provider/model from the
+  # per-target resolution in models.yaml (role = filename slug). Claude
+  # Code reads .claude/iso-route.resolved.json; OpenCode reads
+  # opencode.json's agent.<slug>.model (iso-harness 0.6.0+).
   opencode:
     mode: subagent
-    model: opencode/big-pickle
     temperature: 0.1
     reasoningEffort: minimal
-    fallback_models:
-      - opencode/minimax-m2.5-free
-      - opencode/nemotron-3-super-free
-      - opencode-go/minimax-m2.7
-      - opencode/glm-5.1
     tools:
       geometra_connect: true
       geometra_page_model: true

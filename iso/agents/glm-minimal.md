@@ -1,17 +1,14 @@
 ---
 description: Narrow-scope extractor on free-tier model. Use for single-purpose tasks where the orchestrator passes the exact input and expects a small, structured output — e.g., "extract these 8 fields from this JD text" or "parse this form schema into a label→type map". NOT for multi-step workflows.
 targets:
-  # Claude Code / Cursor / Codex: no inline override — iso-route's resolved
-  # role map stamps model from models.yaml (role name = filename slug).
-  # OpenCode keeps its provider-specific model identifier inline.
+  # No inline model: iso-route 0.2.0+ stamps provider/model from the
+  # per-target resolution in models.yaml (role = filename slug). Claude
+  # Code reads .claude/iso-route.resolved.json; OpenCode reads
+  # opencode.json's agent.<slug>.model (iso-harness 0.6.0+).
   opencode:
     mode: subagent
-    model: opencode/minimax-m2.5-free
     temperature: 0
     reasoningEffort: none
-    fallback_models:
-      - opencode/big-pickle
-      - opencode/nemotron-3-super-free
     tools:
       geometra_*: false
       gmail_*: false
