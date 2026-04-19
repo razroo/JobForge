@@ -85,22 +85,23 @@ The harness ships three subagents (see `.opencode/agents/`). The orchestrator MU
 
 **When to break this rule:** if the user explicitly asks for "quality over cost" or flags a high-stakes application (top-tier company, offer-stage negotiation, executive search), route everything through `@general-paid`. Document the exception in the session.
 
-### Pre-flight delegation (HARD RULE)
+### When to delegate
 
-For any task that will involve **more than one tool call** — i.e., anything beyond a one-shot answer — the orchestrator's **first tool call MUST be `task`** (dispatching to a subagent). Not `Read`, not `Bash`, not `geometra_connect`, not `Grep`. The orchestrator plans and dispatches; subagents execute.
+**Delegate (`task` out) when the work involves repeated tool-heavy steps that bloat the orchestrator's cache prefix.** The concrete failure mode this prevents: a 341-message "apply to 20 jobs" session where repeated `geometra_fill_form` / `geometra_page_model` calls accumulated in history, forcing each new message to re-process 100K+ tokens of fresh input instead of reading from cache.
 
-**Why this is absolute:** every tool call in the orchestrator accumulates in the top-level session's history and pollutes the cache prefix. Once the orchestrator has read three files and made two Geometra calls, delegating to a subagent no longer helps — the subagent inherits the bloated context. The only way to keep the orchestrator lean is to delegate *before* doing anything else.
+**Delegate when:**
+- Applying to N≥2 jobs (repeated Geometra form-fill — the original cache-bust scenario)
+- Batch portal scans hitting ≥3 companies (API loops + page-model reads stack up)
+- Any explicit "apply to... / process pipeline / batch evaluate" phrasing from the user (multi-job intent)
 
-**What counts as "more than one tool call":**
-- Evaluating any offer (always ≥3 steps: fetch JD, score, write report)
-- Any `/job-forge` mode invocation except `tracker` (read-only)
-- Applying to a job
-- Scanning portals
-- Any batch operation
+**Do NOT delegate — orchestrate inline:**
+- Single-offer evaluation (text-heavy, not tool-heavy)
+- Development / bug-fix / file-editing tasks
+- `tracker` and other read-only modes
+- Single-company scan, single-URL check
+- One-shot questions — "what does this mean?", "read X and summarize", "what's my next report number?"
 
-**Explicit exception:** trivial one-shot answers — "what does this error mean?", "read this file and summarize", "what's my next report number?" — can stay in the orchestrator. If the question can be answered in ≤1 tool call, do not delegate.
-
-**Detection signal:** if you (orchestrator) find yourself about to make your 2nd tool call in a session that wasn't a trivial one-shot, STOP. Instead, `task` out the remaining work as a single delegated job.
+**Detection signal:** if you're about to call `geometra_fill_form` for a second *different* job in the same session, STOP and delegate the remainder. For everything else, in-session execution is the expected default.
 
 ---
 
