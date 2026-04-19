@@ -109,9 +109,31 @@ function normalizeCompany(name) {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+// Generic seniority + engineering words that appear across most SWE roles
+// and carry no role-specialty signal. A "discriminator" is any remaining
+// word longer than 3 chars (e.g. "Observability", "Telemetry", "Platform").
+const ROLE_STOPWORDS = new Set([
+  'staff', 'senior', 'principal', 'lead', 'junior',
+  'software', 'engineer', 'engineering', 'developer',
+  'backend', 'frontend', 'fullstack', 'full-stack', 'full', 'stack',
+  'technical', 'applied',
+]);
+
 function roleFuzzyMatch(a, b) {
-  const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  // Split on whitespace AND role punctuation (commas, colons, dashes, parens)
+  // so "Staff SWE, Observability K8s" tokenizes past the comma.
+  const split = (s) => s.toLowerCase()
+    .split(/[\s,:\-()\/]+/)
+    .map(w => w.trim())
+    .filter(w => w.length > 3 && !ROLE_STOPWORDS.has(w));
+
+  const wordsA = split(a);
+  const wordsB = split(b);
+
+  // Match on discriminator-word overlap only. Prevents "Staff Software
+  // Engineer, ML Observability" and "Staff Backend Engineer, Adaptive
+  // Telemetry" from colliding (same company, different specialty) while
+  // still collapsing re-evaluations of the same role (same discriminators).
   const overlap = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
   return overlap.length >= 2;
 }

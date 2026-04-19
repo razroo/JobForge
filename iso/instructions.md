@@ -369,13 +369,27 @@ These blocks come from two distinct root causes and require different responses:
 
 **Known-block Ashby tenants (2026-04-19 empirical observations).** These tenants fired class B on every attempted submit from a headless datacenter-IP proxy. Orchestrators planning apply dispatches should assume these tenants will Fail in headless — prioritize other portals, or skip same-tenant siblings after a confirmed class B to avoid burning subagent slots:
 
-- Vellum, Linear, Vanta, River Financial, Higharc, Trace Labs, Solace Health, Unstructured, ClickUp, Zapier, Deepgram, Ramp, WorkOS
+- Vellum, Linear, Vanta, River Financial, Higharc, Trace Labs, Solace Health, Unstructured, ClickUp, Zapier, Deepgram, Ramp, WorkOS, **Ashby (self-tenant)**, **Perplexity**
 
 **Known class-A-compatible Ashby tenants (same observations).** These tenants accepted headless submits cleanly, often with `imeFriendly: true` making the difference on the text-field subset:
 
-- Supabase, LangChain, Poolside, Runway Financial
+- Supabase, LangChain, Poolside, Runway Financial, **Sentry**, **Cognition**
 
 The pattern is tenant configuration, not role or company size. Lists drift as tenants tune their anti-bot — treat as probabilistic priors, not hard rules.
+
+**Ashby choice-group with `optionCount: 1` and no labels (Sentry pattern).** Some Ashby tenants render Yes/No work-authorization questions as `role="button" name="Application"` pill toggles where the accessibility tree exposes neither `Yes` nor `No` labels. `fill_fields` with `choiceType: "group"` silently no-ops; `geometra_click` by `id` also fails to toggle. Fix: fall back to `geometra_click` with RAW x,y coordinates at the button centers (Yes is typically the left button, No is the right). Confirmed on Sentry Staff Platform #845, 2026-04-19.
+
+### Other Portal Failure Classes
+
+**Typeform applications are Geometra-unsupported.** Some companies (Better Stack confirmed, 2026-04-19) route the Apply link to a Typeform wizard (`*.typeform.com/apply-*`). Typeform renders questions via a custom React/canvas layer that does NOT expose input fields to the accessibility tree — `geometra_form_schema` returns "No forms found", `geometra_query role=textbox` returns empty, blind `geometra_type` produces no semantic change. Mark `Failed` with reason "Typeform portal — Geometra unsupported" on detection; do not burn the 9-minute budget attempting blind input.
+
+**Avature multi-step wizards have a native-`<select>` validation lag (Bloomberg pattern).** Bloomberg's careers site redirects to `bloomberg.avature.net` with a 4-step wizard. On Step 2, native `<select>` elements ("Is Current Position? / No") accept the value but keep `invalid: true` persistently — neither Tab, re-submit, nor re-pick clears it. `imeFriendly` has no effect because the field is a native `<select>`, not React-controlled text. There is no documented recovery. Mark `Failed` with reason "Avature native-select validation lag"; account creation up to that point is preserved for any future manual path. Confirmed on Bloomberg Sr SWE Auth #828, 2026-04-19.
+
+**Cloudflare / ATS-vendor blocks on Dropbox-class portals.** Dropbox's real apply flow lives behind `happydance.website` (ATS vendor), which Cloudflare-fingerprints headless Chromium + datacenter IPs and returns "Sorry, you have been blocked". `job-boards.greenhouse.io/dropbox` does not mirror — there is no public Greenhouse fallback. Symptom-wise indistinguishable from Ashby class B but at a different layer. Mark `Failed` with reason "ATS vendor Cloudflare block (happydance.website or equivalent)". Confirmed on Dropbox Sr FS Product #831, 2026-04-19.
+
+**Greenhouse OTP-on-fill variant (Instacart pattern).** Most Greenhouse OTP flows fire on Submit. A minority (Instacart Staff FoodStorm #827, 2026-04-19) fire the 8-cell security-code gate mid-fill, BEFORE the user clicks Submit. Detection: watch for an 8-cell OTP input surfacing after resume upload or the first listbox commit. Fetch from Gmail (`from:greenhouse newer_than:10m`) immediately when it appears — do not wait for Submit.
+
+**`geometra_fill_otp` char-drop on first fill.** Occasionally `fill_otp` lands only the first character of an 8-char code (seen on Instacart, 2026-04-19). Recovery: click the first cell to focus, then re-issue `fill_otp` with `perCharDelayMs: 120`. The form usually auto-submits once all 8 cells are populated.
 
 ### Greenhouse Bot-Detection Honeypots
 
