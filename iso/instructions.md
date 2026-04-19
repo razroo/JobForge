@@ -416,11 +416,13 @@ These blocks come from two distinct root causes and require different responses:
 
 **Known-block Ashby tenants (2026-04-19 empirical observations).** These tenants fired class B on every attempted submit from a headless datacenter-IP proxy. Orchestrators planning apply dispatches should assume these tenants will Fail in headless — prioritize other portals, or skip same-tenant siblings after a confirmed class B to avoid burning subagent slots:
 
-- Vellum, Linear, Vanta, River Financial, Higharc, Trace Labs, Solace Health, Unstructured, ClickUp, Zapier, Deepgram, Ramp, WorkOS, **Ashby (self-tenant)**, **Perplexity**
+- Vellum, Linear, Vanta, River Financial, Higharc, Trace Labs, Solace Health, Unstructured, ClickUp, Zapier, Deepgram, Ramp, WorkOS, Ashby (self-tenant), Perplexity, **Goody**, **Starbridge**, **Graphite**, **Prompt Health**, **Vantage**
 
 **Known class-A-compatible Ashby tenants (same observations).** These tenants accepted headless submits cleanly, often with `imeFriendly: true` making the difference on the text-field subset:
 
-- Supabase, LangChain, Poolside, Runway Financial, **Sentry**, **Cognition**
+- Supabase, LangChain, Poolside, Runway Financial, Sentry, Cognition
+
+**Base rate for untested Ashby tenants (5/5 tested 2026-04-19 cycle 4 = class B).** The prior today is ~80-90% of untested Ashby tenants fingerprint-block headless submits. Orchestrators should treat any tenant not on the class-A-compatible list as likely class B — still dispatch to collect the data point, but don't burn multiple sibling-role slots on the same Ashby tenant.
 
 The pattern is tenant configuration, not role or company size. Lists drift as tenants tune their anti-bot — treat as probabilistic priors, not hard rules.
 
@@ -437,6 +439,29 @@ The pattern is tenant configuration, not role or company size. Lists drift as te
 **Greenhouse OTP-on-fill variant (Instacart pattern).** Most Greenhouse OTP flows fire on Submit. A minority (Instacart Staff FoodStorm #827, 2026-04-19) fire the 8-cell security-code gate mid-fill, BEFORE the user clicks Submit. Detection: watch for an 8-cell OTP input surfacing after resume upload or the first listbox commit. Fetch from Gmail (`from:greenhouse newer_than:10m`) immediately when it appears — do not wait for Submit.
 
 **`geometra_fill_otp` char-drop on first fill.** Occasionally `fill_otp` lands only the first character of an 8-char code (seen on Instacart, 2026-04-19). Recovery: click the first cell to focus, then re-issue `fill_otp` with `perCharDelayMs: 120`. The form usually auto-submits once all 8 cells are populated.
+
+**Breezy portal — tenant-dependent, native `<select>`, resume-auto-parse is primary.** A subset of companies (Avantos AI, Courted, Instinct Science confirmed 2026-04-19) host applications on `*.breezy.hr` or `applytojob.com`. Empirical rules:
+
+- **Class is per-tenant, not uniform.** Avantos (Failed 2026-04-19 #854) returned Breezy's own "It looks like maybe you've already applied to this job?" banner from IP fingerprinting, even on a first submit — distinct failure mode from Ashby's "flagged as possible spam". Courted (Applied 2026-04-19 #855) went through cleanly on the same session. Don't pre-skip Breezy; the outcome is tenant-specific.
+- **Native `<select>` elements, not React comboboxes.** `geometra_pick_listbox_option` sets the visible display but NOT the underlying form state — submit will fail with "A response is required" on every combobox. Use `geometra_select_option` with x,y + label value for every choice field on Breezy.
+- **Resume-auto-parse carries the signal.** After resume upload, Breezy auto-parses work history and education into structured rows. Do NOT Add/Delete position rows via Geometra — row mutations reshuffle fieldIds mid-flow, sequential `fill_fields` calls land in wrong rows, and upstream pollution corrupts earlier positions. Trust the parsed resume and fill only Personal Details + salary.
+
+**Mailto-apply portals — direct email via gmail-mcp `attachments`.** A subset of HN-listed companies (CoPlane, Gambit Robotics, Rinse, Digital Health Strategies confirmed 2026-04-19) don't host an ATS form — their careers page instructs sending resume by email to `founders@...` / `jobs@...` / `contact@...`. Detection: WebFetch the careers URL; if the Apply link resolves to `mailto:` or the copy reads "email your resume to …", skip Geometra entirely.
+
+Use `gmail_send_message` with the `attachments` parameter (available from `@razroo/gmail-mcp@1.8.0`):
+
+```
+gmail_send_message({
+  to: ["founders@example.com"],
+  subject: "Application — Forward Deployed AI Engineer — Charlie Greenman (Austin)",
+  body: "<Section G pitch, 4-8 short paragraphs>",
+  attachments: [{ path: "/abs/path/to/Charlie-Greenman-CV.pdf" }]
+})
+```
+
+The MCP reads the file from disk and builds multipart/mixed MIME server-side — do NOT manually base64-encode a PDF into the `raw` parameter (the inline blob exceeds tool-call argument limits for any real attachment). Subject is auto MIME-encoded for non-ASCII (em-dash, smart quotes) by the same version. For older gmail-mcp versions (< 1.8.0) the only path was a direct Gmail API POST with the stored OAuth token at `~/.gmail-mcp/credentials.json` — upgrade if you can.
+
+Mark Applied with note `mailto portal — sent via gmail_send_message; Gmail msgId {id}`. Verify via `gmail_get_message` that the attachment intact-size matches what was on disk before writing the TSV.
 
 ### Greenhouse Bot-Detection Honeypots
 
