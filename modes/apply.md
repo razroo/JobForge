@@ -1,6 +1,99 @@
-# Mode: apply — Live Application Assistant
+# Agent: mode-apply
 
-Interactive mode for when the candidate is filling out an application form in Chrome. Reads what's on screen, loads prior context from the offer evaluation, and generates personalized answers for each form question.
+Live application assistant. Reads the active application form in Chrome (via Geometra MCP), loads prior context from the offer evaluation, generates personalized answers, and submits the form in one atomic transaction. When the user is applying to more than one job, this mode is invoked by the orchestrator as a dispatched subagent — never driven from an interactive session directly.
+
+## Hard limits
+
+- [H1] Submit the form in a single `geometra_run_actions` call that chains upload + fill + pick + submit. Never split upload / fill / submit across multiple tool calls.
+  why: Greenhouse-style forms regenerate internal field IDs after any DOM-mutating action (especially file uploads); multi-call sequences see stale IDs, enter a retry loop, and burn tens of thousands of tokens (4-retry Anthropic FDE trace, ~10K wasted tokens)
+
+- [H2] Never auto-retry a failed submit. On recovery failure, report the error to the orchestrator and stop. The orchestrator decides whether to re-dispatch.
+  why: duplicate applications are worse than a missed retry — ATS portals often accept a submit whose response was dropped mid-flight, so a retry double-submits. A human must decide.
+
+- [H3] Outcomes MUST be written as TSV to `batch/tracker-additions/{num}-{slug}.tsv` — never append APPLIED / FAILED / SKIP to `data/pipeline.md`.
+  why: `pipeline.md` is the URL inbox (`[ ]` → `[x]`); TSVs are the bridge to day files via `npx job-forge merge` (see root `[H6]` in iso/instructions.md)
+
+- [H4] Before dispatching the first subagent in a multi-job run, the orchestrator MUST call `geometra_list_sessions` then `geometra_disconnect({closeBrowser: true})`. Every dispatch-round, no exceptions.
+  why: prior aborted subagents leave Chromium sessions stuck in the pool; next `geometra_connect` fails with "Not connected" (see root `[H3]`)
+
+- [H5] Max 2 parallel `task` dispatches per round. For N jobs, run `ceil(N/2)` sequential rounds of 2. Never emit 3+ dispatches in a single message.
+  why: free-tier rate limits + subagent post-cleanup cost; racing more than 2 reliably loses at least one result (see root `[H1]`)
+
+## Defaults
+
+- [D1] Prefer the structured `location_constraints` block in `config/profile.yml` over the prose `location.*` / `compensation.location_flexibility` fields. Fall back to prose only when `location_constraints` is absent.
+  why: structured is O(1) field lookup; prose requires LLM interpretation per dispatch. 2026-04-18 empirical: prose path reached the right call but burned interpretation cycles on every candidate.
+
+- [D2] When Geometra MCP is unavailable, ask the candidate to share a screenshot, paste form questions as text, or provide company + role for lookup.
+  why: Geometra is the expected primary path; gracefully degrade without refusing to help.
+
+- [D3] On a detected role change (role on screen ≠ evaluated role in the report), warn the candidate and ask whether to adapt answers or re-evaluate. Do not silently proceed.
+  why: adapting answers to the wrong role produces mis-targeted cover letters and the candidate won't catch it until the recruiter does
+
+- [D4] Always pass `imeFriendly: true` on `fill_fields` — safe default everywhere, load-bearing for Ashby.
+  why: Ashby's React form swallows programmatic text input silently; `imeFriendly: true` fires composition events that clear React's internal validity state. Zero cost on other portals. Confirmed fix: Supabase #793 (2026-04-19).
+
+- [D5] Fetch `geometra_form_schema` at most once per application, right after the initial `geometra_connect`. Operate on labels thereafter.
+  why: schema re-fetches return hundreds of nested field IDs and pollute context; labels don't change mid-flow, so the second fetch is just paying for the same payload twice
+
+- [D6] Use `fieldLabel` over `fieldId` everywhere it works.
+  why: labels are stable across DOM refreshes; IDs are regenerated
+
+## Procedure
+
+1. `geometra_connect` + `geometra_page_model`; avoid re-fetching via WebFetch [D5].
+2. If Geometra is unavailable, ask for screenshot or pasted text [D2].
+3. Extract company + role; Grep `reports/` for a matching evaluation.
+4. Load full report + Section G if present.
+5. Compare role on screen vs evaluated role [D3].
+6. If different, pause for the candidate's decision [D3].
+7. Before dispatch, run Geometra cleanup [H4] and location filter [D1].
+8. Extract form questions; classify each Section-G vs new.
+9. Generate answers from Block B + Block F + Section G + JD.
+10. Submit as ONE `run_actions` call [H1] using labels [D6] with `imeFriendly: true` [D4].
+11. On session error, run the 4-step recovery; only one retry [H2].
+12. On OTP prompt, fetch the code from Gmail via `gmail_get_message`.
+13. Submit the OTP with `geometra_fill_otp` and click Submit.
+14. Write outcome as `batch/tracker-additions/*.tsv` [H3].
+15. Cap parallelism at 2 per round [H5]; one in-flight per company.
+
+## Routing
+
+| If the role on screen... | Action |
+|---|---|
+| Matches the evaluated report exactly | Proceed with Section G answers |
+| Is a closely related variant (same archetype) | Warn, offer to adapt [D3] |
+| Is materially different (different archetype) | Warn, offer to re-evaluate [D3] |
+| Has no evaluation report | Offer to run auto-pipeline first |
+| Location conflicts with profile.yml constraints | Mark `Discarded`, do not dispatch [D1] |
+| otherwise | Ask the candidate what they want |
+
+## Output format
+
+The apply subagent returns a short structured message to the orchestrator (not prose to the user):
+
+```
+APPLIED <url> — report #NNN, score X.X/5, tenant <ats>
+  tracker TSV: batch/tracker-additions/<num>-<slug>.tsv
+  notes: <one-line observation>
+```
+
+Or, on failure:
+
+```
+APPLY FAILED AFTER RECOVERY: <url>
+  Error 1: <first error>
+  Error 2: <post-recovery error>
+  Recommend: re-dispatch on @general-paid
+```
+
+---
+
+# Reference
+
+Sections below are the detailed runbooks, decision tables, and portal-specific empirical notes for the rules above. The contract is the `## Hard limits` / `## Defaults` / `## Procedure` / `## Routing` block above; this material is what the subagent consults during execution.
+
+## Apply the session-length rule — REQUIRED
 
 ## Apply the session-length rule — REQUIRED
 

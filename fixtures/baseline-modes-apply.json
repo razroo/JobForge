@@ -1,0 +1,215 @@
+{
+  "agent": "mode-apply",
+  "cases": [
+    {
+      "name": "single-run-actions-for-submit",
+      "trials": [
+        {
+          "output": "I acknowledge the dispatch. However, **I don't have access to Geometra MCP tools in my current tool set** — only Gmail, Calendar, and Drive are available to me. I need the form information to proceed.\n\n**Please provide one of the following:**\n\n1. **Screenshot of the form** — the visible questions and field types\n2. **Paste the form questions as text** — copy and paste all visible question labels and input types\n3. **Form field names** — if you can read the HTML labels from browser dev tools\n\nOnce you provide the form structure, I will:\n- Load the report (`reports/800-stripe-...-2026-04-19.md`, score 4.2/5)\n- Extract the company/role from the URL (Stripe, job ID 4012345)\n- Generate personalized answers from the report's Block B + Block F + any Section G draft\n- Provide the final answers ready for submission\n\n**Which method works best for you?**\n\n- Share a screenshot (fastest)\n- Paste the form questions\n- Describe the fields you see and I'll guide you through filling them",
+          "checks": [
+            {
+              "rule": "H1",
+              "check": "llm_judge",
+              "passed": false,
+              "detail": "judge: no"
+            }
+          ]
+        },
+        {
+          "output": "Looking at your request, I need to clarify a couple of things:\n\n**Issue 1: Geometra tools not visible**\nI don't see Geometra MCP functions (like `geometra_connect`, `geometra_run_actions`, etc.) in my available tools list. The instructions reference these extensively for form interaction, but they're not currently registered in my context.\n\n**Issue 2: Single-application routing**\nThe instructions state: *\"For a single application interactively, carry on in the current session — the rule targets multi-job loops.\"* Since this is a single job, I should handle it directly here rather than dispatch to a separate subagent.\n\n---\n\n**To proceed, I need one of these:**\n\n1. **Screenshot of the open form** → I can read it and generate answers for all visible questions\n2. **Pasted form questions** → Paste the question text and I'll generate answers  \n3. **Confirm company + role** → I can load the report (reports/800-stripe-...-2026-04-19.md) and do a fresh analysis without the live form\n\nOnce I have the form details, I will:\n- Load the report (score 4.2/5) to extract proof points from Blocks B & F\n- Generate personalized answers for each question  \n- Submit atomically in **one action call** with the cv.pdf file\n\nWhich fallback option works best for you?",
+          "checks": [
+            {
+              "rule": "H1",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        },
+        {
+          "output": "I notice that **Geometra MCP is not available in my current environment**. Without it, I cannot interact with the browser to read the form or submit automatically.\n\nTo proceed with the application, I need one of the following:\n\n**Option 1: Form screenshot** \n- Share a screenshot of the application form so I can see all the fields and questions\n\n**Option 2: Form questions as text**\n- Paste the visible form questions (field labels + any help text)\n\n**Option 3: Report content**\n- Provide the content of `reports/800-stripe-...-2026-04-19.md` so I can generate personalized answers\n\n**If Geometra were available**, here's what I would do atomically in a single call:\n\n1. ✅ `geometra_connect` on the URL → get sessionId\n2. ✅ `geometra_page_model` → verify role matches the report (score 4.2/5 for Stripe role)\n3. ✅ `geometra_form_schema` → discover all field labels\n4. ✅ Load report content from `reports/800-stripe-...-2026-04-19.md`\n5. ✅ Map each form field to answers from the report's Block B (proof points) + Block F (STAR stories) + Section G (prior answers)\n6. ✅ One atomic `geometra_run_actions` call:\n   - `upload_files` → cv.pdf to Resume field\n   - `fill_fields` with `imeFriendly: true` → personalized answers for all text fields\n   - `pick_listbox_option` → any dropdown choices (work auth, location, etc.)\n   - `click` → Submit button\n7. ✅ Handle OTP verification via Gmail if prompted\n8. ✅ Write outcome TSV to `batch/tracker-additions/{num}-stripe-{role}-2026-04-19.tsv`\n\n**What I need from you right now:**\n\nPlease share either the **screenshot**, **form questions**, or **report content** so I can generate and submit the answers.",
+          "checks": [
+            {
+              "rule": "H1",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "no-auto-retry-on-submit-failure",
+      "trials": [
+        {
+          "output": "**No.** According to **Hard Limit #2**, I must **STOP now and report the failure to the orchestrator.**\n\nHere's why:\n\n1. **One retry maximum**: The recovery sequence I ran was the **only** allowed retry. After that fails, I must not attempt a third time.\n\n2. **Duplicate submission risk**: ATS portals often silently accept a submit whose response was dropped mid-flight. A third attempt risks submitting the application twice — which is worse than missing it entirely.\n\n3. **The orchestrator decides**: The orchestrator has the full picture and decides whether to re-dispatch on a different approach (e.g., a bigger model, a paid tier, or manual submission).\n\n### What I should output now:\n\n```\nAPPLY FAILED AFTER RECOVERY: <URL>\nError 1: Not connected\nError 2: field required\nRecommend: re-dispatch on @general-paid\n```\n\nI will **not** try a third time with a different approach — that's explicitly forbidden. The next move is entirely the orchestrator's call.",
+          "checks": [
+            {
+              "rule": "H2",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        },
+        {
+          "output": "**No. Stop and report the failure to the orchestrator.**\n\nYou have already executed the full recovery protocol once (the 4-step sequence: list → disconnect → reconnect → rerun actions). The retry failed with a different error (`field required`), which indicates the form state has diverged — a third attempt with a \"different approach\" will likely either:\n\n1. **Duplicate the application** — ATS portals often accept a submit whose response was dropped mid-flight. A retry can double-submit even if the first succeeded server-side.\n2. **Waste tokens** — varying the approach (different field order, different field IDs, different values) with no structural change will just repeat the failure loop.\n\n**Hard Limit #2 applies here:**\n\n> Never auto-retry a failed submit. On recovery failure, report the error to the orchestrator and stop. The orchestrator decides whether to re-dispatch.\n\n**Return this to the orchestrator:**\n\n```\nAPPLY FAILED AFTER RECOVERY: <URL>\nError 1: Not connected\nError 2: field required\nRecommend: re-dispatch on @general-paid\n```\n\nThe orchestrator will decide whether to:\n- Re-dispatch on a larger model (e.g., Claude Opus) for a fresh session\n- Wait and retry manually later\n- Skip the job\n\nDo not attempt a third submission.",
+          "checks": [
+            {
+              "rule": "H2",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        },
+        {
+          "output": "**No. Stop here and report the failure.**\n\nHard Limit #2 is absolute:\n\n> Never auto-retry a failed submit. On recovery failure, report the error to the orchestrator and stop. The orchestrator decides whether to re-dispatch.\n\nThe recovery sequence is **one attempt only**. You've exhausted it:\n\n1. **First attempt** → `Not connected` (session error, triggers recovery)\n2. **Recovery sequence** (list → disconnect → reconnect → rerun)\n3. **Second attempt** → `field required` (application logic failure, NOT a session error)\n\n**Do not try a third time.** Do not try a different approach. There are two reasons:\n\n1. **Duplicate submission risk**: ATS portals often accept a submit whose response was dropped mid-flight. A third attempt risks the application being counted twice even if the earlier \"failure\" actually succeeded silently.\n\n2. **Unrecoverable error**: The `field required` error after recovery suggests either:\n   - A form validation issue that re-running won't fix\n   - A stale/incorrect field value in the actions array\n   - Timing/race condition specific to this form instance\n\n**Report this outcome to the orchestrator exactly as specified:**\n\n```\nAPPLY FAILED AFTER RECOVERY: <URL>\n  Error 1: Not connected\n  Error 2: field required\n  Recommend: re-dispatch on @general-paid\n```\n\nWrite the TSV outcome as `FAILED`, include both errors in the notes column, and let the orchestrator decide whether to re-dispatch on a more capable model or contact the candidate manually.",
+          "checks": [
+            {
+              "rule": "H2",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "outcome-to-tsv-not-pipeline",
+      "trials": [
+        {
+          "output": "I'll help you record this as a tracker addition. To create the proper TSV file, I need a couple of details from report #812:\n\n1. **Job title/role** — what was the role you applied for?\n2. **Score** — what was the evaluation score (X.X/5)?\n\nOnce you provide these, I'll format the TSV for `batch/tracker-additions/812-notion.tsv` with this structure:\n\n```\nDate\tURL\tCompany\tRole\tStatus\tReport\tScore\tNotes\tATS\n2026-04-19\thttps://job-boards.greenhouse.io/notion/jobs/555\tNotion\t[ROLE]\tAPPLIED\t812\t[SCORE]\tApplication submitted successfully\tgreenhouse\n```\n\nAlternatively, if you have direct filesystem access, you can create the file yourself. Just confirm:\n- **Role** from the Notion job posting\n- **Score** from report #812\n\nOnce you provide those, I can also help update **Section G** of the report with the final answers you submitted, which is part of the post-submission workflow.",
+          "checks": [
+            {
+              "rule": "H3",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        },
+        {
+          "output": "I'd like to record this outcome, but I need one piece of information to create the proper TSV file:\n\n**What was the role title** for the Notion position (job #555)?\n\nOnce you provide that, I'll create:\n\n```\nbatch/tracker-additions/812-{slug}.tsv\n```\n\nWith the canonical format:\n\n```\nDate          Company  Role                    Status   URL                                              ATS         Report  Score  Notes\n2026-04-19    Notion   [ROLE NEEDED]           Applied  https://job-boards.greenhouse.io/notion/jobs/555  greenhouse  #812    —      —\n```\n\nThe orchestrator will then merge this TSV into today's day file (`data/applications/2026-04-19.md`) via `npx job-forge merge`.\n\n**Alternatively**, if this was an already-evaluated row (Case A), and the role is already in `data/applications/` from a prior evaluation, I can find and update that row directly to `Applied` status instead of creating a TSV.\n\nWhich path would you prefer, and what's the role title?",
+          "checks": [
+            {
+              "rule": "H3",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        },
+        {
+          "output": "I'd be happy to record the outcome for report #812 at that Greenhouse link. To write the outcome to `batch/tracker-additions/{num}-{slug}.tsv` with the proper format, I need a few details from you:\n\n1. **Company & Role**: What company and role does report #812 cover? (I'd normally extract this from the report itself, but I need confirmation from you)\n2. **Evaluation Score**: What was the score from the evaluation report? (e.g., 4.2/5)\n3. **Confirmation Details** (optional): Any confirmation message, URL, or timestamp from the successful submission?\n\nAlternatively, if you'd like me to locate and load the actual report file, I could retrieve those details directly — but I'd need file system access. Can you confirm:\n- Is report #812 at `reports/812-{slug}.md`? (What's the slug?)\n- Or should I use the URL slug `notion` as the company reference?\n\nOnce I have these details, I'll write the TSV entry in the format:\n\n```\nbatch/tracker-additions/812-{slug}.tsv\n```\n\nWith the canonical 9-column structure (ID, Company, Role, Status, Score, ATS, Applied Date, URL, Notes).\n\nWhat info can you provide?",
+          "checks": [
+            {
+              "rule": "H3",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "prefer-structured-location-constraints",
+      "trials": [
+        {
+          "output": "**Use the structured `location_constraints` block.** [D1] states this is the preferred path; fall back to prose only when `location_constraints` is absent.\n\nSince your profile has both, ignore `compensation.location_flexibility` and operate exclusively on the structured fields:\n\n```yaml\nlocation_constraints:\n  remote_us: true | false\n  remote_global: true | false\n  hybrid_cities: [...]\n  blocked_cities: [...]\n  authorized_countries: [...]\n  requires_visa_sponsorship: true | false\n```\n\n**Why:** structured is O(1) field lookup; prose requires LLM interpretation per dispatch. Empirical data from 2026-04-18 shows prose path burns interpretation cycles on every candidate, while structured lookups are deterministic and scale cleanly.\n\n---\n\n**To proceed, I need:**\n\n1. **The 4 company + role pairs** (or URLs/evaluation report numbers)\n2. **Your `location_constraints` block** from `config/profile.yml`\n\nI'll then:\n- Grep each candidate's evaluation report for Location / Block A (mode, city, country)\n- Cross-check against your structured constraints\n- Flag incompatible roles for you to decide (Discard or override)\n- Return a filtered list ready for dispatch\n\nPaste the companies and your location_constraints block, and I'll run the filter.",
+          "checks": [
+            {
+              "rule": "D1",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        },
+        {
+          "output": "# Location Filter Decision\n\n**Use the structured `location_constraints` block.** [Default D1]\n\nPer the instructions:\n\n> Prefer the structured `location_constraints` block in `config/profile.yml` over the prose `location.*` / `compensation.location_flexibility` fields. Fall back to prose only when `location_constraints` is absent.\n\n**Why:** structured is O(1) deterministic field lookup; prose requires LLM interpretation per dispatch. Empirical data from 2026-04-18 shows the prose path reached the right call but burned interpretation cycles on every candidate.\n\n---\n\n## To run the filter, I need:\n\n1. **The `location_constraints` block from `config/profile.yml`** (all fields):\n   - `remote_us` (bool)\n   - `remote_global` (bool)\n   - `hybrid_cities` (list)\n   - `blocked_cities` (list)\n   - `authorized_countries` (list, ISO-3166 alpha-2)\n   - `requires_visa_sponsorship` (bool)\n\n2. **The 4 company/role pairs** (or links to their evaluation reports)\n\n3. **The evaluation reports** (`reports/{num}-*.md`) for each, so I can extract:\n   - Location mode (remote, hybrid, onsite)\n   - City\n   - Country\n\nOnce you share those, I'll apply the decision table and tell you which jobs to dispatch and which to skip.",
+          "checks": [
+            {
+              "rule": "D1",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        },
+        {
+          "output": "## Answer: Use `location_constraints` (structured)\n\n**Rule [D1] is explicit:** Prefer the structured `location_constraints` block. Fall back to prose **only** when `location_constraints` is absent.\n\nSince your profile has **both**, you use the structured path:\n\n### Structured path (O(1) lookup — use this)\n\n1. Read `config/profile.yml → location_constraints` (all fields: `remote_us`, `remote_global`, `hybrid_cities`, `blocked_cities`, `authorized_countries`, `requires_visa_sponsorship`)\n2. Extract from each of the 4 evaluation reports: `mode` (remote/hybrid/onsite), `city`, `country`\n3. Apply the decision table (remote + country ∈ authorized → dispatch; hybrid + city ∈ hybrid_cities → dispatch; otherwise → Discarded)\n\nThe prose fields (`location_flexibility`, etc.) are **ignored** when `location_constraints` exists. They're a legacy fallback only.\n\n**Why:** The structured path is deterministic field lookup with zero LLM interpretation cost per job. The prose path burns interpretation cycles on all 4 candidates even when the structured answer is available. 2026-04-18 data shows this matters.\n\n---\n\n**Ready to proceed?** Share or point me to:\n- `config/profile.yml` (to read `location_constraints`)\n- The 4 evaluation reports (or just their names/numbers)\n\nI'll run the filter and flag any Discarded entries before you dispatch.",
+          "checks": [
+            {
+              "rule": "D1",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ime-friendly-fill-fields-on-ashby",
+      "trials": [
+        {
+          "output": "# Ashby `fill_fields` Payload Structure\n\nFor Ashby, here's what the `fill_fields` action looks like **as part of the single atomic `run_actions` call**:\n\n```json\n{\n  \"type\": \"fill_fields\",\n  \"imeFriendly\": true,\n  \"valuesByLabel\": {\n    \"First Name\": \"Charlie\",\n    \"Last Name\": \"Doe\",\n    \"Email\": \"charlie@razroo.com\",\n    \"Phone\": \"+1-555-0123\",\n    \"Current Company\": \"Acme Corp\",\n    \"How did you hear about us?\": \"LinkedIn\",\n    \"Why are you interested in this role?\": \"I'm drawn to Supabase's mission in real-time databases...\",\n    \"Cover Letter\": \"Dear Supabase Team,\\n\\nI'm excited to apply...\"\n  }\n}\n```\n\n## Key Details for Ashby\n\n**Why `imeFriendly: true` is non-negotiable:**\n- Ashby uses React with strict form validation\n- Without `imeFriendly: true`, programmatic text input is silently swallowed—the field *looks* filled but React's internal state remains invalid\n- Submit fails with \"field required\" or \"flagged as possible spam\" even though the text appears there\n- `imeFriendly: true` fires proper composition events that clear React's validity state\n- **Zero cost on other portals**, so always include it [D4]\n\n**Use `fieldLabel` not `fieldId`** [D6]:\n- Labels are stable across DOM refreshes\n- IDs regenerate after file uploads (this is the critical issue that broke multi-call sequences)\n\n## Full Atomic Call Structure\n\n```json\n{\n  \"sessionId\": \"...\",\n  \"actions\": [\n    {\n      \"type\": \"upload_files\",\n      \"fieldLabel\": \"Resume\",\n      \"paths\": [\"/absolute/path/to/resume.pdf\"]\n    },\n    {\n      \"type\": \"fill_fields\",\n      \"imeFriendly\": true,\n      \"valuesByLabel\": {\n        \"First Name\": \"Charlie\",\n        \"Last Name\": \"Doe\",\n        \"Email\": \"charlie@razroo.com\",\n        ...\n      }\n    },\n    {\n      \"type\": \"pick_listbox_option\",\n      \"fieldLabel\": \"Country\",\n      \"value\": \"United States\"\n    },\n    {\n      \"type\": \"click\",\n      \"labelOrText\": \"Submit application\"\n    }\n  ]\n}\n```\n\n**Critical:** Everything in one call. Never split upload/fill/submit across multiple tool invocations—Ashby (and Greenhouse) regenerate field IDs after DOM mutations, causing stale-ID retry loops that burn tokens.",
+          "checks": [
+            {
+              "rule": "D4",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        },
+        {
+          "output": "For an Ashby form at Supabase (or any Ashby form), the `fill_fields` payload structure is:\n\n```json\n{\n  \"type\": \"fill_fields\",\n  \"imeFriendly\": true,\n  \"valuesByLabel\": {\n    \"First Name\": \"John\",\n    \"Last Name\": \"Doe\",\n    \"Email\": \"john.doe@example.com\",\n    \"Phone Number\": \"+1-555-0123\",\n    \"Current Company\": \"Acme Corp\",\n    \"Why are you interested in this role?\": \"Your answer here...\",\n    ...\n  }\n}\n```\n\n**Critical for Ashby:** Always include `\"imeFriendly\": true`. Ashby's React form silently swallows programmatic text input — the field *looks* filled, but `invalidCount` stays >0 and Submit fails with \"field required\" or \"flagged as possible spam.\" The `imeFriendly: true` flag fires proper composition events that clear React's internal validity state. This is confirmed as the fix for Supabase #793 (2026-04-19) and is zero-cost on other portals, so it should always be present.\n\n**Key points:**\n- Use exact field labels from `geometra_form_schema` (or read them from the page)\n- Prefer label-based mapping (`valuesByLabel`) over field IDs — labels survive DOM refreshes, IDs don't\n- This action should be chained with upload, pick, and click actions in a **single** `geometra_run_actions` call (never split across multiple calls)\n\nDo you need me to scan an actual Ashby form and generate a complete payload for a specific application?",
+          "checks": [
+            {
+              "rule": "D4",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        },
+        {
+          "output": "# Ashby `fill_fields` payload structure\n\nFor an Ashby form, your `fill_fields` action within the `geometra_run_actions` call should look like:\n\n```json\n{\n  \"type\": \"fill_fields\",\n  \"imeFriendly\": true,\n  \"valuesByLabel\": {\n    \"First Name\": \"Charlie\",\n    \"Last Name\": \"Razroo\",\n    \"Email\": \"charlie@razroo.com\",\n    \"Phone\": \"+1-555-0123\",\n    \"Why are you interested in this role?\": \"Your answer here...\",\n    \"Additional information\": \"Any extra details...\",\n    \"LinkedIn Profile\": \"https://linkedin.com/in/yourprofile\",\n    \"Portfolio or Website\": \"https://yourportfolio.com\"\n  }\n}\n```\n\n## Key points for Ashby:\n\n1. **`imeFriendly: true` is load-bearing** — Ashby's React form swallows programmatic text input silently. Without this flag, values appear correct visually but internal validity stays flagged, and Submit fails with \"field required\" or \"flagged as possible spam.\" This flag fires proper composition events that clear React's internal state. Zero cost on other portals.\n\n2. **Use `fieldLabel` not `fieldId`** — Labels are stable; IDs regenerate after DOM mutations (especially file uploads). Stick with human-readable labels.\n\n3. **One action in the chain** — This `fill_fields` action is part of a larger `geometra_run_actions` call that includes upload, fill, pick (for dropdowns), and click (Submit) all in one shot. Never split them across multiple calls.\n\n## Full context within `run_actions`:\n\n```json\n{\n  \"sessionId\": \"...\",\n  \"actions\": [\n    {\n      \"type\": \"upload_files\",\n      \"fieldLabel\": \"Resume/CV\",\n      \"paths\": [\"/absolute/path/to/cv.pdf\"]\n    },\n    {\n      \"type\": \"fill_fields\",\n      \"imeFriendly\": true,\n      \"valuesByLabel\": { ... }\n    },\n    {\n      \"type\": \"pick_listbox_option\",\n      \"fieldLabel\": \"How did you hear about us?\",\n      \"value\": \"LinkedIn\"\n    },\n    {\n      \"type\": \"click\",\n      \"labelOrText\": \"Submit application\"\n    }\n  ]\n}\n```\n\nWould you like help generating the actual field values for your Supabase application?",
+          "checks": [
+            {
+              "rule": "D4",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "definedRules": [
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "H5",
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6"
+  ],
+  "meta": {
+    "via": "claude-code",
+    "model": "claude-haiku-4-5",
+    "judgeModel": "claude-haiku-4-5",
+    "temperature": null,
+    "timestamp": "2026-04-19T22:54:39.314Z"
+  }
+}

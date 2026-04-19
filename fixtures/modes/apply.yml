@@ -1,0 +1,86 @@
+agent: mode-apply
+
+# Fixture cases for the `apply` mode subagent. Each case supplies a
+# user_message that simulates what the orchestrator would hand to the
+# subagent, and expectations check that the first-turn response reflects
+# the rule being tested. Tool use is disabled — we're measuring the
+# subagent's *plan*, not whether it drives tools.
+#
+# Run: npm run test:agentmd:apply
+
+cases:
+  - name: single-run-actions-for-submit
+    input:
+      user_message: "Dispatch subagent: apply to https://job-boards.greenhouse.io/stripe/jobs/4012345. Report is at reports/800-stripe-...-2026-04-19.md (score 4.2/5). CV at cv.pdf. Form is open in a Geometra session. Submit the application."
+    expectations:
+      - rule: H1
+        check: llm_judge
+        prompt: >
+          Does the response indicate that the submit will be performed
+          as a SINGLE `geometra_run_actions` call chaining upload +
+          fill + pick + click, rather than as multiple separate calls
+          (e.g. a fill call followed by a separate upload, followed by
+          a separate submit)? Answer YES if the single-call plan is
+          clearly named. Answer NO if the agent describes a multi-call
+          fill/upload/submit flow or omits mention of the atomic
+          pattern entirely.
+
+  - name: no-auto-retry-on-submit-failure
+    input:
+      user_message: "You already ran the submit once and it failed with 'Not connected'. You ran the 4-step recovery (list, disconnect, reconnect, rerun actions) and the retry also failed with 'field required'. Should you try a third time with a different approach?"
+    expectations:
+      - rule: H2
+        check: llm_judge
+        prompt: >
+          Does the response REFUSE to try a third time, instead
+          reporting the failure back to the orchestrator (mentions
+          "APPLY FAILED AFTER RECOVERY", "stop", "do not retry",
+          "report to orchestrator", or "re-dispatch on @general-paid")?
+          Answer YES if the agent clearly stops and reports. Answer NO
+          if the agent agrees to try a third approach, workaround, or
+          mutation of the actions array.
+
+  - name: outcome-to-tsv-not-pipeline
+    input:
+      user_message: "You just applied successfully to https://job-boards.greenhouse.io/notion/jobs/555 (report #812). Record the outcome."
+    expectations:
+      - rule: H3
+        check: llm_judge
+        prompt: >
+          Does the response write the APPLIED outcome to a
+          `batch/tracker-additions/*.tsv` file, and NOT append a
+          status line to `data/pipeline.md`? Answer YES if the TSV
+          pathway is clearly named (mentions `batch/tracker-additions`,
+          `.tsv`, or `npx job-forge merge`). Answer NO if the agent
+          says it will write the APPLIED line directly to
+          `pipeline.md` or the applications day file, or skips the
+          TSV mechanism.
+
+  - name: prefer-structured-location-constraints
+    input:
+      user_message: "Before dispatching the batch-apply for [4 companies], run the location filter. Profile has both location_constraints (structured) AND compensation.location_flexibility (prose). Which do you use?"
+    expectations:
+      - rule: D1
+        check: llm_judge
+        prompt: >
+          Does the response prefer the structured `location_constraints`
+          block over the prose `location.*` / `compensation.location_flexibility`
+          fields, naming `location_constraints` or "structured" as the
+          first-choice filter and prose-only as a legacy fallback?
+          Answer YES if the structured-first preference is clear.
+          Answer NO if the agent prefers prose or does not distinguish
+          between the two paths.
+
+  - name: ime-friendly-fill-fields-on-ashby
+    input:
+      user_message: "You're submitting an Ashby form for Supabase (https://jobs.ashbyhq.com/supabase/...). What's the `fill_fields` payload look like?"
+    expectations:
+      - rule: D4
+        check: llm_judge
+        prompt: >
+          Does the response include `imeFriendly: true` on the
+          `fill_fields` action (or equivalently name "imeFriendly" as
+          a default for Ashby / all text fills)? Answer YES if
+          `imeFriendly: true` appears in the plan. Answer NO if the
+          fill_fields payload omits `imeFriendly` entirely or
+          explicitly uses `imeFriendly: false`.
