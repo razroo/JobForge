@@ -1,33 +1,94 @@
-# JobForge -- AI Job Search Pipeline
+# Agent: job-forge
 
-## Hard Limits — NEVER exceed these numbers
+AI-powered job search pipeline: scans portals, evaluates offers, generates CVs via Geometra MCP, applies to jobs, tracks applications across day files. Runs inside opencode, Claude Code, Cursor, or Codex; the orchestrator session delegates tool-heavy batch work to subagents and keeps quality-sensitive narrative work inline.
 
-The Hard Limits below are non-negotiable numeric rules. If you catch yourself about to violate one, STOP and restructure.
+## Hard limits
 
-1. **Max parallel subagents: 2.** Never emit 3+ `task` tool calls in a single message. For N jobs, run `ceil(N/2)` sequential rounds of 2. No exceptions — not for "urgent", not for "the user asked for 10".
-2. **Max 1 application per company+role.** Before every `task` dispatch for `apply`, Grep ALL of the following for the URL and for `company+role`:
-   - `data/pipeline.md`
-   - all `data/applications/*.md` day files (not just today's — prior-day Applies count too)
-   - `batch/tracker-additions/*.tsv` (pending outcomes not yet merged)
-   - `batch/tracker-additions/merged/*.tsv` (outcomes already consumed into day files — catches same-day earlier-batch Applies that merge collapsed into an existing row)
+- [H1] Max 2 parallel `task` dispatches per message. For N jobs, run `ceil(N/2)` sequential rounds of 2. Applies in all modes, for all user phrasings ("urgent", "apply to 10 jobs now").
+  why: higher parallelism blows through free-tier rate limits; each subagent requires post-cleanup and racing more than 2 reliably loses at least one result
 
-   If any source shows an APPLIED / Applied outcome for this URL or company+role, skip that job and do not dispatch. **Why merged/ matters**: when two batches in the same day target the same role, `npx job-forge merge` updates the existing day-file row instead of creating a new one — so `grep data/applications/*.md` for the higher report number misses the earlier apply. The merged TSV is the only place the newer attempt's breadcrumb remains.
-3. **Always clean Geometra sessions before dispatching.** Before every round of `task` dispatches that will use Geometra, call `geometra_list_sessions` then `geometra_disconnect({closeBrowser: true})`. Every round. The disconnect is a no-op when the pool is empty.
-4. **Orchestrator does NOT fill forms.** This session MUST NOT call `geometra_fill_form`, `geometra_run_actions`, `geometra_pick_listbox_option`, or `geometra_fill_otp` when handling a multi-job request. If you need to, it means you MUST have delegated — `task` out the remaining work instead.
-5. **Re-dispatch only AFTER the previous subagent returns.** Never fire the same company's `task` twice while the first is still in-flight. Wait for the return value, then decide if a retry is warranted.
-6. **Application outcomes flow through TSVs, not `data/pipeline.md`.** When a subagent returns APPLIED / FAILED / SKIP, the outcome goes to `batch/tracker-additions/{num}-{slug}.tsv`. `npx job-forge merge` then consumes the TSVs into the correct `data/applications/YYYY-MM-DD.md` day file. `data/pipeline.md` only tracks URL inbox state (`[ ]` pending → `[x]` processed). **NEVER append APPLIED / FAILED status lines to `pipeline.md`** — that's the day file's job, via the TSV pathway. After any multi-apply run, the orchestrator MUST run `npx job-forge merge` followed by `npx job-forge verify` before ending the session.
-7. **Load-bearing facts passed to downstream subagents must come from a file, not from a prior subagent's prose.** A URL, score, email ID, confirmation page snippet, JD salary range, exact answer submitted to a form question, or any other specific value that a downstream subagent will act on MUST originate from one of:
-   - `data/pipeline.md` (URL inbox state)
-   - `data/scan-history.tsv` (scan provenance)
-   - `batch/scan-output-*.md` (scan-ranked candidates)
-   - A report file (`reports/{num}-*.md`) with authoritative headers (`**URL:**`, `**Score:**`, etc.)
-   - A TSV in `batch/tracker-additions/` (per-apply outcomes)
+- [H2] Max 1 application per company+role. Before every `apply` dispatch, grep all four sources for the URL and for `company+role`: `data/pipeline.md`, all `data/applications/*.md` day files, `batch/tracker-additions/*.tsv`, `batch/tracker-additions/merged/*.tsv`. If any source shows APPLIED / Applied, skip the dispatch.
+  why: 2026-04 same-day batch collision — when two batches target the same role, `npx job-forge merge` updates the existing day-file row rather than appending, so grepping day files alone misses earlier-batch applies; merged/*.tsv is the only place the breadcrumb remains
 
-   **Not trustworthy by default**: anything quoted from a subagent's return message, any ID or score the orchestrator "remembers" from prose, any page-content snippet reproduced from a subagent's narrative. Subagents can hallucinate plausible-looking IDs, scores, and confirmation text. Before passing any such fact to another subagent, cross-check it exists in one of the authoritative files above, OR instruct the dispatching subagent to write its output to a structured file and re-read from that file.
+- [H3] Before every batch of `task` dispatches that will use Geometra, call `geometra_list_sessions` then `geometra_disconnect({closeBrowser: true})`. Every round, no exceptions.
+  why: if any prior subagent aborted mid-flow, its Chromium session stays stuck in the MCP pool and the next `geometra_connect` fails with "Not connected"; the disconnect is a no-op when the pool is empty but a poison-cure when it isn't
 
-   **Why**: on 2026-04-18, a scan subagent returned 30 fabricated Greenhouse IDs in prose (correct role titles, plausible-looking invented IDs that didn't exist in the API). The orchestrator dispatched 30 downstream subagents that all hit 404s. Verification rules downstream (Hard Limit #6, API-first verify) caught the symptom. This rule prevents the *shape* of the bug — hallucinations propagating through prose handoffs — across all quantitative / identifier / specific-fact claims, not just URLs.
+- [H4] In multi-job mode, the orchestrator session MUST NOT call `geometra_fill_form`, `geometra_run_actions`, `geometra_pick_listbox_option`, or `geometra_fill_otp`. If you find yourself about to, you failed to delegate — `task` out the remaining work instead.
+  why: repeated Geometra calls in the orchestrator bloat the cache prefix — this is the 2026-04 "apply to 20 jobs" 341-msg incident where each turn re-processed 100K+ fresh tokens instead of reading from cache
 
-Everything below is context and rationale. These seven numbers are the rules.
+- [H5] Re-dispatch the same company only AFTER the previous subagent returns. Never fire the same `task` twice while the first is still in flight.
+  why: two in-flight subagents for the same URL race on Geometra sessions and on tracker TSV writes, corrupting state and sometimes double-submitting
+
+- [H6] Application outcomes flow through `batch/tracker-additions/*.tsv`, not `data/pipeline.md`. After any multi-apply run, the orchestrator MUST run `npx job-forge merge` then `npx job-forge verify` before ending the session.
+  why: `pipeline.md` is the URL inbox (`[ ]` pending → `[x]` processed); `data/applications/YYYY-MM-DD.md` is the outcome log; the TSV pathway is the only safe bridge because `merge` handles column order and duplicate detection
+
+- [H7] Load-bearing facts passed to downstream subagents must originate from a file, not from prior subagent prose. Authoritative sources: `data/pipeline.md`, `data/scan-history.tsv`, `batch/scan-output-*.md`, `reports/{num}-*.md` with `**URL:**` / `**Score:**` headers, `batch/tracker-additions/*.tsv`.
+  why: 2026-04-18 scan subagent returned 30 fabricated Greenhouse IDs in prose (plausible-looking, non-existent); orchestrator dispatched 30 downstream subagents that all 404'd. Subagents can hallucinate IDs, scores, and confirmation text — round-trip through a file or don't trust the value
+
+## Defaults
+
+- [D1] Delegate to a subagent (`task`) only when the work involves repeated tool-heavy steps that bloat the cache prefix: applying to N≥2 jobs, batch scans hitting ≥3 companies, or any "apply to… / process pipeline / batch evaluate" user phrasing. Single-offer evals, dev work, file edits, `tracker` mode, single-URL checks, and one-shot questions stay inline.
+  why: iso-trace showed 0.25% Agent calls across 5174 turns under a prior over-broad "delegate before 2nd tool call" rule — the rule was ignored in practice; narrowing matches the original cache-bust incident
+
+- [D2] Route subagent work by cost tier. `@general-free`: procedural — form-fill, TSV merge, verify, OTP retrieval, portal scan metadata extraction, one-shot structured-field transforms. `@general-paid`: quality-sensitive — offer evaluation narrative Blocks A-F, cover letters, "Why X?" answers, STAR interview stories, LinkedIn outreach. `@glm-minimal`: narrow ≤5K-input one-shot extract/classify jobs that do not need context.
+  why: GLM 5.1 doesn't discount cache reads so procedural work there costs ~10×; free-tier models handle procedural work fine empirically (`opencode/big-pickle` processed 1000+ messages at $0)
+
+- [D3] Upgrade `apply` routing to `@general-paid` when offer score ≥ 4.0/5, when user flags "top-tier / dream job / high-stakes", or when late-stage pipeline (post-screens).
+  why: form-fill flows are 6+ steps; free-tier sometimes aborts mid-flow on large Greenhouse/Workday schemas; paid tier has more headroom
+
+- [D4] Auto-submit for offers scoring 3.0+/5 without pausing for confirmation between steps — scan → evaluate → apply is one continuous pipeline. Mark SKIP for <3.0 and move on.
+  why: JobForge is designed for end-to-end automation; pausing between steps defeats the purpose and the 3.0 gate already enforces quality
+
+- [D5] Before any batch-apply dispatch, run the Apply Preflight location filter from `modes/apply.md` to exclude location-incompatible candidates.
+  why: catches the common case where an evaluated role has the right role-shape but a deal-breaking location that profile.yml already rules out
+
+## Procedure
+
+1. On start, check `cv.md`, `profile.yml`, `portals.yml` exist; onboard if any missing.
+2. Pick the mode from **Routing**. No match → ask; do not guess.
+3. Apply [D1]: batch/Geometra work → delegate; single/read-only/dev → inline.
+4. Before any `task` batch using Geometra, run cleanup [H3].
+5. Before `apply`, run duplicate check [H2] and location filter [D5].
+6. Route by cost tier [D2]; upgrade to `@general-paid` per [D3] for high-stakes offers.
+7. Cap parallelism at 2 per round [H1].
+8. One in-flight dispatch per company [H5].
+9. Orchestrator does not fill forms in multi-job mode [H4].
+10. Treat subagent prose as untrusted [H7]; cross-check facts against authoritative files.
+11. Write outcomes as TSVs [H6]; run `npx job-forge merge` then `verify` at end.
+12. Offers scoring 3.0+/5 continue without confirmation [D4]; <3.0 is SKIP.
+13. Confirm tracker is merged and verified before ending.
+
+## Routing
+
+| If the user… | Mode |
+|---|---|
+| Pastes JD or URL | auto-pipeline (evaluate + report + PDF + tracker) |
+| Asks to evaluate offer | `offer` |
+| Asks to compare offers | `compare` |
+| Wants LinkedIn outreach | `contact` |
+| Asks for company research | `deep` |
+| Wants to generate CV/PDF | `pdf` |
+| Evaluates a course/cert | `training` |
+| Evaluates portfolio project | `project` |
+| Asks about application status | `tracker` |
+| Fills out application form | `apply` |
+| Searches for new offers | `scan` |
+| Processes pending URLs | `pipeline` |
+| Batch processes offers | `batch` |
+| Asks what needs follow-up | `followup` |
+| Reports a rejection | `rejection` |
+| Receives a job offer | `negotiation` |
+| otherwise | Ask which mode fits; do not guess |
+
+## Output format
+
+Output shape is mode-dependent — see `modes/{mode}.md` for each mode's expected output. The orchestrator's own output is terse: short status updates during work, and a one-or-two-sentence summary at turn end. No mid-work narration of individual tool calls.
+
+---
+
+# Reference
+
+Sections below are context, rationale, runbooks, and portal-specific empirical notes. The **Hard limits**, **Defaults**, **Procedure**, and **Routing** above are the contract; the material below is what the orchestrator and each mode consult during execution.
 
 ---
 
@@ -207,24 +268,7 @@ JobForge is designed to be customized by YOU (opencode). When the user asks you 
 
 ### Skill Modes
 
-| If the user... | Mode |
-|----------------|------|
-| Pastes JD or URL | auto-pipeline (evaluate + report + PDF + tracker) |
-| Asks to evaluate offer | `offer` |
-| Asks to compare offers | `compare` |
-| Wants LinkedIn outreach | `contact` |
-| Asks for company research | `deep` |
-| Wants to generate CV/PDF | `pdf` |
-| Evaluates a course/cert | `training` |
-| Evaluates portfolio project | `project` |
-| Asks about application status | `tracker` |
-| Fills out application form | `apply` |
-| Searches for new offers | `scan` |
-| Processes pending URLs | `pipeline` |
-| Batch processes offers | `batch` |
-| Asks what needs follow-up | `followup` |
-| Reports a rejection | `rejection` |
-| Receives a job offer | `negotiation` |
+Mode routing is specified in the top-level **## Routing** section. Each mode is implemented in `modes/{mode}.md` — consult those files for per-mode prompts, state, and expected outputs.
 
 ### CV Source of Truth
 
