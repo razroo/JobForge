@@ -22,7 +22,7 @@
     "trace:stats": "iso-trace stats --since 7d --cwd .",
     "lint:agentmd": "agentmd lint iso/instructions.md",
     "test:agentmd": "agentmd test iso/instructions.md --fixtures fixtures/instructions.yml --via claude-code --model claude-haiku-4-5 --concurrency 2",
-    "test:agentmd:baseline": "agentmd test iso/instructions.md --fixtures fixtures/instructions.yml --via claude-code --model claude-haiku-4-5 --concurrency 2 --format json --out fixtures/baseline.json",
+    "test:agentmd:baseline": "agentmd test iso/instructions.md --fixtures fixtures/instructions.yml --via claude-code --model claude-haiku-4-5 --concurrency 2 --trials 3 --format json --out fixtures/baseline.json",
     "build:config": "iso build .",
     "prepack": "iso build .",
     "release:check-source": "node ./scripts/release/check-source.mjs",

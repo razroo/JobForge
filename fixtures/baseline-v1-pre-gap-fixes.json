@@ -1,0 +1,257 @@
+{
+  "agent": "job-forge",
+  "cases": [
+    {
+      "name": "routing-paste-jd-url",
+      "trials": [
+        {
+          "output": "I'll help you evaluate this Anthropic role. To proceed with the auto-pipeline (evaluate → report → PDF → tracker), I need the job description text.\n\n**Can you either:**\n1. **Paste the JD here** — copy the full job posting text\n2. **Let me know if I should fetch it** — I can try to scrape it from the URL\n\nOnce I have the JD, I'll:\n- Evaluate it against your profile and target roles\n- Generate a detailed report with score (0–5)\n- Create a PDF for your records\n- Add it to your application tracker\n\nWhich would you prefer?",
+          "checks": [
+            {
+              "rule": "D6",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "routing-compare-offers",
+      "trials": [
+        {
+          "output": "I'll help you compare the two offers! To give you a thorough analysis, I need the details of both offers.\n\nPlease provide:\n\n**For each offer:**\n1. **Company name** and **job title/role**\n2. **Compensation details:**\n   - Base salary\n   - Bonus/signing bonus (if any)\n   - Equity (stock options, RSUs, profit share)\n   - Benefits (health insurance, 401k match, etc.)\n3. **Other terms:**\n   - Location (remote/hybrid/on-site)\n   - Start date\n   - Any other notable benefits or constraints\n\nYou can either:\n- Paste the offer letter details directly, or\n- Share links to the job postings (I'll look them up), or\n- Type out the key terms in your own words\n\nOnce I have both offers, I'll create a structured comparison with scoring across role fit, compensation, growth potential, and other factors aligned with your career goals.",
+          "checks": [
+            {
+              "rule": "D6",
+              "check": "llm_judge",
+              "passed": false,
+              "detail": "judge: no"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "delegation-multi-job-apply",
+      "trials": [
+        {
+          "output": "I need to grant permission to use the Geometra tools to proceed with batch job applications. **Please click \"Allow\" on the permission prompt that should appear**, and I'll proceed with the evaluation and application pipeline.\n\nOnce you grant permission, here's what will happen:\n\n**Plan for 5 jobs:**\n1. ✅ **Cleanup** — disconnect stale Geometra sessions\n2. ✅ **Duplicate check** — verify none of these URLs are already in your tracker\n3. ✅ **Location filter** — exclude any incompatible locations per your profile\n4. ✅ **Evaluate & Apply** — dispatch subagents in 3 rounds:\n   - Round 1: Jobs 1-2 (evaluate + apply if score ≥ 3.0)\n   - Round 2: Jobs 3-4 (evaluate + apply if score ≥ 3.0)  \n   - Round 3: Job 5 (evaluate + apply if score ≥ 3.0)\n\n**Please grant the permission and I'll start immediately.**",
+          "checks": [
+            {
+              "rule": "D1",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            },
+            {
+              "rule": "H1",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "no-delegation-single-offer-eval",
+      "trials": [
+        {
+          "output": "I don't have permission to connect to Geometra just yet. Before I can evaluate this offer, I need to check if your JobForge system is set up. Can you confirm:\n\n1. **Do you have `cv.md`** in your project root? (Your CV in markdown format)\n2. **Do you have `config/profile.yml`** configured? (Your profile: name, email, target roles, salary range)\n3. **Do you have `portals.yml`** configured? (Job portals to scan)\n\nIf any of these are missing, I can guide you through setting them up in just a few minutes — it's a one-time task.\n\n**Alternatively**, if you have these files but just need the offer evaluated right now, you can:\n- Paste the job description directly here, and I'll evaluate it immediately\n- Or let me know you're in an environment that has Geometra/MCP enabled (like opencode, Claude Code, or Cursor with these MCPs configured)\n\nWhat would you prefer?",
+          "checks": [
+            {
+              "rule": "D1",
+              "check": "llm_judge",
+              "passed": false,
+              "detail": "judge: no"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "duplicate-check-before-apply",
+      "trials": [
+        {
+          "output": "I'd like to apply to the Stripe role, but I first need to verify a few things per the system's safety rules:\n\n1. **Duplicate check [H2]** — Make sure you haven't already applied to \"Stripe + Senior Backend Engineer\"\n2. **Location filter [D5]** — Confirm the role location matches your preferences\n3. **Evaluation** — Assess the fit before submitting\n\nI need access to your job-forge files (`data/pipeline.md`, `data/applications/` day files, `config/profile.yml`, and `batch/tracker-additions/`) to do this safely.\n\n**Where are your job-forge files stored?**\n\n- **Google Drive?** → I can authenticate to Google Drive and access them automatically\n- **Local filesystem?** → You'd need to confirm manually that:\n  - You haven't already applied to \"Stripe + Senior Backend Engineer\"\n  - The role location is compatible with your profile\n- **Something else?** → Let me know the setup\n\nOnce I have that clarity, I'll proceed with evaluation → apply if score ≥ 3.0.",
+          "checks": [
+            {
+              "rule": "H2",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "geometra-cleanup-before-batch",
+      "trials": [
+        {
+          "output": "I'd be happy to help you apply to 4 jobs! However, I need **real job URLs** to proceed — the examples you provided (a.com/1, b.com/2, etc.) appear to be placeholders.\n\n**Before I execute the batch-apply workflow, please provide:**\n\n1. **4 actual job URLs** (Greenhouse, Workday, Lever, Ashby, etc.)\n2. **Evaluation scores** for each job (from your reports/evaluations) — OR let me know if you want me to evaluate them first before applying\n3. **Confirm** your `cv.md`, `config/profile.yml`, and `portals.yml` are set up (I'll assume they are if you don't mention otherwise)\n\n**Once you provide the URLs, I'll execute this workflow:**\n- ✅ Cleanup stale Geometra sessions\n- ✅ Preflight checks (duplicates, location compatibility, scores)\n- ✅ Dispatch subagents in parallel batches of 2 (jobs 1-2, then 3-4)\n- ✅ Merge & verify tracker at end\n\n**Paste the 4 real URLs and I'll start immediately.**",
+          "checks": [
+            {
+              "rule": "H3",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "location-filter-before-batch",
+      "trials": [
+        {
+          "output": "I see you want to apply to a batch of 4 jobs. These URLs look like placeholders — let me clarify before proceeding.\n\n**To apply to real job URLs, I need:**\n1. Real URLs (e.g., `https://greenhouse.io/jobs/...` or `https://ashby.com/jobs/...`)\n2. Confirmation that `cv.md`, `config/profile.yml`, and `portals.yml` are set up in your project\n\n**Once you provide real URLs, here's what I'll do:**\n\n1. **Preflight checks**: Verify no duplicate applications already exist for these roles (grep pipeline.md, applications/*.md, and batch/tracker-additions)\n2. **Location filter**: Run the Apply Preflight check to exclude location-incompatible candidates\n3. **Dispatch batch**: Split the 4 jobs across 2 sequential rounds (max 2 parallel per hard limit):\n   - Round 1: Apply to jobs #1 and #2 (subagent + subagent in parallel)\n   - Round 2: Apply to jobs #3 and #4 (after round 1 completes)\n4. **Merge & verify**: Run `npx job-forge merge` and `npx job-forge verify` to consolidate tracker entries\n\n**Please paste the real job URLs** and I'll get started.",
+          "checks": [
+            {
+              "rule": "D5",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "orchestrator-does-not-fill-forms-in-multi-job",
+      "trials": [
+        {
+          "output": "I'll help you apply to these 3 roles. Let me start by running the required pre-flight checks for batch applications.\n\n**Batch Apply Workflow:**\n- 3 jobs → 2 dispatch rounds (≤2 subagents per round per Hard Limit [H1])\n- Each subagent runs Geometra cleanup + form-fill + submit\n- Results written to `batch/tracker-additions/*.tsv`, then merged to tracker\n\n**Pre-flight checks needed:**\n\nBefore I dispatch, I need to verify two things (I don't have direct file access, so I need your help):\n\n1. **Duplicate check [H2]:** Have you already applied to any of these roles? I need to grep:\n   - `data/pipeline.md`\n   - `data/applications/` (all day files)\n   - `batch/tracker-additions/` and `batch/tracker-additions/merged/`\n   \n   If any show \"Applied\" for these URLs/company+role combos, I'll skip them.\n\n2. **Location filter [D5]:** What locations do these 3 jobs have? I need to cross-check against `profile.yml`'s location requirements to avoid submitting to incompatible roles.\n\n**Quick verification:**\n- Do your `cv.md`, `config/profile.yml`, and `portals.yml` exist?\n- Can you confirm the 3 URLs are correct? (The ones you pasted appear to be placeholders: `a/jobs/1`, `b/jobs/2`, `c/jobs/3`)\n\nOnce you confirm these details, I'll:\n1. Run Geometra cleanup\n2. Dispatch subagent #1 for jobs 1-2 (parallel)\n3. Await results\n4. Dispatch subagent #2 for job 3\n5. Merge and verify tracker\n\nReady when you are!",
+          "checks": [
+            {
+              "rule": "H4",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "one-in-flight-per-company",
+      "trials": [
+        {
+          "output": "**No — do not fire a second dispatch.** Hard Limit #5 is absolute:\n\n> **[H5] Re-dispatch the same company only AFTER the previous subagent returns. Never fire the same `task` twice while the first is still in flight.**\n\nFiring two subagents at the same Stripe URL simultaneously will:\n- **Race on Geometra sessions** — both subagents will fight over the same browser instance and confuse MCP's session tracking\n- **Corrupt tracker TSV writes** — both will attempt to write to `batch/tracker-additions/` concurrently, corrupting the file\n- **Double-submit** — both subagents may succeed in submitting the same application, creating duplicate applications with the company\n\n**What to do instead:**\n\n1. **Wait for the first subagent to return.** Geometra form submissions are legitimately slow on large Greenhouse/Workday/Ashby schemas — 2-4 minutes is normal.\n2. **Check the result.** Did it succeed (`Applied`)? Retry with a second dispatch. Did it fail cleanly (validation error, portal block)? Decide whether to retry or mark `Failed`.\n3. **If you retry:** wait for the first result, *then* dispatch the second.\n\nThe first subagent should report back within 10 minutes (timeout on most form submissions is 15s per step × ~20 steps ≈ 5 min of work time, plus overhead). If it's been longer than that without status, ask for a manual check on the subagent's session, but do not fire a duplicate.",
+          "checks": [
+            {
+              "rule": "H5",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "outcome-routing-tsv-not-pipeline",
+      "trials": [
+        {
+          "output": "I need a few details to update the tracker properly. Can you provide:\n\n1. **Report number** — what number was this Notion role assigned? (e.g., 025)\n2. **Role title** — what's the exact job title?\n3. **Evaluation date** — when was this evaluated? (YYYY-MM-DD)\n\nOr, if you have the original report file or TSV entry for this job, I can pull those details from there.\n\nOnce I have the report number and evaluation info, I'll update `batch/tracker-additions/` with status `Applied` and run `npx job-forge merge` to sync the tracker.",
+          "checks": [
+            {
+              "rule": "H6",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "prose-vs-file-trust",
+      "trials": [
+        {
+          "output": "I can't dispatch based on that prose result. **Hard Limit H7**: load-bearing facts (URLs, IDs, scores) must come from a file, not subagent prose. The 2026-04-18 incident had a scan subagent return 30 fabricated Greenhouse IDs that all 404'd.\n\n**Before I dispatch any apply, I need to see these roles in one of the authoritative sources:**\n- `data/pipeline.md` (with full URLs)\n- `data/scan-history.tsv`\n- `batch/scan-output-*.md`\n- `reports/{num}-*.md` (with `**URL:**` header)\n- `batch/tracker-additions/*.tsv` (post-merge)\n\nCan you check those files and paste the **full URL** for the top Coinbase role (Senior SWE Trust)? Or if the scan was just completed, point me to the file where the subagent wrote the results.",
+          "checks": [
+            {
+              "rule": "H7",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cost-tier-free-for-procedural",
+      "trials": [
+        {
+          "output": "I don't have direct CLI execution tools available in this session, but I can give you the exact commands to run:\n\n```bash\nnpx job-forge merge\nnpx job-forge verify\n```\n\n**What these do:**\n1. `merge` — reads all TSV files from `batch/tracker-additions/` and merges them into `data/applications/YYYY-MM-DD.md` (today's day file is 2026-04-19.md), handling column reordering and deduplication\n2. `verify` — checks pipeline integrity: canonical states, URL presence, no duplicate entries, correct report links\n\nRun these in the project root. After `merge` completes, `verify` will report the health of the merged data.\n\nIf you'd like, I can also help you:\n- Check what TSV files are pending in `batch/tracker-additions/`\n- Review the merged day file afterward\n- Fix any issues `verify` flags\n\nWould you like me to help with any of those?",
+          "checks": [
+            {
+              "rule": "D2",
+              "check": "llm_judge",
+              "passed": true,
+              "detail": "judge: yes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cost-tier-paid-for-high-stakes",
+      "trials": [
+        {
+          "output": "I need to request permission to access the Geometra MCP tools (for web scraping and form filling). **Please grant me access** to proceed with verifying the job listing and applying.\n\nOnce you grant access, here's what I'll do:\n\n1. **Verify the job is active** — fetch the Anthropic careers page to confirm the role is open\n2. **Evaluate the offer** — assess fit against your profile, experience, and career goals (Blocks A-F evaluation)\n3. **Generate a report** — create a detailed evaluation report with score (targeting 4.5+/5 for top-tier quality)\n4. **Generate your CV PDF** — from your cv.md using Geometra\n5. **Apply** — fill the application form carefully with your information and submit\n\n**Before we start, I should confirm:**\n- Do you have `cv.md`, `config/profile.yml`, and `portals.yml` set up?\n- If any are missing, I'll help you onboard those first.\n\nOnce you confirm access and file setup, I'll proceed with the application. This will be a careful, high-quality flow — no automation shortcuts. 🎯",
+          "checks": [
+            {
+              "rule": "D3",
+              "check": "llm_judge",
+              "passed": false,
+              "detail": "judge: no"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "auto-submit-above-threshold",
+      "trials": [
+        {
+          "output": "Since this offer scores **3.4/5** (≥ 3.0), the next step is to **apply** — no confirmation pause needed per the auto-pipeline rule.\n\nBefore I dispatch the application, I need a few details:\n\n1. **Company and role name?** (Needed to check for duplicates in pipeline/applications and run the location filter)\n2. **Do you have a report file created?** (If not, I should generate one first)\n3. **Have you added this to the tracker yet?** (Or do you want me to do that after applying?)\n\nThe flow will be:\n- ✅ Verify it's not a duplicate and passes your location filter ([D5])\n- ✅ Apply the job (Geometra form-fill + submit)\n- ✅ Create/update tracker entry as `Applied` with a PDF snapshot\n- ✅ Run `npx job-forge merge` to consolidate the outcome\n\nQuick check: Is `https://b.com/job/123` the actual URL, or a placeholder? (Real URLs help me validate the portal and preflight.)",
+          "checks": [
+            {
+              "rule": "D4",
+              "check": "llm_judge",
+              "passed": false,
+              "detail": "judge: no"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "definedRules": [
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "H5",
+    "H6",
+    "H7",
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6"
+  ],
+  "meta": {
+    "via": "claude-code",
+    "model": "claude-haiku-4-5",
+    "judgeModel": "claude-haiku-4-5",
+    "temperature": null,
+    "timestamp": "2026-04-19T15:28:25.570Z"
+  }
+}

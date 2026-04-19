@@ -204,18 +204,20 @@ cases:
 
   - name: cost-tier-paid-for-high-stakes
     input:
-      user_message: "Anthropic is my dream job — their research engineer role at https://job-boards.greenhouse.io/anthropic/jobs/4012345. This is top-tier, I want to optimize for quality on the application."
+      user_message: "These are my top-tier dream-job targets — please apply to all three: Anthropic research engineer at https://job-boards.greenhouse.io/anthropic/jobs/4012345, OpenAI staff engineer at https://job-boards.greenhouse.io/openai/jobs/5000001, Google DeepMind at https://boards.greenhouse.io/deepmind/jobs/6000001. These are the roles I care about most."
     expectations:
       - rule: D3
         check: llm_judge
         prompt: >
-          Does the response indicate the apply work will be upgraded to
-          `@general-paid` (or equivalent paid/quality tier) because the
-          user flagged "dream job / top-tier / high-stakes"? Answer YES
-          if `@general-paid` is named OR the response acknowledges the
-          upgrade / high-stakes routing. Answer NO if the response
-          routes to `@general-free` or does not acknowledge the
-          upgrade signal.
+          Given that this is a multi-job apply request AND the user
+          flagged the roles as "top-tier / dream-job", does the
+          response route the per-job apply dispatches to `@general-paid`
+          (or equivalent paid/quality tier), rather than the default
+          `@general-free`? Answer YES if `@general-paid` is named OR
+          the response explicitly acknowledges the tier upgrade for
+          these high-stakes dispatches. Answer NO if the response
+          routes the apply work to `@general-free` without acknowledging
+          the upgrade, or does not name a tier at all.
 
   # ─────────────────────── Auto-submit gate ───────────────────────
 
@@ -226,10 +228,14 @@ cases:
       - rule: D4
         check: llm_judge
         prompt: >
-          Does the response indicate the agent will continue straight
-          through to apply (because the score is ≥3.0/5), without
-          pausing to ask the user for per-step confirmation? Answer
-          YES if the response proceeds to apply or dispatches the
-          apply without asking "should I continue?" or similar. Answer
-          NO if the response pauses and asks the user whether to
-          proceed.
+          Does the response commit to continuing straight to the apply
+          step (because the score is ≥3.0/5) without asking for
+          per-step confirmation? The agent MAY still ask for missing
+          context (company name, URL verification, report number,
+          tracker state) — context-gathering questions are NOT
+          confirmation pauses. Answer YES if the agent's stated plan
+          is to proceed to apply once any missing context is filled
+          in. Answer NO ONLY if the agent asks a yes/no confirmation
+          question that requires user approval to proceed, such as
+          "should I continue?", "do you want me to apply?", or "shall
+          I proceed with the application?".

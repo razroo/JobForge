@@ -42,8 +42,8 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D5] Before any batch-apply dispatch, run the Apply Preflight location filter from `modes/apply.md` to exclude location-incompatible candidates.
   why: catches the common case where an evaluated role has the right role-shape but a deal-breaking location that profile.yml already rules out
 
-- [D6] Pick the mode from the **Routing** table below. If no row matches the user's intent, ask which mode fits; do not guess.
-  why: silent mode picks mis-route work (a "negotiation" question answered in `offer` mode produces the wrong report shape); routing is the agent's entry point and must be explicit
+- [D6] Pick the mode from the **Routing** table below AND name it explicitly in your first response (e.g., "running auto-pipeline mode", "this is a `compare` request"). If no row matches the user's intent, ask which mode fits; do not guess.
+  why: silent mode picks mis-route work (a "negotiation" question answered in `offer` mode produces the wrong report shape); naming the mode out loud makes the routing decision reviewable and gives downstream dispatches a reliable anchor
 
 ## Procedure
 
