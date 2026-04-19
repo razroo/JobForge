@@ -1,10 +1,11 @@
 ---
 description: Narrow-scope extractor on free-tier model. Use for single-purpose tasks where the orchestrator passes the exact input and expects a small, structured output — e.g., "extract these 8 fields from this JD text" or "parse this form schema into a label→type map". NOT for multi-step workflows.
+role: minimal
 targets:
-  # No inline model: iso-route 0.2.0+ stamps provider/model from the
-  # per-target resolution in models.yaml (role = filename slug). Claude
-  # Code reads .claude/iso-route.resolved.json; OpenCode reads
-  # opencode.json's agent.<slug>.model (iso-harness 0.6.0+).
+  # No inline model: iso-route's "standard" preset maps role "minimal" to
+  # each harness's smallest credible model. Claude Code reads
+  # .claude/iso-route.resolved.json; OpenCode reads opencode.json's
+  # agent.minimal.model (iso-harness 0.6.0+).
   opencode:
     mode: subagent
     temperature: 0

@@ -1,63 +1,30 @@
-# JobForge model policy — one authored source, fanned out to each harness.
+# JobForge model policy.
 #
-# `@razroo/iso-route build` reads this file and writes:
-#   - .claude/settings.json            (default Claude Code model)
-#   - .claude/iso-route.resolved.json  (role map iso-harness stamps onto
-#                                       .claude/agents/*.md frontmatter)
-#   - .codex/config.toml               (model + [profiles.*] + providers;
-#                                       iso-harness merges [mcp_servers.*]
-#                                       on top of this via v0.5+)
-#   - opencode.json                    (top-level + per-agent overrides;
-#                                       iso-harness preserves these when
-#                                       layering mcp on top)
-#   - .cursor/iso-route.md             (advisory — Cursor has no
-#                                       programmatic model binding)
+# Extends @razroo/iso-route's bundled "standard" preset — a curated
+# cost-tiered routing config verified against 2026-04 provider catalogs.
+# Preset content lives in node_modules/@razroo/iso-route/presets/standard.yaml;
+# run `npx iso-route plan models.yaml` to see the resolved policy.
 #
-# Each role maps 1:1 to a subagent file in iso/agents/ (by filename slug).
-# The `targets.<harness>` sub-object overrides provider+model when
-# emitting for that specific harness; otherwise the generic policy on the
-# role is used (iso-route v0.2+).
+# JobForge's subagents bind to preset roles via the `role:` field in
+# iso/agents/<slug>.md:
+#   @general-free  → role: fast     (Haiku / opencode/big-pickle / gpt-5.4-mini)
+#   @general-paid  → role: quality  (Opus 4.7 / opencode-go/kimi-k2.5 / gpt-5.4)
+#   @glm-minimal   → role: minimal  (Haiku / opencode/minimax-m2.5-free / gpt-5.4-nano)
+#
+# Override anything by adding fields here. For example, to pin Opus on
+# Claude Code for the @general-paid (quality) role:
+#
+#   roles:
+#     quality:
+#       model: claude-opus-4-7
+#
+# Or to route all high-stakes applies to GPT-5.4 on Codex:
+#
+#   roles:
+#     quality:
+#       targets:
+#         codex:
+#           provider: openai
+#           model: gpt-5.4
 
-default:
-  provider: anthropic
-  model: claude-sonnet-4-6
-  targets:
-    # OpenCode users default to the OpenCode proxy's paid-tier chat model
-    # for the top-level (non-subagent) session.
-    opencode:
-      provider: opencode
-      model: opencode/glm-5.1
-
-roles:
-  # @general-free — procedural worker (form-fill, TSV merge, OTP retrieval,
-  # scan metadata extraction). Runs on each harness's cheapest-reliable
-  # model; OpenCode gets the free-tier proxy so batch applies cost $0.
-  general-free:
-    provider: anthropic
-    model: claude-haiku-4-5
-    targets:
-      opencode:
-        provider: opencode
-        model: opencode/big-pickle
-
-  # @general-paid — quality-sensitive worker (Blocks A-F evaluation, cover
-  # letters, STAR stories, LinkedIn outreach). Upgrade target for
-  # high-stakes applies per [D3] in iso/instructions.md.
-  general-paid:
-    provider: anthropic
-    model: claude-sonnet-4-6
-    targets:
-      opencode:
-        provider: opencode
-        model: opencode/glm-5.1
-
-  # @glm-minimal — narrow ≤5K-input one-shot extractor / classifier. Named
-  # for its original tuning target (Minimax on the OpenCode proxy); on
-  # harnesses without that proxy it falls through to a cheap general model.
-  glm-minimal:
-    provider: anthropic
-    model: claude-haiku-4-5
-    targets:
-      opencode:
-        provider: opencode
-        model: opencode/minimax-m2.5-free
+extends: standard

@@ -1,10 +1,11 @@
 ---
 description: Quality-sensitive worker on paid model. Use for offer evaluation narratives (Blocks A-F), cover letter generation, "Why X?" form answers, interview STAR stories, and other tasks where writing quality and judgment matter.
+role: quality
 targets:
-  # No inline model: iso-route 0.2.0+ stamps provider/model from the
-  # per-target resolution in models.yaml (role = filename slug). Claude
-  # Code reads .claude/iso-route.resolved.json; OpenCode reads
-  # opencode.json's agent.<slug>.model (iso-harness 0.6.0+).
+  # No inline model: iso-route's "standard" preset maps role "quality" to
+  # each harness's top-tier reasoning-capable model. Claude Code reads
+  # .claude/iso-route.resolved.json; OpenCode reads opencode.json's
+  # agent.quality.model (iso-harness 0.6.0+).
   opencode:
     mode: subagent
     temperature: 0.3

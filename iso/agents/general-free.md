@@ -1,10 +1,11 @@
 ---
 description: Procedural worker on free-tier model. Use for form filling via Geometra, tracker updates, TSV merges, scan dedup, OTP retrieval, and other mechanical/scripted tasks where quality-sensitive text generation is NOT required.
+role: fast
 targets:
-  # No inline model: iso-route 0.2.0+ stamps provider/model from the
-  # per-target resolution in models.yaml (role = filename slug). Claude
-  # Code reads .claude/iso-route.resolved.json; OpenCode reads
-  # opencode.json's agent.<slug>.model (iso-harness 0.6.0+).
+  # No inline model: iso-route's "standard" preset maps role "fast" to
+  # each harness's cheapest reliable model. Claude Code reads
+  # .claude/iso-route.resolved.json; OpenCode reads opencode.json's
+  # agent.fast.model (iso-harness 0.6.0+).
   opencode:
     mode: subagent
     temperature: 0.1
