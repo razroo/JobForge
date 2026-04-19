@@ -1,46 +1,63 @@
 # JobForge model policy — one authored source, fanned out to each harness.
 #
 # `@razroo/iso-route build` reads this file and writes:
-#   - .claude/settings.json       (default model for Claude Code)
+#   - .claude/settings.json            (default Claude Code model)
 #   - .claude/iso-route.resolved.json  (role map iso-harness stamps onto
 #                                       .claude/agents/*.md frontmatter)
-#   - .codex/config.toml          (model + [profiles.*] + providers;
-#                                  iso-harness then merges its [mcp_servers.*]
-#                                  sections on top — see @razroo/iso-harness
-#                                  0.5.0+ for the merge behavior)
-#   - opencode.json               (top-level model, plus per-agent overrides
-#                                  that don't clobber inline opencode-specific
-#                                  model IDs in iso/agents/*.md)
-#   - .cursor/iso-route.md        (advisory README — Cursor has no programmatic
-#                                  way to bind a model to a rule or agent)
+#   - .codex/config.toml               (model + [profiles.*] + providers;
+#                                       iso-harness merges [mcp_servers.*]
+#                                       on top of this via v0.5+)
+#   - opencode.json                    (top-level + per-agent overrides;
+#                                       iso-harness preserves these when
+#                                       layering mcp on top)
+#   - .cursor/iso-route.md             (advisory — Cursor has no
+#                                       programmatic model binding)
 #
-# Roles map 1:1 to the subagent files in iso/agents/ (by slug). JobForge
-# agents opt in to each harness by removing the `targets.<harness>: skip`
-# line — then iso-harness stamps the model from the resolved map below.
+# Each role maps 1:1 to a subagent file in iso/agents/ (by filename slug).
+# The `targets.<harness>` sub-object overrides provider+model when
+# emitting for that specific harness; otherwise the generic policy on the
+# role is used (iso-route v0.2+).
 
 default:
   provider: anthropic
   model: claude-sonnet-4-6
+  targets:
+    # OpenCode users default to the OpenCode proxy's paid-tier chat model
+    # for the top-level (non-subagent) session.
+    opencode:
+      provider: opencode
+      model: opencode/glm-5.1
 
 roles:
   # @general-free — procedural worker (form-fill, TSV merge, OTP retrieval,
-  # scan extraction). Cheap model; deterministic work where quality-sensitive
-  # prose is NOT required. Matches D2 in iso/instructions.md.
+  # scan metadata extraction). Runs on each harness's cheapest-reliable
+  # model; OpenCode gets the free-tier proxy so batch applies cost $0.
   general-free:
     provider: anthropic
     model: claude-haiku-4-5
+    targets:
+      opencode:
+        provider: opencode
+        model: opencode/big-pickle
 
   # @general-paid — quality-sensitive worker (Blocks A-F evaluation, cover
-  # letters, STAR stories, LinkedIn outreach). Matches D2 in iso/instructions.md.
-  # Upgrade target for high-stakes applies per D3.
+  # letters, STAR stories, LinkedIn outreach). Upgrade target for
+  # high-stakes applies per [D3] in iso/instructions.md.
   general-paid:
     provider: anthropic
     model: claude-sonnet-4-6
+    targets:
+      opencode:
+        provider: opencode
+        model: opencode/glm-5.1
 
-  # @glm-minimal — narrow ≤5K-input one-shot extractor / classifier. Runs on
-  # the cheap tier because inputs are small and outputs are structured; no
-  # context budget pressure. Named for the OpenCode provider it was tuned
-  # against; on other harnesses, Haiku is the closest equivalent.
+  # @glm-minimal — narrow ≤5K-input one-shot extractor / classifier. Named
+  # for its original tuning target (Minimax on the OpenCode proxy); on
+  # harnesses without that proxy it falls through to a cheap general model.
   glm-minimal:
     provider: anthropic
     model: claude-haiku-4-5
+    targets:
+      opencode:
+        provider: opencode
+        model: opencode/minimax-m2.5-free
