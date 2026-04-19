@@ -343,6 +343,27 @@ Is the visible value correct?
 
 **The `invalidCount` from schema is a heuristic, not ground truth.** Always prefer direct observation of field values over the invalid count. If Submit becomes enabled, ignore any remaining invalid fields — the portal accepted the data.
 
+**Text-field specific fix — `imeFriendly: true`.** For text fills where the React-controlled input swallows programmatic value assignment (visible value correct, but `invalidCount` stays >0 and Submit is rejected with "flagged as possible spam" or "field required"), pass `imeFriendly: true` to `geometra_fill_fields`. This fires proper composition events (`compositionstart` / `input` / `compositionend`) that clear React's internal validity state. Confirmed fix on Ashby for Supabase (2026-04-19): first submit rejected despite clean fills; refill with `imeFriendly: true` succeeded on retry. Safe to use as default on all Ashby text fields — no cost if not needed.
+
+### Ashby Anti-Bot Spam Filter — Two Failure Classes
+
+**Symptom:** after a form is filled cleanly (`invalidCount: 0`, all values correct) and Submit is clicked, Ashby returns: *"We couldn't submit your application. Your application submission was flagged as possible spam."*
+
+These blocks come from two distinct root causes and require different responses:
+
+| Class | Root cause | Recoverable in-session? | Fix |
+|---|---|---|---|
+| **A. React-validation lag** | programmatic text input didn't fire composition events; React marks required fields internally missing even though values look correct | Yes | Refill with `imeFriendly: true` and resubmit once. |
+| **B. Environment fingerprint** | datacenter IP / VPN / headless Chromium signatures / browser-extension tells detected server-side | No (in headless) | Mark `Failed` with note "Ashby env-fingerprint"; recommend manual submit from user's own browser. |
+
+**How to tell them apart:** if you saw `invalidCount > 0` and the "required field" error BEFORE submit, class A is likely — retry with `imeFriendly: true`. If the form filled perfectly clean (`invalidCount: 0` on every step) and the spam flag fires only on submit, class B is likely — Ashby's "Learn more" dialog cites VPN/proxy, ad blockers, shared/public network, which `imeFriendly` cannot influence.
+
+**Evidence (2026-04-19 session):**
+- Class A confirmed: Supabase #793 (rejected → refilled with `imeFriendly` → applied).
+- Class B confirmed: Unstructured #786 + ClickUp #787 — both filled cleanly with per-field `imeFriendly: true`, both still spam-flagged on submit with identical "VPN / ad blockers / shared network" messaging.
+
+**Rule — do NOT loop retrying a class B block.** One retry with `imeFriendly: true` is the correct test for class A. If the same spam message fires after a clean `imeFriendly` refill, stop, mark Failed, move on. Repeated retries waste subagent time and do not change the outcome.
+
 ### Nested Scroll Containers (Greenhouse / Ashby)
 
 The major ATS portals (Greenhouse, Workday, Lever, Ashby) use nested scrollable regions. A field's `visibleBounds` may show it as off-screen even when it is actually visible within a child scroll container. Geometra's `scroll_to` operates on the outermost page scroll, so it cannot reach fields in inner scroll regions.

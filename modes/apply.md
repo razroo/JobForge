@@ -191,13 +191,16 @@ geometra_run_actions({
   sessionId: "...",
   actions: [
     { type: "upload_files",  fieldLabel: "Resume/CV", paths: ["/abs/path/cv.pdf"] },
-    { type: "fill_fields",   valuesByLabel: { "First Name": "...", "Last Name": "...", ... } },
+    { type: "fill_fields",   imeFriendly: true,
+                             valuesByLabel: { "First Name": "...", "Last Name": "...", ... } },
     { type: "pick_listbox_option", fieldLabel: "Country", value: "United States" },
     ... (one entry per choice/listbox) ...
     { type: "click",         labelOrText: "Submit application" }
   ]
 })
 ```
+
+**Always pass `imeFriendly: true` on `fill_fields` for Ashby** (and safe as a default everywhere). Ashby's React form swallows programmatic text input silently — visible value looks correct, `invalidCount` stays >0, and Submit fails with "field required" or "flagged as possible spam." `imeFriendly: true` fires proper composition events that clear React's internal validity state. Confirmed fix: Supabase #793 (2026-04-19). Zero cost on other portals; no reason to leave it off.
 
 ### Use `fieldLabel` over `fieldId` (Rule B)
 
