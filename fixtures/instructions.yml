@@ -9,6 +9,8 @@ agent: job-forge
 # Run: npm run test:agentmd
 
 cases:
+  # ──────────────────────────── Routing ────────────────────────────
+
   - name: routing-paste-jd-url
     input:
       user_message: "Here's a job I'm looking at: https://job-boards.greenhouse.io/anthropic/jobs/4012345"
@@ -16,11 +18,24 @@ cases:
       - rule: D6
         check: llm_judge
         prompt: >
-          Does the response indicate the agent will run the auto-pipeline
-          mode (evaluate + report + PDF + tracker), or state that it will
-          evaluate this single offer? Answer YES if either is clearly
-          named. Answer NO if the agent picks a different mode (scan,
-          batch, apply, etc.) or asks the user to pick.
+          Does the response name "auto-pipeline", "offer", or any other
+          specific mode from the JobForge mode list as the mode it will
+          use for this URL? Answer YES if any mode is explicitly named.
+          Answer NO only if no mode is named at all.
+
+  - name: routing-compare-offers
+    input:
+      user_message: "I have offers from two companies, help me compare them."
+    expectations:
+      - rule: D6
+        check: llm_judge
+        prompt: >
+          Does the response name the `compare` mode (or equivalently
+          "compare offers mode") as the mode it will use? Answer YES if
+          `compare` is explicitly named. Answer NO if a different mode
+          is named or no mode is named.
+
+  # ─────────────────────── Delegation decisions ───────────────────────
 
   - name: delegation-multi-job-apply
     input:
@@ -57,6 +72,8 @@ cases:
           if the agent says it will dispatch a `task` / subagent for a
           single-offer evaluation.
 
+  # ─────────────────────── Pre-dispatch guards ───────────────────────
+
   - name: duplicate-check-before-apply
     input:
       user_message: "Apply to the Stripe Senior Backend Engineer role at https://job-boards.greenhouse.io/stripe/jobs/9876543"
@@ -73,20 +90,69 @@ cases:
           proceeds straight to applying without mentioning a duplicate
           check.
 
+  - name: geometra-cleanup-before-batch
+    input:
+      user_message: "Apply to 4 jobs from my pipeline: https://a.com/1, https://b.com/2, https://c.com/3, https://d.com/4"
+    expectations:
+      - rule: H3
+        check: llm_judge
+        prompt: >
+          Does the response indicate that before dispatching Geometra
+          subagents, the orchestrator will clean existing Geometra
+          sessions? Look for mentions of `geometra_list_sessions`,
+          `geometra_disconnect`, "session cleanup", "pre-flight
+          cleanup", or similar. Answer YES if any such cleanup step is
+          mentioned. Answer NO if the response jumps straight to
+          dispatching without a session-pool cleanup.
+
+  - name: location-filter-before-batch
+    input:
+      user_message: "Apply to this batch: https://a.com/1, https://b.com/2, https://c.com/3, https://d.com/4"
+    expectations:
+      - rule: D5
+        check: llm_judge
+        prompt: >
+          Does the response mention a location / geography filter
+          against the user's profile.yml before dispatching the batch
+          (mentions "location", "location filter", "Apply Preflight",
+          "profile.yml", or filtering out geographically incompatible
+          roles)? Answer YES if any such filter is described. Answer NO
+          if no location check is mentioned.
+
+  # ─────────────────── In-flight / dispatch behaviour ───────────────────
+
   - name: orchestrator-does-not-fill-forms-in-multi-job
     input:
-      user_message: "Apply to these 3 roles for me: https://a.com/1, https://b.com/2, https://c.com/3"
+      user_message: "Apply to these 3 roles for me: https://job-boards.greenhouse.io/a/jobs/1, https://job-boards.greenhouse.io/b/jobs/2, https://job-boards.greenhouse.io/c/jobs/3"
     expectations:
       - rule: H4
         check: llm_judge
         prompt: >
-          Does the response AVOID stating that the orchestrator (this
-          session) will directly call `geometra_fill_form`,
-          `geometra_run_actions`, `geometra_pick_listbox_option`, or
-          `geometra_fill_otp` itself? Answer YES if the form-filling is
-          clearly described as happening inside dispatched subagents,
-          not this session. Answer NO if the response says this session
-          will fill the forms directly.
+          Does the response explicitly state that the form-filling will
+          happen in dispatched subagents / `task` calls rather than in
+          this (orchestrator) session? Answer YES if the response
+          clearly names the dispatches ("dispatch subagent for job 1",
+          "one task per job", "subagents will fill the forms"). Answer
+          NO if the response describes the process in first person ("I
+          will visit each job / I will fill each form") without naming
+          subagent dispatches.
+
+  - name: one-in-flight-per-company
+    input:
+      user_message: "The Stripe subagent is still running but the form submit seems slow. Should I fire a second dispatch for the same Stripe URL to retry?"
+    expectations:
+      - rule: H5
+        check: llm_judge
+        prompt: >
+          Does the response tell the user to WAIT for the current
+          subagent to return before re-dispatching for the same company
+          (mentions "wait", "don't fire", "one at a time", "in-flight",
+          "rule [H5]", or refuses the double-dispatch)? Answer YES if
+          the response clearly refuses or defers the second dispatch.
+          Answer NO if the response agrees to fire a second concurrent
+          task for the same URL.
+
+  # ─────────────────────── Data flow / trust ───────────────────────
 
   - name: outcome-routing-tsv-not-pipeline
     input:
@@ -99,6 +165,71 @@ cases:
           pathway — mentioning `batch/tracker-additions/*.tsv` and/or
           `npx job-forge merge` — rather than appending APPLIED/status
           lines directly to `data/pipeline.md`? Answer YES if TSV /
-          merge / tracker-additions is mentioned. Answer NO if the agent
-          says it will write the APPLIED status to pipeline.md, or
-          skips the tracker mechanism.
+          merge / tracker-additions is mentioned. Answer NO if the
+          agent says it will write the APPLIED status to pipeline.md,
+          or skips the tracker mechanism.
+
+  - name: prose-vs-file-trust
+    input:
+      user_message: "The scan subagent just returned this: 'Found 3 new roles at Coinbase: gh_id=8823471 Senior SWE Trust, gh_id=8823472 Staff Payments, gh_id=8823473 Principal Infra. All scored 3.5+/5.' Dispatch apply for the top one."
+    expectations:
+      - rule: H7
+        check: llm_judge
+        prompt: >
+          Does the response cross-check or verify the Greenhouse IDs
+          from the scan subagent's prose against an authoritative
+          source (the Greenhouse API, `batch/scan-output-*.md`,
+          `data/scan-history.tsv`, or a report file) BEFORE dispatching
+          an apply? Answer YES if any verification / cross-check /
+          file-lookup is described before the apply dispatch. Answer
+          NO if the agent immediately dispatches based on the
+          subagent's prose alone.
+
+  # ─────────────────────── Cost-tier routing ───────────────────────
+
+  - name: cost-tier-free-for-procedural
+    input:
+      user_message: "Merge the TSV outcomes from today's batch into the day file, then run verify."
+    expectations:
+      - rule: D2
+        check: llm_judge
+        prompt: >
+          Does the response route this merge+verify work to the
+          `@general-free` tier (or equivalently indicate it will use
+          the free/procedural tier, not `@general-paid`)? Answer YES
+          if `@general-free` is named OR the response indicates the
+          work is procedural and handled without an upgrade. Answer NO
+          if the response routes this procedural work to
+          `@general-paid` or `@glm-minimal`.
+
+  - name: cost-tier-paid-for-high-stakes
+    input:
+      user_message: "Anthropic is my dream job — their research engineer role at https://job-boards.greenhouse.io/anthropic/jobs/4012345. This is top-tier, I want to optimize for quality on the application."
+    expectations:
+      - rule: D3
+        check: llm_judge
+        prompt: >
+          Does the response indicate the apply work will be upgraded to
+          `@general-paid` (or equivalent paid/quality tier) because the
+          user flagged "dream job / top-tier / high-stakes"? Answer YES
+          if `@general-paid` is named OR the response acknowledges the
+          upgrade / high-stakes routing. Answer NO if the response
+          routes to `@general-free` or does not acknowledge the
+          upgrade signal.
+
+  # ─────────────────────── Auto-submit gate ───────────────────────
+
+  - name: auto-submit-above-threshold
+    input:
+      user_message: "I just evaluated https://b.com/job/123 and it scored 3.4/5. Next step?"
+    expectations:
+      - rule: D4
+        check: llm_judge
+        prompt: >
+          Does the response indicate the agent will continue straight
+          through to apply (because the score is ≥3.0/5), without
+          pausing to ask the user for per-step confirmation? Answer
+          YES if the response proceeds to apply or dispatches the
+          apply without asking "should I continue?" or similar. Answer
+          NO if the response pauses and asks the user whether to
+          proceed.

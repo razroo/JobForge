@@ -13,8 +13,8 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [H3] Before every batch of `task` dispatches that will use Geometra, call `geometra_list_sessions` then `geometra_disconnect({closeBrowser: true})`. Every round, no exceptions.
   why: if any prior subagent aborted mid-flow, its Chromium session stays stuck in the MCP pool and the next `geometra_connect` fails with "Not connected"; the disconnect is a no-op when the pool is empty but a poison-cure when it isn't
 
-- [H4] In multi-job mode, the orchestrator session MUST NOT call `geometra_fill_form`, `geometra_run_actions`, `geometra_pick_listbox_option`, or `geometra_fill_otp`. If you find yourself about to, you failed to delegate — `task` out the remaining work instead.
-  why: repeated Geometra calls in the orchestrator bloat the cache prefix — this is the 2026-04 "apply to 20 jobs" 341-msg incident where each turn re-processed 100K+ fresh tokens instead of reading from cache
+- [H4] In multi-job mode, the orchestrator session MUST NOT call `geometra_fill_form`, `geometra_run_actions`, `geometra_pick_listbox_option`, or `geometra_fill_otp` directly. Your first-response plan must name the `task` dispatches explicitly ("dispatch subagent for job 1, subagent for job 2, …") — do not describe the work in first person ("I'll visit each job, fill each form") when it will be delegated.
+  why: repeated Geometra calls in the orchestrator bloat the cache prefix — this is the 2026-04 "apply to 20 jobs" 341-msg incident where each turn re-processed 100K+ fresh tokens instead of reading from cache; first-person narration is a leading indicator that the agent is mentally queueing work for itself rather than a subagent
 
 - [H5] Re-dispatch the same company only AFTER the previous subagent returns. Never fire the same `task` twice while the first is still in flight.
   why: two in-flight subagents for the same URL race on Geometra sessions and on tracker TSV writes, corrupting state and sometimes double-submitting
