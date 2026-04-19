@@ -1,9 +1,9 @@
 ---
 description: Procedural worker on free-tier model. Use for form filling via Geometra, tracker updates, TSV merges, scan dedup, OTP retrieval, and other mechanical/scripted tasks where quality-sensitive text generation is NOT required.
 targets:
-  claude: skip
-  cursor: skip
-  codex: skip
+  # Claude Code / Cursor / Codex: no inline override — iso-route's resolved
+  # role map stamps model from models.yaml (role name = filename slug).
+  # OpenCode keeps its provider-specific model identifier inline.
   opencode:
     mode: subagent
     model: opencode/big-pickle

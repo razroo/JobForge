@@ -1,9 +1,9 @@
 ---
 description: Narrow-scope extractor on free-tier model. Use for single-purpose tasks where the orchestrator passes the exact input and expects a small, structured output — e.g., "extract these 8 fields from this JD text" or "parse this form schema into a label→type map". NOT for multi-step workflows.
 targets:
-  claude: skip
-  cursor: skip
-  codex: skip
+  # Claude Code / Cursor / Codex: no inline override — iso-route's resolved
+  # role map stamps model from models.yaml (role name = filename slug).
+  # OpenCode keeps its provider-specific model identifier inline.
   opencode:
     mode: subagent
     model: opencode/minimax-m2.5-free

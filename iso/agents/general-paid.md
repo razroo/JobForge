@@ -1,9 +1,9 @@
 ---
 description: Quality-sensitive worker on paid model. Use for offer evaluation narratives (Blocks A-F), cover letter generation, "Why X?" form answers, interview STAR stories, and other tasks where writing quality and judgment matter.
 targets:
-  claude: skip
-  cursor: skip
-  codex: skip
+  # Claude Code / Cursor / Codex: no inline override — iso-route's resolved
+  # role map stamps model from models.yaml (role name = filename slug).
+  # OpenCode keeps its provider-specific model identifier inline.
   opencode:
     mode: subagent
     model: opencode/glm-5.1

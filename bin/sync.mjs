@@ -53,23 +53,34 @@ if (PROJECT_DIR === PKG_ROOT) {
 
 // Each entry: { source (inside harness), target (inside consumer project) }
 const links = [
-  // Cursor: MCP servers + always-apply rule (harness-level). Consumers can
-  // add their own rules in .cursor/rules/ alongside this one.
+  // Cursor: MCP servers, harness-level always-apply rule, per-agent
+  // @-referenceable rules, and an iso-route advisory README.
   { src: '.cursor/mcp.json',               dst: '.cursor/mcp.json' },
   { src: '.cursor/rules/main.mdc',         dst: '.cursor/rules/main.mdc' },
+  { src: '.cursor/rules/agent-general-free.mdc',  dst: '.cursor/rules/agent-general-free.mdc' },
+  { src: '.cursor/rules/agent-general-paid.mdc',  dst: '.cursor/rules/agent-general-paid.mdc' },
+  { src: '.cursor/rules/agent-glm-minimal.mdc',   dst: '.cursor/rules/agent-glm-minimal.mdc' },
+  { src: '.cursor/iso-route.md',           dst: '.cursor/iso-route.md' },
 
-  // Claude Code: MCP config (.mcp.json is what claude-code reads for
-  // project-scoped MCP). No subagents/commands emitted because iso/agents/
-  // and iso/commands/ are flagged claude: skip.
+  // Claude Code: MCP + per-agent subagent definitions + default-model
+  // settings + iso-route resolved role map.
   { src: '.mcp.json',                      dst: '.mcp.json' },
+  { src: '.claude/agents',                 dst: '.claude/agents' },
+  { src: '.claude/settings.json',          dst: '.claude/settings.json' },
+  { src: '.claude/iso-route.resolved.json', dst: '.claude/iso-route.resolved.json' },
 
-  // Codex: MCP config.
+  // Codex: config.toml contains MCP + model + [profiles.<role>] + provider
+  // blocks (merged by iso-harness >=0.5.0 after iso-route writes first).
   { src: '.codex/config.toml',             dst: '.codex/config.toml' },
 
   // OpenCode: skill router + subagent definitions. Users can override any
   // single subagent by replacing its symlink with a local file.
   { src: '.opencode/skills/job-forge.md',  dst: '.opencode/skills/job-forge.md' },
   { src: '.opencode/agents',               dst: '.opencode/agents' },
+
+  // Model policy (source of truth for iso-route). Consumers can edit and
+  // re-run `npm run build:config` in their project to swap model picks.
+  { src: 'models.yaml',                    dst: 'models.yaml' },
 
   // Shared content directories referenced by opencode.json instructions +
   // skill router (Read's modes/{mode}.md, etc).

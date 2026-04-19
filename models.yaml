@@ -1,0 +1,46 @@
+# JobForge model policy — one authored source, fanned out to each harness.
+#
+# `@razroo/iso-route build` reads this file and writes:
+#   - .claude/settings.json       (default model for Claude Code)
+#   - .claude/iso-route.resolved.json  (role map iso-harness stamps onto
+#                                       .claude/agents/*.md frontmatter)
+#   - .codex/config.toml          (model + [profiles.*] + providers;
+#                                  iso-harness then merges its [mcp_servers.*]
+#                                  sections on top — see @razroo/iso-harness
+#                                  0.5.0+ for the merge behavior)
+#   - opencode.json               (top-level model, plus per-agent overrides
+#                                  that don't clobber inline opencode-specific
+#                                  model IDs in iso/agents/*.md)
+#   - .cursor/iso-route.md        (advisory README — Cursor has no programmatic
+#                                  way to bind a model to a rule or agent)
+#
+# Roles map 1:1 to the subagent files in iso/agents/ (by slug). JobForge
+# agents opt in to each harness by removing the `targets.<harness>: skip`
+# line — then iso-harness stamps the model from the resolved map below.
+
+default:
+  provider: anthropic
+  model: claude-sonnet-4-6
+
+roles:
+  # @general-free — procedural worker (form-fill, TSV merge, OTP retrieval,
+  # scan extraction). Cheap model; deterministic work where quality-sensitive
+  # prose is NOT required. Matches D2 in iso/instructions.md.
+  general-free:
+    provider: anthropic
+    model: claude-haiku-4-5
+
+  # @general-paid — quality-sensitive worker (Blocks A-F evaluation, cover
+  # letters, STAR stories, LinkedIn outreach). Matches D2 in iso/instructions.md.
+  # Upgrade target for high-stakes applies per D3.
+  general-paid:
+    provider: anthropic
+    model: claude-sonnet-4-6
+
+  # @glm-minimal — narrow ≤5K-input one-shot extractor / classifier. Runs on
+  # the cheap tier because inputs are small and outputs are structured; no
+  # context budget pressure. Named for the OpenCode provider it was tuned
+  # against; on other harnesses, Haiku is the closest equivalent.
+  glm-minimal:
+    provider: anthropic
+    model: claude-haiku-4-5

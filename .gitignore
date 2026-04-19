@@ -36,6 +36,7 @@ node_modules/
 /.codex/
 /.cursor/mcp.json
 /.cursor/rules/
+/.cursor/iso-route.md
 /.opencode/agents/
 /.opencode/skills/
 /opencode.json
