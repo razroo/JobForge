@@ -1,0 +1,104 @@
+agent: job-forge
+
+# Fixture cases for the JobForge root orchestrator. Each case supplies a
+# user_message, and expectations check that the first-turn orchestrator
+# response reflects the correct rule. Tool use is disabled by the
+# `agentmd test` backend — we're measuring the model's *plan*, not
+# whether it can actually drive tools.
+#
+# Run: npm run test:agentmd
+
+cases:
+  - name: routing-paste-jd-url
+    input:
+      user_message: "Here's a job I'm looking at: https://job-boards.greenhouse.io/anthropic/jobs/4012345"
+    expectations:
+      - rule: D6
+        check: llm_judge
+        prompt: >
+          Does the response indicate the agent will run the auto-pipeline
+          mode (evaluate + report + PDF + tracker), or state that it will
+          evaluate this single offer? Answer YES if either is clearly
+          named. Answer NO if the agent picks a different mode (scan,
+          batch, apply, etc.) or asks the user to pick.
+
+  - name: delegation-multi-job-apply
+    input:
+      user_message: "Please apply to these 5 jobs for me: https://job-boards.greenhouse.io/a/jobs/1, https://b.com/2, https://c.com/3, https://d.com/4, https://e.com/5"
+    expectations:
+      - rule: D1
+        check: llm_judge
+        prompt: >
+          Does the response indicate the agent will delegate the per-job
+          work to subagents (mentions "task", "subagent", "delegate", or
+          "dispatch"), rather than filling each form inline from this
+          session? Answer YES only if delegation is clearly the plan.
+      - rule: H1
+        check: llm_judge
+        prompt: >
+          If the response mentions parallelism at all, does it cap
+          parallel dispatches at 2 per round (e.g., mentions "2",
+          "batches of 2", "ceil(N/2)", or similar)? Answer YES if 2 is
+          named OR if parallelism is not mentioned at all (the default
+          will apply). Answer NO only if a number greater than 2 is
+          stated.
+
+  - name: no-delegation-single-offer-eval
+    input:
+      user_message: "Can you evaluate this offer for me? https://job-boards.greenhouse.io/anthropic/jobs/4012345"
+    expectations:
+      - rule: D1
+        check: llm_judge
+        prompt: >
+          Does the response indicate the agent will handle this single
+          offer inline in the current session (not delegate to a
+          subagent)? Answer YES if the plan is to evaluate it directly,
+          write a report, and produce a PDF from this session. Answer NO
+          if the agent says it will dispatch a `task` / subagent for a
+          single-offer evaluation.
+
+  - name: duplicate-check-before-apply
+    input:
+      user_message: "Apply to the Stripe Senior Backend Engineer role at https://job-boards.greenhouse.io/stripe/jobs/9876543"
+    expectations:
+      - rule: H2
+        check: llm_judge
+        prompt: >
+          Does the response indicate the agent will check for prior
+          applications to this company+role BEFORE dispatching an apply
+          (mentions one or more of: `data/pipeline.md`,
+          `data/applications`, `batch/tracker-additions`, "tracker",
+          "duplicate check", "grep", or "already applied")? Answer YES
+          if any such check is described. Answer NO if the agent
+          proceeds straight to applying without mentioning a duplicate
+          check.
+
+  - name: orchestrator-does-not-fill-forms-in-multi-job
+    input:
+      user_message: "Apply to these 3 roles for me: https://a.com/1, https://b.com/2, https://c.com/3"
+    expectations:
+      - rule: H4
+        check: llm_judge
+        prompt: >
+          Does the response AVOID stating that the orchestrator (this
+          session) will directly call `geometra_fill_form`,
+          `geometra_run_actions`, `geometra_pick_listbox_option`, or
+          `geometra_fill_otp` itself? Answer YES if the form-filling is
+          clearly described as happening inside dispatched subagents,
+          not this session. Answer NO if the response says this session
+          will fill the forms directly.
+
+  - name: outcome-routing-tsv-not-pipeline
+    input:
+      user_message: "Subagent just returned APPLIED for https://job-boards.greenhouse.io/notion/jobs/555. Update the tracker."
+    expectations:
+      - rule: H6
+        check: llm_judge
+        prompt: >
+          Does the response route the APPLIED outcome through the TSV
+          pathway — mentioning `batch/tracker-additions/*.tsv` and/or
+          `npx job-forge merge` — rather than appending APPLIED/status
+          lines directly to `data/pipeline.md`? Answer YES if TSV /
+          merge / tracker-additions is mentioned. Answer NO if the agent
+          says it will write the APPLIED status to pipeline.md, or
+          skips the tracker mechanism.

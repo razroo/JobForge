@@ -42,10 +42,13 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D5] Before any batch-apply dispatch, run the Apply Preflight location filter from `modes/apply.md` to exclude location-incompatible candidates.
   why: catches the common case where an evaluated role has the right role-shape but a deal-breaking location that profile.yml already rules out
 
+- [D6] Pick the mode from the **Routing** table below. If no row matches the user's intent, ask which mode fits; do not guess.
+  why: silent mode picks mis-route work (a "negotiation" question answered in `offer` mode produces the wrong report shape); routing is the agent's entry point and must be explicit
+
 ## Procedure
 
 1. On start, check `cv.md`, `profile.yml`, `portals.yml` exist; onboard if any missing.
-2. Pick the mode from **Routing**. No match → ask; do not guess.
+2. Pick the mode from **Routing** [D6]. No match → ask; do not guess.
 3. Apply [D1]: batch/Geometra work → delegate; single/read-only/dev → inline.
 4. Before any `task` batch using Geometra, run cleanup [H3].
 5. Before `apply`, run duplicate check [H2] and location filter [D5].
