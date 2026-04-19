@@ -45,7 +45,7 @@ Supported API shapes:
 - **Endpoint**: `https://boards-api.greenhouse.io/v1/boards/{slug}/jobs`
 - **Method**: `GET` (plain, no auth)
 - **Shape**: `{ jobs: [{ id, title, absolute_url, updated_at, location: { name } }, ...] }`
-- **Canonical URL to record**: `https://job-boards.greenhouse.io/{slug}/jobs/{id}` — do NOT use `absolute_url` when it points to a customer-skinned front-end (see Verification section below).
+- **Canonical URL to record**: `https://job-boards.greenhouse.io/{slug}/jobs/{id}` — do NOT use `absolute_url` when it points to a customer-skinned front-end (see **Verify Before Marking CLOSED** below).
 - **ats**: `greenhouse`
 
 #### Ashby (JSON, per-company board)
@@ -75,7 +75,7 @@ Supported API shapes:
   ```json
   {"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": ""}
   ```
-- **Required headers**: `Content-Type: application/json`, `Accept: application/json`. Some tenants reject requests without a realistic `User-Agent` — set one if the response is 403.
+- **Required headers**: `Content-Type: application/json`, `Accept: application/json`. If the response is 403, set a realistic `User-Agent` header and retry — Workday tenants selectively block data-center UAs.
 - **Shape**: `{ jobPostings: [{ title, externalPath, postedOn, locationsText, bulletFields }, ...], total }`
 - **Canonical URL to record**: `https://{subdomain}.{pod}.myworkdayjobs.com/{site}{externalPath}` (note: `externalPath` already starts with `/job/...` — do NOT prepend an extra `/`).
 - **Pagination**: increment `offset` by `limit` (20) until `jobPostings.length < limit` or `offset >= total`.
@@ -287,7 +287,7 @@ NEXT STEP RECOMMENDATION:
 
 ## Verify Before Marking CLOSED (downstream rule)
 
-**DO NOT mark a Greenhouse offer CLOSED based on a WebFetch/Geometra result alone.** Customer-skinned careers pages (`pinterestcareers.com`, `okta.com`, `samsara.com`, `zoominfo.com`, `collibra.com`, `careers.toasttab.com`, `careers.airbnb.com`, `coinbase.com`, `instacart.careers`, etc.) serve bot-hostile shells — a 403, a navbar-only response, or a client-side-only render. WebFetch sees "no JD" and mis-classifies as CLOSED.
+**DO NOT mark a Greenhouse offer CLOSED based on a WebFetch/Geometra result alone.** Customer-skinned careers pages serve bot-hostile shells — a 403, a navbar-only response, or a client-side-only render — and WebFetch sees "no JD" and mis-classifies as CLOSED. Known customer-skinned hosts: `pinterestcareers.com`, `okta.com`, `samsara.com`, `zoominfo.com`, `collibra.com`, `careers.toasttab.com`, `careers.airbnb.com`, `coinbase.com`, `instacart.careers`. Treat any host that is NOT `greenhouse.io` / `job-boards.greenhouse.io` / `boards-api.greenhouse.io` as customer-skinned.
 
 **Correct verification order for any Greenhouse-sourced URL** (identified by a `| gh={slug}/{id}` suffix in `pipeline.md` or a `boards-api.greenhouse.io` / `job-boards.greenhouse.io` / `boards.greenhouse.io` host):
 
@@ -298,7 +298,7 @@ NEXT STEP RECOMMENDATION:
 2. Only then fall back to WebFetch of the canonical `job-boards.greenhouse.io/{slug}/jobs/{id}` URL.
 3. Only then fall back to Geometra on the same canonical URL.
 
-**Rule of thumb:** Greenhouse postings with valid `gh_slug`/`gh_id` should be verified via the API first. A WebFetch failure on a customer-skinned domain is NOT evidence the role is closed.
+**Rule:** Greenhouse postings with valid `gh_slug`/`gh_id` MUST be verified via the API first. A WebFetch failure on a customer-skinned domain is NOT evidence the role is closed.
 
 ## Update careers_url
 

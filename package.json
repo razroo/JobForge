@@ -1,6 +1,6 @@
 {
   "name": "job-forge",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "AI-powered job search pipeline built on opencode",
   "type": "module",
   "bin": {
@@ -18,8 +18,8 @@
     "tokens": "node scripts/token-usage-report.mjs",
     "tokens:today": "node scripts/token-usage-report.mjs --days 1",
     "tokens:log": "node scripts/token-usage-report.mjs --days 1 --append",
-    "build:config": "iso-harness build --source iso --out .",
-    "prepack": "iso-harness build --source iso --out .",
+    "build:config": "iso build .",
+    "prepack": "iso build .",
     "release:check-source": "node ./scripts/release/check-source.mjs",
     "postinstall": "node bin/sync.mjs"
   },
@@ -74,6 +74,7 @@
     "playwright": "^1.58.1"
   },
   "devDependencies": {
+    "@razroo/iso": "^0.1.1",
     "@razroo/iso-harness": "^0.1.3"
   }
 }
