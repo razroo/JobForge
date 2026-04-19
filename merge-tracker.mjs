@@ -60,6 +60,29 @@ Run from the repository root.`);
 const CANONICAL_STATES = loadCanonicalStates(PROJECT_DIR) || DEFAULT_STATES;
 const STATUS_DETECT_RE = buildStatusDetectionRegex(CANONICAL_STATES);
 
+// Lifecycle precedence — higher value means the status represents a later
+// stage of the application and should override an earlier stage on merge,
+// independent of score. Evaluated (pure eval, no action) is the baseline;
+// any action state outranks it. This fixes a historical bug where a higher-
+// score Evaluated row would silently block an Applied/Failed/SKIP outcome
+// from propagating because the merge considered score alone.
+const STATUS_PRECEDENCE = {
+  'Evaluated': 0,
+  'SKIP': 1,
+  'Discarded': 1,
+  'Contacted': 2,
+  'Failed': 2,
+  'Applied': 3,
+  'Responded': 4,
+  'Rejected': 4,
+  'Interview': 5,
+  'Offer': 6,
+};
+
+function statusRank(s) {
+  return STATUS_PRECEDENCE[s] ?? 0;
+}
+
 function validateStatus(status) {
   const clean = status.replace(/\*\*/g, '').replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
   const lower = clean.toLowerCase();
@@ -274,25 +297,49 @@ for (const file of tsvFiles) {
   if (duplicate) {
     const newScore = parseScore(addition.score);
     const oldScore = parseScore(duplicate.score);
+    const newRank = statusRank(addition.status);
+    const oldRank = statusRank(duplicate.status);
 
-    if (newScore > oldScore) {
-      console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
+    // Update if EITHER the lifecycle status advances (e.g. Evaluated → Applied)
+    // OR the score improves. Never regress the status (Applied → Evaluated is
+    // ignored). Same-rank same-score updates are skipped as no-op.
+    const statusAdvances = newRank > oldRank;
+    const statusRegresses = newRank < oldRank;
+    const scoreImproves = newScore > oldScore;
+
+    if (statusAdvances || (!statusRegresses && scoreImproves)) {
+      const newStatus = statusAdvances ? addition.status : duplicate.status;
+      const newPdf = statusAdvances ? addition.pdf : duplicate.pdf;
+      const reason = statusAdvances
+        ? `${duplicate.status}→${newStatus}`
+        : `${oldScore}→${newScore}`;
+      console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${reason})`);
 
       if (layout === 'day') {
-        // Update in existing entries list for later write
         duplicate.date = addition.date;
         duplicate.company = addition.company;
         duplicate.role = addition.role;
-        duplicate.score = addition.score;
+        duplicate.score = scoreImproves ? addition.score : duplicate.score;
+        duplicate.status = newStatus;
+        duplicate.pdf = newPdf;
         duplicate.report = addition.report;
-        duplicate.notes = `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`;
+        duplicate.notes = statusAdvances
+          ? addition.notes
+          : `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`;
       } else {
         const lineIdx = appLines.indexOf(duplicate.raw);
+        const outScore = scoreImproves ? addition.score : duplicate.score;
+        const noteText = statusAdvances
+          ? addition.notes
+          : `Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes}`;
         if (lineIdx >= 0) {
-          appLines[lineIdx] = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
+          appLines[lineIdx] = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${outScore} | ${newStatus} | ${newPdf} | ${addition.report} | ${noteText} |`;
         }
       }
       updated++;
+    } else if (statusRegresses) {
+      console.log(`⏭️  Skip: ${addition.company} — ${addition.role} (existing #${duplicate.num} status ${duplicate.status} outranks new ${addition.status})`);
+      skipped++;
     } else {
       console.log(`⏭️  Skip: ${addition.company} — ${addition.role} (existing #${duplicate.num} ${oldScore} >= new ${newScore})`);
       skipped++;

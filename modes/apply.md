@@ -260,6 +260,22 @@ If you've uploaded a file with a dedicated `geometra_run_actions` call (e.g., th
 
 Specific portals — Workday "parse my resume", iCIMS multi-step, SAP SuccessFactors — reveal additional fields ONLY after a file upload. In that case, use exactly two `run_actions` calls: (1) upload + wait_for, (2) fill+submit. After the first call, call `geometra_form_schema` **once** to discover the newly-revealed labels, then run the second call using labels. Never more than two phases.
 
+### Resume-upload silent-fail → chooser-strategy fallback (Greenhouse)
+
+Some Greenhouse tenants (Grafana Labs confirmed, 2026-04-19) render the resume upload as a file input where the default `upload_files` action readback succeeds but the field stays empty — Submit returns "Resume/CV is required." only after submit is clicked.
+
+**Fix:** if the resume field shows empty after an `upload_files` action (either by explicit readback or by a "Resume/CV is required" error post-submit), re-upload using `strategy: chooser` with x,y coordinates pulled from the upload button's `visibleBounds` center. Example:
+
+```
+{ type: "upload_files",
+  fieldLabel: "Resume/CV",
+  paths: ["/abs/path/cv.pdf"],
+  strategy: "chooser",
+  x: 314, y: 474 }
+```
+
+The `chooser` strategy triggers the native file picker via click-at-coordinates, which bypasses the React-controlled input that silently drops programmatic assignments on some Greenhouse tenants. One retry is enough; if it still fails, mark Failed.
+
 ## Step 6 — Resolve OTP verification (if prompted)
 
 Check for an OTP gate after the candidate (or Geometra) submits — the major portals (Greenhouse, Workday, Lever, Ashby) gate submission behind an email verification code. When an OTP step appears, do this.
@@ -282,6 +298,7 @@ Check for an OTP gate after the candidate (or Geometra) submits — the major po
 | `smartrecruiters` | `from:smartrecruiters newer_than:10m` |
 | `wwr` / `remoteok` | Follow the apply redirect to the underlying ATS, re-detect the host, then use that row's query. Aggregators do not send OTP emails themselves. |
 | `builtin`    | `from:builtin newer_than:10m` |
+| Toast (via Greenhouse + ClinchTalent) | `from:toast.mail.clinchtalent.com newer_than:15m` OR `subject:"verify your login at Toast" newer_than:15m`. Default `from:greenhouse` returns null — Toast routes OTP through ClinchTalent. |
 | `custom` / `unknown` / missing | `newer_than:10m subject:(verify OR code OR confirm)` |
 
 **Fallback when `ats` is missing** (legacy pipeline entries with no `| ats=` suffix, or scan-output without an `ats` column): infer from the URL host — `*.greenhouse.io` → `greenhouse`; `jobs.ashbyhq.com` → `ashby`; `jobs.lever.co` → `lever`; `*.myworkdayjobs.com` → `workday`; `apply.workable.com` / `jobs.workable.com` → `workable`; `api.smartrecruiters.com` / `jobs.smartrecruiters.com` → `smartrecruiters`; `weworkremotely.com` → `wwr`; `remoteok.com` → `remoteok`; `builtin.com` → `builtin`; otherwise use the generic `verify OR code OR confirm` subject query.
