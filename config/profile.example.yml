@@ -86,3 +86,23 @@ location_constraints:
     - US
   requires_visa_sponsorship: false     # true → roles in non-authorized countries are blocked unless
                                        # the JD explicitly mentions visa sponsorship
+
+# Optional outbound proxy for the Chromium that Geometra MCP spawns.
+# Uncomment and fill in to route ALL browser traffic through a residential /
+# mobile / SOCKS proxy you already pay for. Bypasses the datacenter-IP
+# fingerprinting that drives ~80-90% of Ashby / Lever / Cloudflare-fronted
+# "flagged as possible spam" submit failures in headless mode.
+#
+# BYO — JobForge does NOT bundle or resell proxy bandwidth. Pick a residential
+# or mobile provider (Bright Data, Oxylabs, SOAX, Smartproxy, etc.), or a
+# mobile hotspot, or your own SOCKS relay. Required: Geometra MCP >= 1.59.0.
+#
+# When present, the apply / scan / auto-pipeline modes thread this into every
+# `geometra_connect` call as `proxy: {...}`. Pool is partitioned by proxy
+# identity so direct and proxied sessions never share a Chromium.
+#
+# proxy:
+#   server: "http://residential.example.com:8080"   # http://, https://, or socks5://
+#   username: "your-proxy-username"                  # optional; omit if no auth
+#   password: "your-proxy-password"                  # optional; omit if no auth
+#   bypass: "*.internal,localhost"                   # optional comma-separated host patterns

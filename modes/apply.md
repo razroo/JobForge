@@ -39,9 +39,12 @@ Live application assistant. Reads the active application form in Chrome (via Geo
 - [D6] Use `fieldLabel` over `fieldId` everywhere it works.
   why: labels are stable across DOM refreshes; IDs are regenerated
 
+- [D7] If the orchestrator's task prompt includes a `proxy` object (sourced from `config/profile.yml`), pass it verbatim into every `geometra_connect` call — including Call 3 of the recovery sequence. If absent, run without one; never invent a proxy URL.
+  why: class-B Ashby / Cloudflare-fronted portals need a residential outbound IP; the fix is wired in Geometra MCP v1.59.0 but the orchestrator owns the config pipe. See "BYO Residential Proxy" in iso/instructions.md.
+
 ## Procedure
 
-1. `geometra_connect` + `geometra_page_model`; avoid re-fetching via WebFetch [D5].
+1. `geometra_connect` + `geometra_page_model`; thread `proxy` if present [D7]; no WebFetch [D5].
 2. If Geometra is unavailable, ask for screenshot or pasted text [D2].
 3. Extract company + role; Grep `reports/` for a matching evaluation.
 4. Load full report + Section G if present.
@@ -317,7 +320,8 @@ Call 3:  geometra_connect({
            pageUrl: "<the same URL as before>",
            isolated: true,
            headless: true,
-           slowMo: 350
+           slowMo: 350,
+           proxy: <pass through from task prompt if present; omit otherwise>
          })
 Call 4:  geometra_run_actions({
            sessionId: "<new sessionId from Call 3>",

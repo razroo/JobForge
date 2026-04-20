@@ -414,6 +414,8 @@ These blocks come from two distinct root causes and require different responses:
 
 **Rule — do NOT loop retrying a class B block.** One retry with `imeFriendly: true` is the correct test for class A. If the same spam message fires after a clean `imeFriendly` refill, stop, mark Failed, move on. Repeated retries waste subagent time and do not change the outcome.
 
+**Class B fix — BYO residential proxy** (added 2026-04-20 via Geometra MCP v1.59.0). When the candidate has configured `proxy:` in `config/profile.yml`, every `geometra_connect` call threads that proxy through to Chromium, which flips the outbound IP from datacenter to residential/mobile and collapses most class-B failures. See the "BYO Residential Proxy" reference section below. Without a configured proxy, class B stays Failed.
+
 **Known-block Ashby tenants (2026-04-19 empirical observations).** These tenants fired class B on every attempted submit from a headless datacenter-IP proxy. Orchestrators planning apply dispatches should assume these tenants will Fail in headless — prioritize other portals, or skip same-tenant siblings after a confirmed class B to avoid burning subagent slots:
 
 - Vellum, Linear, Vanta, River Financial, Higharc, Trace Labs, Solace Health, Unstructured, ClickUp, Zapier, Deepgram, Ramp, WorkOS, Ashby (self-tenant), Perplexity, **Goody**, **Starbridge**, **Graphite**, **Prompt Health**, **Vantage**
@@ -505,6 +507,8 @@ geometra_connect({ pageUrl: "https://...", isolated: true, headless: true, slowM
 
 **Wrong:** running `geometra_connect` without `isolated: true` when submitting multiple forms concurrently. The forms may share state and produce incorrect submissions.
 
+**With a configured proxy,** add `proxy: { server, username?, password?, bypass? }` to the same call — see "BYO Residential Proxy" below. The reusable-proxy pool is partitioned by proxy identity, so mixing direct and proxied sessions across parallel rounds is safe.
+
 ### Session Reuse — When Subagents Cannot Reach Existing Sessions
 
 Subagents launched via the `task` tool start with a fresh context and cannot automatically attach to Chromium sessions spawned by a previous orchestrator session. If you dispatch a subagent to fill a form in session `s16`, but `s16` was created by a previous opencode session, the subagent's MCP calls will silently fail (returning empty results) because the subagent's MCP server has no knowledge of `s16`.
@@ -548,6 +552,17 @@ Step 2:  geometra_disconnect({ closeBrowser: true })
 Step 3:  geometra_connect({ pageUrl: "<the URL the orchestrator gave you>", isolated: true, headless: true, slowMo: 350 })
 ```
 
+**If the orchestrator passed a `proxy` object in the task prompt** (sourced from `config/profile.yml`), add it to Step 3:
+
+```
+Step 3:  geometra_connect({
+           pageUrl: "<URL>", isolated: true, headless: true, slowMo: 350,
+           proxy: { server: "...", username: "...", password: "...", bypass: "..." }
+         })
+```
+
+Pass the proxy object through unchanged. Do NOT paraphrase or drop fields — `username`/`password`/`bypass` are optional, so only include what the orchestrator gave you. See the "BYO Residential Proxy" reference section for the why.
+
 **DO NOT** skip Step 1 or Step 2. **DO NOT** think about whether it's needed. **DO NOT** look at `geometra_list_sessions` output and reason about it — just always call `geometra_disconnect({ closeBrowser: true })` next. The disconnect is a no-op if the pool is empty, and a poison-cure if it isn't.
 
 **Single exception:** if the orchestrator's task prompt says literally "attach to sessionId X" or "use existing session X", skip Steps 1-3 and call `geometra_page_model({ sessionId: "X" })` directly.
@@ -569,7 +584,64 @@ When the orchestrator dispatches an `apply` (form-fill + submit), pick the subag
 
 ---
 
-## Stack and Conventions
+## BYO Residential Proxy — opt-in outbound-IP override
+
+**Problem:** on 2026-04-19 cycle 4, 5/5 untested Ashby tenants and 100% of Dropbox-class Cloudflare-fronted portals fingerprint-blocked headless Chromium from datacenter IPs. `imeFriendly: true` fixes class A (React validation lag) but has zero effect on class B (environment fingerprint). There is no in-session software-only fix for class B: the server decided the session is a bot before the form response was rendered.
+
+**Fix:** route the spawned Chromium through a residential or mobile proxy the candidate already pays for. Geometra MCP v1.59.0 added a `proxy: { server, username?, password?, bypass? }` parameter on `geometra_connect` and `geometra_prepare_browser` that forwards straight to Playwright's `chromium.launch({ proxy })`. The outbound IP becomes residential/mobile, and the fingerprint check that fired class B no longer trips.
+
+**Opt-in, BYO.** JobForge does NOT bundle or resell proxy bandwidth — the candidate brings their own provider (Bright Data, Oxylabs, SOAX, Smartproxy, mobile hotspot, self-hosted SOCKS). Without a configured proxy, JobForge behavior is unchanged from v2.11.0 and earlier.
+
+### Where the proxy config lives
+
+`config/profile.yml` → top-level `proxy:` block:
+
+```yaml
+proxy:
+  server: "http://residential.example.com:8080"   # http://, https://, or socks5://
+  username: "your-proxy-username"                  # optional
+  password: "your-proxy-password"                  # optional
+  bypass: "*.internal,localhost"                   # optional
+```
+
+See `config/profile.example.yml` for the commented-out template.
+
+### How the orchestrator threads it through
+
+**Orchestrator responsibilities:**
+
+1. On session start, read `config/profile.yml` once. If a `proxy:` block is present, capture it as the `PROXY_CONFIG` for the session.
+2. When dispatching any subagent whose work involves a `geometra_connect` call, include `PROXY_CONFIG` verbatim in the task prompt. Example dispatch prompt line: "Pass `proxy: { server: ..., username: ..., password: ..., bypass: ... }` to every `geometra_connect` call you make."
+3. When the orchestrator itself opens a Chromium session (single-application interactive flow), include the same `proxy` object in its own `geometra_connect` call.
+4. If `proxy:` is absent from `profile.yml`, skip the param entirely. Do NOT invent a proxy URL or leave a stale placeholder.
+
+**Subagent responsibilities:**
+
+1. If the task prompt includes a `proxy` object, pass it through to `geometra_connect` and any `geometra_prepare_browser` calls unchanged.
+2. If the task prompt does NOT include a proxy object, run without one.
+3. Never second-guess the proxy field — if the orchestrator sourced it from `profile.yml`, it's authoritative.
+
+### When proxy use is load-bearing
+
+Apply these rules when deciding whether the proxy is worth waiting for:
+
+- **Required** for known-block Ashby tenants (see the class-B list in the Ashby section above), for `happydance.website` / Cloudflare-fronted ATSes, and for any Lever tenant that previously failed in the class-B pattern.
+- **Recommended** for any Ashby tenant NOT on the class-A-compatible list (base rate prior: ~80-90% block headless).
+- **Optional** for Greenhouse, Workday, Lever-clean tenants — these accept datacenter IPs today; using the proxy adds ~100ms per frame but no material downside.
+- **Not useful** for Typeform (Geometra-unsupported), Avature native-select lag (not a fingerprint issue), JazzHR+reCAPTCHA (reCAPTCHA scores unrelated to IP), Breezy (tenant-configured per-IP throttle — proxy may help or may hit a fresh throttle).
+
+### Pool partitioning — why mixed runs are safe
+
+The Geometra MCP partitions its reusable-proxy pool by `(server, username, bypass)` — see `@geometra/mcp@1.59.0` release notes. A direct session and a proxied session NEVER share a Chromium instance, and two sessions with different proxy configs don't pool either. Practical consequence: flipping `proxy:` on or off in `profile.yml` mid-session is safe — the next `geometra_connect` just opens a fresh Chromium in its own pool partition.
+
+### Troubleshooting
+
+| Symptom | Diagnosis |
+|---|---|
+| `Error: Failed to connect to proxy` immediately after `geometra_connect` | Proxy URL is wrong / unreachable. Verify the `server:` field hits the right host:port. |
+| `407 Proxy Authentication Required` | `username` or `password` is wrong or missing. Many residential providers require both. |
+| Class-B submit failure persists even with proxy set | (a) proxy is a datacenter proxy, not residential; (b) same tenant IP-banned your specific proxy's IP pool; (c) tenant uses TLS fingerprint / canvas fingerprint, not IP — switch to a fresh Chromium (isolated: true) and retry once, else mark Failed. |
+| Every `geometra_connect` is 3-5s slower than before | Expected — residential proxies add latency. Trade-off for higher submit-success rate. Do NOT revert unless the acceptance-rate lift is < 5%. |
 
 - Node.js (mjs modules), Geometra MCP (PDF + scraping + form filling), Gmail MCP (email), YAML (config), HTML/CSS (template), Markdown (data)
 
