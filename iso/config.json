@@ -1,7 +1,23 @@
 {
   "targets": {
     "opencode": {
-      "instructions": ["templates/states.yml"]
+      "plugin": ["@razroo/opencode-model-fallback"],
+      "instructions": ["templates/states.yml"],
+      "small_model": "openrouter/google/gemma-4-26b-a4b-it:free",
+      "provider": {
+        "openrouter": {
+          "models": {
+            "qwen/qwen3-coder:free": {},
+            "minimax/minimax-m2.5:free": {},
+            "qwen/qwen3-next-80b-a3b-instruct:free": {},
+            "google/gemma-4-26b-a4b-it:free": {},
+            "google/gemma-4-31b-it:free": {},
+            "openai/gpt-oss-120b:free": {},
+            "openai/gpt-oss-20b:free": {},
+            "z-ai/glm-4.5-air:free": {}
+          }
+        }
+      }
     }
   }
 }

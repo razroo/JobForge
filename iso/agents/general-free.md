@@ -10,6 +10,10 @@ targets:
     mode: subagent
     temperature: 0.1
     reasoningEffort: minimal
+    fallback_models:
+      - openrouter/qwen/qwen3-coder:free
+      - openrouter/google/gemma-4-26b-a4b-it:free
+      - openrouter/openai/gpt-oss-20b:free
     tools:
       geometra_connect: true
       geometra_page_model: true

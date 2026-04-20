@@ -135,6 +135,11 @@ write('package.json', JSON.stringify(consumerPkg, null, 2) + '\n');
 
 const opencodeCfg = {
   $schema: 'https://opencode.ai/config.json',
+  // Keep the top-level orchestrator on a free model too. Subagents pin
+  // their own models in .opencode/agents/*.md; this covers the main chat
+  // session and any commands that don't hop to a subagent immediately.
+  model: 'openrouter/qwen/qwen3-coder:free',
+  small_model: 'openrouter/google/gemma-4-26b-a4b-it:free',
   // Model-fallback plugin: on rate-limit / 5xx / known provider errors,
   // rotates the agent's model to the next entry in its fallback_models
   // chain (see `agent` below) and replays the request. Without this, a
@@ -168,6 +173,22 @@ const opencodeCfg = {
       // the HTTP server is unused and its port (default 3000) only
       // causes EADDRINUSE conflicts with other local processes.
       environment: { DISABLE_HTTP: 'true' },
+    },
+  },
+  // Register the exact OpenRouter free models the harness uses so they're
+  // selectable even if they are not in OpenCode's built-in preloaded set.
+  provider: {
+    openrouter: {
+      models: {
+        'qwen/qwen3-coder:free': {},
+        'minimax/minimax-m2.5:free': {},
+        'qwen/qwen3-next-80b-a3b-instruct:free': {},
+        'google/gemma-4-26b-a4b-it:free': {},
+        'google/gemma-4-31b-it:free': {},
+        'openai/gpt-oss-120b:free': {},
+        'openai/gpt-oss-20b:free': {},
+        'z-ai/glm-4.5-air:free': {},
+      },
     },
   },
   // Restrict the primary orchestrator to dispatching only the three harness

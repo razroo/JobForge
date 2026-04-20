@@ -7,8 +7,8 @@ JobForge routes each piece of work to the cheapest model that can do it well, in
 A two-day trace early in development showed `$48` in spend, with **84% coming from GLM 5.1** despite the majority of the work being procedural (form fills, tracker updates, OTP retrieval). The root cause:
 
 - **GLM 5.1's provider doesn't discount cache reads.** On Anthropic, a 10K-token cached prefix costs ~$0.03. On GLM 5.1 it bills near-full input rate (~$0.35). Every session that re-loads the prefix pays full price.
-- **Procedural work is the high-volume work.** 1000+ messages per day go to form filling, TSV merges, scan dedup. Running that on GLM 5.1 is ~10× more expensive than running it on a free-tier model that can handle the task just fine.
-- **Free-tier opencode models are genuinely free and genuinely capable.** `opencode/big-pickle` processed 1000+ messages at $0 over the same window with acceptable quality on procedural tasks.
+- **Procedural work is the high-volume work.** 1000+ messages per day go to form filling, TSV merges, scan dedup. Running that on a paid model is unnecessary when current free OpenRouter models can handle the task.
+- **Current OpenRouter free models are strong enough to cover the whole OpenCode path.** JobForge now defaults every OpenCode role to a free model, including the quality-sensitive writer tier.
 
 Conclusion: route procedural work to free tier, reserve paid models for tasks that actually need the quality.
 
@@ -18,9 +18,9 @@ Defined in `.opencode/agents/*.md` (shipped in the harness, symlinked into consu
 
 | Agent | Model | Reasoning | Use for |
 |-------|-------|-----------|---------|
-| `@general-free` | `opencode/big-pickle` (free) | `minimal` | Geometra form fills, tracker TSV merges, scan dedup, OTP retrieval via Gmail, scripted pipeline steps |
-| `@general-paid` | `opencode/glm-5.1` | `medium` | Offer evaluation narratives (Blocks A-F), cover letters, "Why X?" answers, STAR+R interview stories, LinkedIn outreach prose |
-| `@glm-minimal` | `opencode/minimax-m2.5-free` (free) | `none` | Narrow one-shot transforms: "extract these 8 fields from this JD text → JSON", "classify this archetype" |
+| `@general-free` | `openrouter/minimax/minimax-m2.5:free` | `minimal` | Geometra form fills, tracker TSV merges, scan dedup, OTP retrieval via Gmail, scripted pipeline steps |
+| `@general-paid` | `openrouter/qwen/qwen3-next-80b-a3b-instruct:free` | `medium` | Offer evaluation narratives (Blocks A-F), cover letters, "Why X?" answers, STAR+R interview stories, LinkedIn outreach prose |
+| `@glm-minimal` | `openrouter/google/gemma-4-26b-a4b-it:free` | `none` | Narrow one-shot transforms: "extract these 8 fields from this JD text → JSON", "classify this archetype" |
 
 The full task-to-agent mapping lives in [AGENTS.md → Subagent Routing](../AGENTS.md#subagent-routing--which-agent-for-which-task). The orchestrator (your primary session) is expected to delegate before taking any multi-step action — see the **Pre-flight delegation** rule in AGENTS.md.
 
@@ -66,7 +66,7 @@ All three layers are designed to be edited — this is your search, your cost bu
 
 ### Swap the paid model
 
-The default `@general-paid` is `opencode/glm-5.1`. To use Claude instead, edit `.opencode/agents/general-paid.md`:
+The default `@general-paid` is `openrouter/qwen/qwen3-next-80b-a3b-instruct:free`. To use Claude instead, edit `.opencode/agents/general-paid.md`:
 
 ```yaml
 ---
@@ -79,7 +79,7 @@ The `.opencode/agents/general-paid.md` file is a symlink into `node_modules/job-
 
 ### Swap the free tier
 
-Same idea — edit `.opencode/agents/general-free.md`'s `model:` field. `opencode/minimax-m2.5-free` is another zero-cost option the data shows handles ~900 messages per day cleanly. If you run into quality issues on forms, bump this agent's model to a small paid tier (e.g., Haiku) rather than routing everything through paid.
+Same idea — edit `.opencode/agents/general-free.md`'s `model:` field. If you run into quality issues on forms, swap to a different free OpenRouter model first before considering a paid tier.
 
 ### Add a custom agent
 
@@ -122,8 +122,8 @@ npx job-forge tokens --session <session-id>
 ```
 
 Healthy pattern after this architecture lands:
-- **`opencode/big-pickle`** (or your free-tier choice) handles the message majority at $0
-- **`opencode/glm-5.1`** (or your paid choice) costs per session stay under $1 for most evaluations
+- **Free OpenRouter defaults** now cover procedural, quality-sensitive, and extractor work on OpenCode
+- If you opt back into a paid model, do it deliberately and only for the role that needs it
 - Session titles prefixed `@general-free`, `@general-paid`, `@glm-minimal` appear in the list — confirms delegation actually happened
 - `cache_read` >> `cache_creation` on parallel subagent runs within a 5-min window
 
@@ -139,13 +139,13 @@ Default chains ship upstream in each agent's YAML frontmatter (`node_modules/job
 
 | Agent | Primary | Fallback chain (in order) |
 |-------|---------|---------------------------|
-| `@general-free` | `opencode/big-pickle` | `opencode/minimax-m2.5-free` → `opencode/nemotron-3-super-free` → `opencode-go/minimax-m2.7` → `opencode/glm-5.1` (paid escape hatch) |
-| `@general-paid` | `opencode/glm-5.1` | `opencode/claude-haiku-4-5` |
-| `@glm-minimal` | `opencode/minimax-m2.5-free` | `opencode/big-pickle` → `opencode/nemotron-3-super-free` |
+| `@general-free` | `openrouter/minimax/minimax-m2.5:free` | `openrouter/qwen/qwen3-coder:free` → `openrouter/google/gemma-4-26b-a4b-it:free` → `openrouter/openai/gpt-oss-20b:free` |
+| `@general-paid` | `openrouter/qwen/qwen3-next-80b-a3b-instruct:free` | `openrouter/qwen/qwen3-coder:free` → `openrouter/openai/gpt-oss-120b:free` → `openrouter/z-ai/glm-4.5-air:free` |
+| `@glm-minimal` | `openrouter/google/gemma-4-26b-a4b-it:free` | `openrouter/minimax/minimax-m2.5:free` → `openrouter/openai/gpt-oss-20b:free` → `openrouter/google/gemma-4-31b-it:free` |
 
-Free-tier agents exhaust free models first, then try minimax 2.7 as a cheap buffer before escalating to glm-5.1. Paid agents fall back to Haiku (cheaper unstick escape hatch). **Note:** all model IDs use the `opencode/` or `opencode-go/` prefix — the `anthropic/` prefix does not exist in opencode's model registry and will throw `ProviderModelNotFoundError`.
+These chains are deliberately free-only so the default OpenCode path never needs to pay. **Note:** OpenCode model IDs must use the provider prefix it expects (`openrouter/...`, `opencode/...`, etc.). The raw OpenRouter model slug by itself is not enough.
 
-Consumers **do not need to configure anything** to get these defaults: the chains arrive via the symlinked agent MD files, and `@razroo/opencode-model-fallback` (≥0.3.1) reads them from the `options.fallback_models` field that opencode relocates unknown frontmatter keys into. The consumer's `opencode.json` only needs `"plugin": ["@razroo/opencode-model-fallback"]` — which the scaffolder sets automatically.
+Consumers **do not need to configure anything** to get these defaults: the subagent chains arrive via the symlinked agent MD files, and the harness also ships `.opencode/opencode-model-fallback.json` for the main orchestrator / any agent without its own list. `@razroo/opencode-model-fallback` (≥0.3.1) reads per-agent chains from the frontmatter-derived `fallback_models` field and falls through to the global file when no per-agent list exists. The consumer's `opencode.json` only needs `"plugin": ["@razroo/opencode-model-fallback"]` — which the scaffolder sets automatically.
 
 **When fallback fires:** the plugin pattern-matches rate-limit / 5xx / quota / "overloaded" / "insufficient credits" errors. Failed models enter a 60-second cooldown before they're retried. Every rotation logs to `~/.config/opencode/opencode-model-fallback.log` with the trigger error, original model, and target model — grep for `"Auto-retrying with fallback model"` to confirm it fired.
 
@@ -172,7 +172,7 @@ Plugin-level config at `.opencode/opencode-model-fallback.json` — applies to a
   "cooldown_seconds": 60,
   "timeout_seconds": 30,
   "notify_on_fallback": true,
-  "fallback_models": ["opencode/minimax-m2.5-free", "opencode/glm-5.1"]
+  "fallback_models": ["openrouter/minimax/minimax-m2.5:free", "openrouter/qwen/qwen3-coder:free"]
 }
 ```
 

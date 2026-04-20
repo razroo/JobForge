@@ -10,6 +10,10 @@ targets:
     mode: subagent
     temperature: 0
     reasoningEffort: none
+    fallback_models:
+      - openrouter/minimax/minimax-m2.5:free
+      - openrouter/openai/gpt-oss-20b:free
+      - openrouter/google/gemma-4-31b-it:free
     tools:
       geometra_*: false
       gmail_*: false

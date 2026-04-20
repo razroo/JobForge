@@ -1,15 +1,17 @@
 # JobForge model policy.
 #
-# Extends @razroo/iso-route's bundled "standard" preset — a curated
-# cost-tiered routing config verified against 2026-04 provider catalogs.
-# Preset content lives in node_modules/@razroo/iso-route/presets/standard.yaml;
-# run `npx iso-route plan models.yaml` to see the resolved policy.
+# Extends @razroo/iso-route's bundled "openrouter-free" preset — a
+# curated zero-cost routing config that keeps Claude Code / Codex on
+# their native providers but routes OpenCode through explicit free
+# OpenRouter model IDs. Preset content lives in
+# node_modules/@razroo/iso-route/presets/openrouter-free.yaml; run
+# `npx iso-route plan models.yaml` to see the resolved policy.
 #
 # JobForge's subagents bind to preset roles via the `role:` field in
 # iso/agents/<slug>.md:
-#   @general-free  → role: fast     (Haiku / opencode/big-pickle / gpt-5.4-mini)
-#   @general-paid  → role: quality  (Opus 4.7 / opencode-go/kimi-k2.5 / gpt-5.4)
-#   @glm-minimal   → role: minimal  (Haiku / opencode/minimax-m2.5-free / gpt-5.4-nano)
+#   @general-free  → role: fast     (Haiku / OpenRouter MiniMax M2.5 free / gpt-5.4-mini)
+#   @general-paid  → role: quality  (Opus 4.7 / OpenRouter Qwen3 Next 80B free / gpt-5.4)
+#   @glm-minimal   → role: minimal  (Haiku / OpenRouter Gemma 4 26B free / gpt-5.4-nano)
 #
 # Override anything by adding fields here. For example, to pin Opus on
 # Claude Code for the @general-paid (quality) role:
@@ -27,4 +29,14 @@
 #           provider: openai
 #           model: gpt-5.4
 
-extends: standard
+extends: openrouter-free
+
+# Only override the preset where we prefer a different OpenRouter pick.
+# The preset's quality-tier OpenCode pick is openai/gpt-oss-120b:free;
+# we prefer Qwen3 Next 80B for job-application writing quality.
+roles:
+  quality:
+    targets:
+      opencode:
+        provider: openrouter
+        model: qwen/qwen3-next-80b-a3b-instruct:free

@@ -68,8 +68,8 @@ JobForge turns opencode into a full job search command center. Instead of manual
 | **Portal Scanner** | 45+ companies pre-configured with fuzzy dedup for reposts |
 | **Batch Processing** | Parallel evaluation with `opencode run` workers, with honest verification flagging |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
-| **Cost-Aware Agent Routing** | Three subagents (`@general-free`, `@general-paid`, `@glm-minimal`) with per-task model tiers; procedural work runs on free-tier models, quality-sensitive work on paid. See [Subagent Routing in AGENTS.md](AGENTS.md) for the task-to-agent mapping. |
-| **Automatic Model Fallback** | When a model rate-limits or 5xx's, [`@razroo/opencode-model-fallback`](https://www.npmjs.com/package/@razroo/opencode-model-fallback) rotates the agent through a configured `fallback_models` chain and replays the request. Ships with sensible defaults: free-tier agents fall back to another free model then to paid as an escape hatch, paid agents fall back to a different paid provider. |
+| **Cost-Aware Agent Routing** | Three subagents (`@general-free`, `@general-paid`, `@glm-minimal`) with per-task model tiers. On OpenCode, all three default to free OpenRouter models so the harness can run there without paid model spend. See [Subagent Routing in AGENTS.md](AGENTS.md) for the task-to-agent mapping. |
+| **Automatic Model Fallback** | When a model rate-limits or 5xx's, [`@razroo/opencode-model-fallback`](https://www.npmjs.com/package/@razroo/opencode-model-fallback) rotates the agent through a configured `fallback_models` chain and replays the request. JobForge's OpenCode defaults stay on free models for both primaries and fallbacks. |
 | **Token Cost Visibility** | `job-forge tokens --days 1` for per-session breakdown; `job-forge session-report --since-minutes 60 --log` to flag sessions over budget and append history to `data/token-usage.tsv`. Auto-logged after every batch run. |
 
 ## Usage
