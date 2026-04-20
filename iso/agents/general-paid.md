@@ -12,13 +12,17 @@ targets:
     temperature: 0.3
     reasoningEffort: medium
     # Primary (qwen/qwen3-next-80b-a3b-instruct:free) resolves from the
-    # openrouter-free preset. Fallback chain prioritizes models with
-    # strong long-form writing judgment over raw size.
+    # openrouter-free preset. First fallbacks intentionally avoid another
+    # immediate hop through the same Venice/Qwen pool when OpenRouter
+    # returns "[Venice] insufficient …" — gpt-oss-120b + nemotron are
+    # usually different backends. Remaining picks stay free-only.
     fallback_models:
-      - openrouter/nvidia/nemotron-3-super-120b-a12b:free
       - openrouter/openai/gpt-oss-120b:free
+      - openrouter/nvidia/nemotron-3-super-120b-a12b:free
       - openrouter/z-ai/glm-4.5-air:free
       - openrouter/qwen/qwen3-coder:free
+      - openrouter/google/gemma-4-31b-it:free
+      - openrouter/meta-llama/llama-3.3-70b-instruct:free
     tools:
       geometra_*: false
       gmail_*: false

@@ -10,10 +10,15 @@
       "openrouter/qwen/qwen3-next-80b-a3b-instruct:free"
     ],
     "retryable_error_patterns": [
-      "(?i)\\bvenice\\b.*(?:insufficient|balance|credits?|diem|usd)",
-      "(?i)insufficient\\s+(?:usd|diem|credits?|funds?|balance)",
-      "(?i)credit.*balance.*too.*low",
-      "(?i)(?:temporarily\\s+)?unavailable|overloaded|try\\s+again"
+      "\\bvenice\\b",
+      "insufficient\\s+usd",
+      "insufficient\\s+.*\\s+diem",
+      "diem\\s+balance",
+      "add\\s+credits",
+      "chutes",
+      "insufficient\\s+(?:credits?|funds?|balance)",
+      "credit.*balance.*too.*low",
+      "(?:temporarily\\s+)?unavailable|overloaded|try\\s+again"
     ]
   },
   "targets": {
@@ -34,7 +39,8 @@
             "nvidia/nemotron-3-nano-30b-a3b:free": {},
             "nvidia/nemotron-nano-9b-v2:free": {},
             "google/gemma-4-26b-a4b-it:free": {},
-            "google/gemma-4-31b-it:free": {}
+            "google/gemma-4-31b-it:free": {},
+            "meta-llama/llama-3.3-70b-instruct:free": {}
           }
         }
       }

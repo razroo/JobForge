@@ -140,7 +140,7 @@ Default chains ship upstream in each agent's YAML frontmatter (`node_modules/job
 | Agent | Primary | Fallback chain (in order) |
 |-------|---------|---------------------------|
 | `@general-free` | `openrouter/z-ai/glm-4.5-air:free` | `openrouter/minimax/minimax-m2.5:free` → `openrouter/openai/gpt-oss-20b:free` → `openrouter/nvidia/nemotron-3-nano-30b-a3b:free` → `openrouter/qwen/qwen3-coder:free` |
-| `@general-paid` | `openrouter/qwen/qwen3-next-80b-a3b-instruct:free` | `openrouter/nvidia/nemotron-3-super-120b-a12b:free` → `openrouter/openai/gpt-oss-120b:free` → `openrouter/z-ai/glm-4.5-air:free` → `openrouter/qwen/qwen3-coder:free` |
+| `@general-paid` | `openrouter/qwen/qwen3-next-80b-a3b-instruct:free` | `openrouter/openai/gpt-oss-120b:free` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` → `openrouter/z-ai/glm-4.5-air:free` → `openrouter/qwen/qwen3-coder:free` → `openrouter/google/gemma-4-31b-it:free` → `openrouter/meta-llama/llama-3.3-70b-instruct:free` |
 | `@glm-minimal` | `openrouter/openai/gpt-oss-20b:free` | `openrouter/google/gemma-4-26b-a4b-it:free` → `openrouter/nvidia/nemotron-nano-9b-v2:free` → `openrouter/google/gemma-4-31b-it:free` → `openrouter/z-ai/glm-4.5-air:free` |
 
 These chains are deliberately free-only so the default OpenCode path never needs to pay. **Note:** OpenCode model IDs must use the provider prefix it expects (`openrouter/...`, `opencode/...`, etc.). The raw OpenRouter model slug by itself is not enough.
