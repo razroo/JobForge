@@ -36,6 +36,9 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D3] Upgrade `apply` routing to `@general-paid` when offer score ≥ 4.0/5, when user flags "top-tier / dream job / high-stakes", or when late-stage pipeline (post-screens).
   why: form-fill flows are 6+ steps; free-tier sometimes aborts mid-flow on large Greenhouse/Workday schemas; paid tier has more headroom
 
+- [D3f] **Provider-failure downgrade on `apply` (all harnesses; OpenCode + OpenRouter especially):** If you dispatched `@general-paid` per [D3] and that subagent fails or exhausts retries with provider-side errors — copy mentioning Venice / Diem / Chutes, "insufficient" USD/credits/funds/balance, HTTP 402/429, overload / temporarily unavailable — re-dispatch the **same apply URL** once on `@general-free` before marking FAILED. Do not abandon the role solely because the upgraded tier hit a pool-specific limit.
+  why: `@general-paid` on OpenCode still uses free OpenRouter model ids; Venice-style balance errors are a backend-route issue, not proof that procedural `@general-free` cannot complete the same Greenhouse-style flow after [D5]/[H2] gates pass
+
 - [D4] Auto-submit for offers scoring 3.0+/5 without pausing for confirmation between steps — scan → evaluate → apply is one continuous pipeline. Mark SKIP for <3.0 and move on.
   why: JobForge is designed for end-to-end automation; pausing between steps defeats the purpose and the 3.0 gate already enforces quality
 
@@ -52,7 +55,7 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 3. Apply [D1]: batch/Geometra work → delegate; single/read-only/dev → inline.
 4. Before any `task` batch using Geometra, run cleanup [H3].
 5. Before `apply`, run duplicate check [H2] and location filter [D5].
-6. Route by cost tier [D2]; upgrade to `@general-paid` per [D3] for high-stakes offers.
+6. Route by cost tier [D2]; upgrade to `@general-paid` per [D3] for high-stakes offers; if that apply dispatch hits provider errors, downgrade once per [D3f].
 7. Cap parallelism at 2 per round [H1].
 8. One in-flight dispatch per company [H5].
 9. Orchestrator does not fill forms in multi-job mode [H4].

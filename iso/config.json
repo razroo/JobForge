@@ -1,4 +1,21 @@
 {
+  "opencodeModelFallback": {
+    "cooldown_seconds": 60,
+    "timeout_seconds": 30,
+    "notify_on_fallback": true,
+    "fallback_models": [
+      "openrouter/openai/gpt-oss-120b:free",
+      "openrouter/z-ai/glm-4.5-air:free",
+      "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+      "openrouter/qwen/qwen3-next-80b-a3b-instruct:free"
+    ],
+    "retryable_error_patterns": [
+      "(?i)\\bvenice\\b.*(?:insufficient|balance|credits?|diem|usd)",
+      "(?i)insufficient\\s+(?:usd|diem|credits?|funds?|balance)",
+      "(?i)credit.*balance.*too.*low",
+      "(?i)(?:temporarily\\s+)?unavailable|overloaded|try\\s+again"
+    ]
+  },
   "targets": {
     "opencode": {
       "plugin": ["@razroo/opencode-model-fallback"],

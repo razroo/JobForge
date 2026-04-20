@@ -39,6 +39,7 @@ node_modules/
 /.cursor/iso-route.md
 /.opencode/agents/
 /.opencode/skills/
+/.opencode/opencode-model-fallback.json
 /opencode.json
 
 # OS

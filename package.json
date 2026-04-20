@@ -1,6 +1,6 @@
 {
   "name": "job-forge",
-  "version": "2.14.0",
+  "version": "2.14.1",
   "description": "AI-powered job search pipeline built on opencode",
   "type": "module",
   "bin": {
@@ -88,7 +88,7 @@
   },
   "devDependencies": {
     "@razroo/iso": "^0.2.5",
-    "@razroo/iso-harness": "^0.6.0",
+    "@razroo/iso-harness": "^0.6.1",
     "@razroo/iso-route": "^0.5.0",
     "@razroo/iso-trace": "^0.1.0",
     "@razroo/opencode-model-fallback": "^0.3.1"
