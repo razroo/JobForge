@@ -9,9 +9,9 @@
 #
 # JobForge's subagents bind to preset roles via the `role:` field in
 # iso/agents/<slug>.md:
-#   @general-free  → role: fast     (Haiku / OpenRouter MiniMax M2.5 free / gpt-5.4-mini)
+#   @general-free  → role: fast     (Haiku / OpenRouter GLM 4.5 Air free / gpt-5.4-mini)
 #   @general-paid  → role: quality  (Opus 4.7 / OpenRouter Qwen3 Next 80B free / gpt-5.4)
-#   @glm-minimal   → role: minimal  (Haiku / OpenRouter Gemma 4 26B free / gpt-5.4-nano)
+#   @glm-minimal   → role: minimal  (Haiku / OpenRouter GPT-OSS-20B free / gpt-5.4-nano)
 #
 # Override anything by adding fields here. For example, to pin Opus on
 # Claude Code for the @general-paid (quality) role:
@@ -30,13 +30,3 @@
 #           model: gpt-5.4
 
 extends: openrouter-free
-
-# Only override the preset where we prefer a different OpenRouter pick.
-# The preset's quality-tier OpenCode pick is openai/gpt-oss-120b:free;
-# we prefer Qwen3 Next 80B for job-application writing quality.
-roles:
-  quality:
-    targets:
-      opencode:
-        provider: openrouter
-        model: qwen/qwen3-next-80b-a3b-instruct:free

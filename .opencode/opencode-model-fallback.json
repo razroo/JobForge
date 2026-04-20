@@ -3,9 +3,9 @@
   "timeout_seconds": 30,
   "notify_on_fallback": true,
   "fallback_models": [
-    "openrouter/qwen/qwen3-next-80b-a3b-instruct:free",
     "openrouter/openai/gpt-oss-120b:free",
-    "openrouter/google/gemma-4-26b-a4b-it:free",
-    "openrouter/z-ai/glm-4.5-air:free"
+    "openrouter/z-ai/glm-4.5-air:free",
+    "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+    "openrouter/qwen/qwen3-next-80b-a3b-instruct:free"
   ]
 }

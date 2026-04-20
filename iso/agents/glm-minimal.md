@@ -10,10 +10,14 @@ targets:
     mode: subagent
     temperature: 0
     reasoningEffort: none
+    # Primary (openai/gpt-oss-20b:free) resolves from openrouter-free
+    # preset. Fallback chain sticks to small dense models with reliable
+    # structured-output behavior — no creative generation upstream.
     fallback_models:
-      - openrouter/minimax/minimax-m2.5:free
-      - openrouter/openai/gpt-oss-20b:free
+      - openrouter/google/gemma-4-26b-a4b-it:free
+      - openrouter/nvidia/nemotron-nano-9b-v2:free
       - openrouter/google/gemma-4-31b-it:free
+      - openrouter/z-ai/glm-4.5-air:free
     tools:
       geometra_*: false
       gmail_*: false

@@ -11,10 +11,14 @@ targets:
     mode: subagent
     temperature: 0.3
     reasoningEffort: medium
+    # Primary (qwen/qwen3-next-80b-a3b-instruct:free) resolves from the
+    # openrouter-free preset. Fallback chain prioritizes models with
+    # strong long-form writing judgment over raw size.
     fallback_models:
-      - openrouter/qwen/qwen3-coder:free
+      - openrouter/nvidia/nemotron-3-super-120b-a12b:free
       - openrouter/openai/gpt-oss-120b:free
       - openrouter/z-ai/glm-4.5-air:free
+      - openrouter/qwen/qwen3-coder:free
     tools:
       geometra_*: false
       gmail_*: false

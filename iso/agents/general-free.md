@@ -10,10 +10,14 @@ targets:
     mode: subagent
     temperature: 0.1
     reasoningEffort: minimal
+    # Primary (z-ai/glm-4.5-air:free) resolves from openrouter-free preset.
+    # Fallback chain is ordered by decreasing likelihood of rate-limits,
+    # staying within free models that can tool-call Geometra + Gmail MCPs.
     fallback_models:
-      - openrouter/qwen/qwen3-coder:free
-      - openrouter/google/gemma-4-26b-a4b-it:free
+      - openrouter/minimax/minimax-m2.5:free
       - openrouter/openai/gpt-oss-20b:free
+      - openrouter/nvidia/nemotron-3-nano-30b-a3b:free
+      - openrouter/qwen/qwen3-coder:free
     tools:
       geometra_connect: true
       geometra_page_model: true
