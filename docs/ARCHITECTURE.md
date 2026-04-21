@@ -43,7 +43,7 @@ The consumer's `opencode.json` loads a small set of stable files as always-prese
 
 The skill router (`.opencode/skills/job-forge.md`) loads mode and data files on demand, keeping per-session input tokens low (~20-40K for most modes instead of ~130-170K when everything was force-loaded).
 
-**Cost-tiered subagents** live in `.opencode/agents/` (`general-free`, `general-paid`, `glm-minimal`). On OpenCode, all three now resolve to free OpenRouter models by default, with different quality/latency tiers per task shape. See [MODEL-ROUTING.md](MODEL-ROUTING.md) for the routing architecture, why it exists, and how to customize.
+**Cost-tiered subagents** live in `.opencode/agents/` (`general-free`, `general-paid`, `glm-minimal`). On OpenCode, JobForge now uses a mix of native free models and free OpenRouter routes, with different quality/latency tiers per task shape. See [MODEL-ROUTING.md](MODEL-ROUTING.md) for the routing architecture, why it exists, and how to customize.
 
 **Multi-harness support.** Because `iso/` is the single source of truth, publishing ships config for OpenCode, Cursor, Claude Code, and Codex in one tarball. Consumers run any of `opencode`, `cursor`, `claude`, or `codex` in the project and each picks up the shared MCP config + instructions via the symlinks above.
 

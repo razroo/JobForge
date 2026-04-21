@@ -9,7 +9,7 @@
 #
 # JobForge's subagents bind to preset roles via the `role:` field in
 # iso/agents/<slug>.md:
-#   @general-free  → role: fast     (Haiku / OpenRouter GLM 4.5 Air free / gpt-5.4-mini)
+#   @general-free  → role: fast     (Haiku / OpenCode big-pickle / gpt-5.4-mini)
 #   @general-paid  → role: quality  (Opus 4.7 / OpenRouter Qwen3 Next 80B free / gpt-5.4)
 #   @glm-minimal   → role: minimal  (Haiku / OpenRouter GPT-OSS-20B free / gpt-5.4-nano)
 #
@@ -30,3 +30,10 @@
 #           model: gpt-5.4
 
 extends: openrouter-free
+
+roles:
+  fast:
+    targets:
+      opencode:
+        provider: opencode
+        model: opencode/big-pickle

@@ -10,11 +10,12 @@ targets:
     mode: subagent
     temperature: 0.1
     reasoningEffort: minimal
-    # Primary (z-ai/glm-4.5-air:free) resolves from openrouter-free preset.
-    # Fallback chain is ordered by decreasing likelihood of rate-limits,
-    # staying within free models that can tool-call Geometra + Gmail MCPs.
+    # Primary comes from models.yaml: opencode/big-pickle on OpenCode.
+    # Fallback chain stays free-only and intentionally excludes
+    # openrouter/minimax/minimax-m2.5:free because recent traces showed
+    # repeated read({ path|file_path }) schema drift on that route.
     fallback_models:
-      - openrouter/minimax/minimax-m2.5:free
+      - openrouter/z-ai/glm-4.5-air:free
       - openrouter/openai/gpt-oss-20b:free
       - openrouter/nvidia/nemotron-3-nano-30b-a3b:free
       - openrouter/qwen/qwen3-coder:free

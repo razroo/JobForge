@@ -7,8 +7,8 @@ JobForge routes each piece of work to the cheapest model that can do it well, in
 A two-day trace early in development showed `$48` in spend, with **84% coming from GLM 5.1** despite the majority of the work being procedural (form fills, tracker updates, OTP retrieval). The root cause:
 
 - **GLM 5.1's provider doesn't discount cache reads.** On Anthropic, a 10K-token cached prefix costs ~$0.03. On GLM 5.1 it bills near-full input rate (~$0.35). Every session that re-loads the prefix pays full price.
-- **Procedural work is the high-volume work.** 1000+ messages per day go to form filling, TSV merges, scan dedup. Running that on a paid model is unnecessary when current free OpenRouter models can handle the task.
-- **Current OpenRouter free models are strong enough to cover the whole OpenCode path.** JobForge now defaults every OpenCode role to a free model, including the quality-sensitive writer tier.
+- **Procedural work is the high-volume work.** 1000+ messages per day go to form filling, TSV merges, scan dedup. Running that on a paid model is unnecessary when current free models can handle the task.
+- **OpenCode no longer needs one provider for every role.** JobForge now pins the procedural `@general-free` worker to `opencode/big-pickle`, while the quality-sensitive writer tier stays on a free OpenRouter route.
 
 Conclusion: route procedural work to free tier, reserve paid models for tasks that actually need the quality.
 
@@ -18,7 +18,7 @@ Defined in `.opencode/agents/*.md` (shipped in the harness, symlinked into consu
 
 | Agent | Model | Reasoning | Use for |
 |-------|-------|-----------|---------|
-| `@general-free` | `openrouter/z-ai/glm-4.5-air:free` | `minimal` | Geometra form fills, tracker TSV merges, scan dedup, OTP retrieval via Gmail, scripted pipeline steps |
+| `@general-free` | `opencode/big-pickle` | `minimal` | Geometra form fills, tracker TSV merges, scan dedup, OTP retrieval via Gmail, scripted pipeline steps |
 | `@general-paid` | `openrouter/qwen/qwen3-next-80b-a3b-instruct:free` | `medium` | Offer evaluation narratives (Blocks A-F), cover letters, "Why X?" answers, STAR+R interview stories, LinkedIn outreach prose |
 | `@glm-minimal` | `openrouter/openai/gpt-oss-20b:free` | `none` | Narrow one-shot transforms: "extract these 8 fields from this JD text → JSON", "classify this archetype" |
 
@@ -79,7 +79,10 @@ The `.opencode/agents/general-paid.md` file is a symlink into `node_modules/job-
 
 ### Swap the free tier
 
-Same idea — edit `.opencode/agents/general-free.md`'s `model:` field. If you run into quality issues on forms, swap to a different free OpenRouter model first before considering a paid tier.
+The primary `@general-free` model is set in `models.yaml` via the `fast`
+role's `targets.opencode` override. Change that if you want a different
+default. The `fallback_models` list still lives in
+`.opencode/agents/general-free.md` / `iso/agents/general-free.md`.
 
 ### Add a custom agent
 
@@ -139,7 +142,7 @@ Default chains ship upstream in each agent's YAML frontmatter (`node_modules/job
 
 | Agent | Primary | Fallback chain (in order) |
 |-------|---------|---------------------------|
-| `@general-free` | `openrouter/z-ai/glm-4.5-air:free` | `openrouter/minimax/minimax-m2.5:free` → `openrouter/openai/gpt-oss-20b:free` → `openrouter/nvidia/nemotron-3-nano-30b-a3b:free` → `openrouter/qwen/qwen3-coder:free` |
+| `@general-free` | `opencode/big-pickle` | `openrouter/z-ai/glm-4.5-air:free` → `openrouter/openai/gpt-oss-20b:free` → `openrouter/nvidia/nemotron-3-nano-30b-a3b:free` → `openrouter/qwen/qwen3-coder:free` |
 | `@general-paid` | `openrouter/qwen/qwen3-next-80b-a3b-instruct:free` | `openrouter/openai/gpt-oss-120b:free` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` → `openrouter/z-ai/glm-4.5-air:free` → `openrouter/qwen/qwen3-coder:free` → `openrouter/google/gemma-4-31b-it:free` → `openrouter/meta-llama/llama-3.3-70b-instruct:free` |
 | `@glm-minimal` | `openrouter/openai/gpt-oss-20b:free` | `openrouter/google/gemma-4-26b-a4b-it:free` → `openrouter/nvidia/nemotron-nano-9b-v2:free` → `openrouter/google/gemma-4-31b-it:free` → `openrouter/z-ai/glm-4.5-air:free` |
 
