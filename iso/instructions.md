@@ -299,6 +299,8 @@ Mode routing is specified in the top-level **## Routing** section. Each mode is 
 
 ## Offer Verification -- MANDATORY
 
+**Read local artifacts before the network.** If `reports/` already contains this posting URL (or company+role with a full JD in the body), **Read** that report for verification or evaluation instead of WebFetch/Geometra. If `data/pipeline.md` or `jds/` points at frozen JD text (`local:jds/{file}` or pasted blocks), **Read** that first. Reuse JD text already in the same conversation — do not fetch the same URL twice. (Auto-pipeline Step 0 and the "at most once per session" rule in `modes/auto-pipeline.md` are the detailed contract.)
+
 **When Geometra MCP is available** (interactive sessions), ALWAYS use it to verify offers:
 1. `geometra_connect` to the URL (via proxy)
 2. `geometra_page_model` to read structured page content
@@ -311,6 +313,17 @@ Mode routing is specified in the top-level **## Routing** section. Each mode is 
 4. Do NOT skip the evaluation — proceed but flag the uncertainty so the user can verify manually before applying
 
 The goal is to never waste time on closed offers, but also never silently assume a role is active when verification was incomplete.
+
+### Canonical MCP tools (quick reference)
+
+Pick tools by name directly — reduces unnecessary tool discovery:
+
+| Task | Preferred tools |
+|------|------------------|
+| JD from URL | Greenhouse boards API when the URL matches (see `modes/auto-pipeline.md` Step 0) → else `geometra_connect` + `geometra_page_model` → else WebFetch → WebSearch last |
+| Offer still live? | Same as JD when Geometra is available; else WebFetch per above |
+| One apply subagent (single job) | One `geometra_connect` per job URL; reuse `sessionId` through schema + fill; submit via atomic `geometra_run_actions` per `modes/apply.md` [H1]. Do **not** `geometra_disconnect` between `geometra_form_schema` and submit on the same form unless recovery requires it |
+| Chromium pool between orchestrator dispatch rounds | `geometra_list_sessions` + `geometra_disconnect({ closeBrowser: true })` per Hard limit [H3] — orchestrator-only; not a substitute for finishing the in-subagent form flow |
 
 ---
 

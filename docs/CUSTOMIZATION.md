@@ -90,6 +90,24 @@ JobForge can integrate with external systems via opencode hooks. Example hooks:
 
 Save hooks in `.opencode/settings.json`.
 
+## Application tracker layouts
+
+The default harness uses **day-based** tracker files: `data/applications/YYYY-MM-DD.md` (one markdown table per calendar day).
+
+Some forks use a **single** `data/applications.md` instead. That is fine if you document it in the project root `AGENTS.md` (or equivalent) and keep `npx job-forge merge` / `verify` aligned with whatever `merge-tracker.mjs` and `verify-pipeline.mjs` expect in your fork.
+
+## Transcript observability (iso-trace)
+
+To inspect real agent sessions locally (tool mix, redundant fetches, Geometra churn) without uploading transcripts, use Razroo's [`@razroo/iso-trace`](https://github.com/razroo/iso/tree/main/packages/iso-trace).
+
+This harness also ships npm scripts (from the package root): `npm run trace:list`, `npm run trace:stats`, and `npm run trace:show -- <id>` — they wrap `iso-trace` with sensible defaults when the CLI is on `PATH`.
+
+**Where Claude Code writes JSONL:** `~/.claude/projects/<encoded-cwd>/*.jsonl`.
+
+**CLI (install once per machine):** `npx -y @razroo/iso-trace@latest stats --source "$HOME/.claude/projects/<encoded-dir>/<session>.jsonl"`
+
+**Performance:** `iso-trace list --cwd /path/to/repo` walks all of `~/.claude/projects` before filtering; on large machines prefer `stats --source <one.jsonl>` or the library's `discoverSessions({ roots: ["<one encoded project dir>"] })` (see the iso-trace README).
+
 ## States (templates/states.yml)
 
 The canonical states rarely need changing. Since `templates/` is a symlink into the harness in consumer projects, adding new states means contributing back to `razroo/JobForge` (see [CONTRIBUTING.md](../CONTRIBUTING.md)). If you're working in the harness repo directly (Path B), update:

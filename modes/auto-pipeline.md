@@ -21,6 +21,8 @@ Fetch the JD content once. If the input is a **URL** (not pasted JD text), fetch
 
 **If the input is JD text** (not a URL): use it directly, no fetching needed.
 
+**Local artifacts before Step 0 methods:** Grep `reports/` for the URL or stable company+role slug; if a report already embeds the full JD, Read it and skip network fetch entirely. If the pipeline row or `jds/` references `local:jds/{file}`, Read that file first. This stacks with the rule above: one fetch per URL per session, and **zero** if the JD is already on disk.
+
 ## Step 1 — Run Evaluation A-F
 Execute exactly as in the `offer` mode (read `modes/offer.md` for all blocks A-F).
 
@@ -34,7 +36,7 @@ Execute the full `pdf` pipeline (read `modes/pdf.md`).
 
 Generate draft answers for the application form when the final score is >= 3.5. If the final score is >= 3.5 (per Canonical Scoring Model thresholds in `_shared.md`), generate draft answers for the application form:
 
-1. **Extract form questions**: Use Geometra MCP (`geometra_connect` + `geometra_form_schema`) to discover all form fields. If questions cannot be extracted, use the generic questions.
+1. **Extract form questions**: Use Geometra MCP (`geometra_connect` + `geometra_form_schema`) to discover all form fields. **Reuse the same `sessionId` from Step 0** when the apply URL is the same rendered page; only connect again if the prior session ended or the URL changed. If questions cannot be extracted, use the generic questions.
 2. **Generate answers** following the tone guidelines (see below).
 3. **Save in the report** as a `## G) Draft Application Answers` section.
 

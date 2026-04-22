@@ -36,6 +36,9 @@ Live application assistant. Reads the active application form in Chrome (via Geo
 - [D5] Fetch `geometra_form_schema` at most once per application, right after the initial `geometra_connect`. Operate on labels thereafter.
   why: schema re-fetches return hundreds of nested field IDs and pollute context; labels don't change mid-flow, so the second fetch is just paying for the same payload twice
 
+- [D5b] Reuse the same Geometra `sessionId` for every tool call on that job URL until the atomic submit transaction completes (or recovery sequence finishes). Do not `geometra_disconnect` mid-flow between schema and submit unless [H1] recovery forces it.
+  why: disconnecting between schema and fill invalidates the SPA session and matches real traces where redundant disconnects outnumbered connects; orchestrator pool cleanup [H3]/[H4] is a separate concern between dispatch rounds, not inside one apply subagent
+
 - [D6] Use `fieldLabel` over `fieldId` everywhere it works.
   why: labels are stable across DOM refreshes; IDs are regenerated
 
