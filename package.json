@@ -28,6 +28,7 @@
     "test:agentmd:baseline": "agentmd test iso/instructions.md --fixtures fixtures/instructions.yml --via claude-code --model claude-haiku-4-5 --concurrency 2 --trials 3 --format json --out fixtures/baseline.json",
     "test:agentmd:apply": "agentmd test modes/apply.md --fixtures fixtures/modes/apply.yml --via claude-code --model claude-haiku-4-5 --concurrency 2 --trials 3",
     "lint:agentmd:modes": "agentmd lint modes/apply.md",
+    "smoke:iso": "iso plan . && iso build . --dry-run && node scripts/iso-route-smoke.mjs && node scripts/check-iso-smoke.mjs . && JOBFORGE_ROOT=$PWD iso-eval run fixtures/iso-smoke/eval.yml",
     "build:config": "iso build .",
     "prepack": "iso build .",
     "release:check-source": "node ./scripts/release/check-source.mjs",
@@ -87,7 +88,9 @@
     "playwright": "^1.58.1"
   },
   "devDependencies": {
+    "@razroo/agentmd": "^0.3.0",
     "@razroo/iso": "^0.2.5",
+    "@razroo/iso-eval": "^0.2.0",
     "@razroo/iso-harness": "^0.6.1",
     "@razroo/iso-route": "^0.5.2",
     "@razroo/iso-trace": "^0.3.1",

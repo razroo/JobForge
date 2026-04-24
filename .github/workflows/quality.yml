@@ -19,6 +19,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: ISO source smoke checks
+        run: npm run smoke:iso
+
       - name: Build iso-harness configs
         run: npm run build:config
 

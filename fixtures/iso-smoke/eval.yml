@@ -1,0 +1,15 @@
+suite: jobforge-iso-smoke
+runner: fake
+timeoutMs: 30000
+
+tasks:
+  - id: source-contract
+    prompt: tasks/source-contract.md
+    workspace: workspace/
+    checks:
+      - type: command
+        run: test -f smoke-ok.txt
+        expectExit: 0
+      - type: file_contains
+        path: smoke-ok.txt
+        value: JobForge iso smoke passed

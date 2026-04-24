@@ -43,7 +43,13 @@ Live application assistant. Reads the active application form in Chrome (via Geo
   why: labels are stable across DOM refreshes; IDs are regenerated
 
 - [D7] If the orchestrator's task prompt includes a `proxy` object (sourced from `config/profile.yml`), pass it verbatim into every `geometra_connect` call — including Call 3 of the recovery sequence. If absent, run without one; never invent a proxy URL.
-  why: class-B Ashby / Cloudflare-fronted portals need a residential outbound IP; the fix is wired in Geometra MCP v1.59.0 but the orchestrator owns the config pipe. See "BYO Residential Proxy" in iso/instructions.md.
+  why: class-B Ashby / Cloudflare-fronted portals need a residential outbound IP; the fix is wired in Geometra MCP v1.59.0 but the orchestrator owns the config pipe. See "BYO Residential Proxy" in modes/reference-portals.md.
+
+- [D8] Upgrade application routing to `@general-paid` when the offer score is ≥ 4.0/5, the user flags "top-tier", "dream job", or "high-stakes", or the candidate is late-stage/post-screen.
+  why: form-fill flows are 6+ steps; free-tier sometimes aborts mid-flow on large Greenhouse/Workday schemas; paid tier has more headroom
+
+- [D9] If an upgraded `@general-paid` subagent fails with provider-side errors, re-dispatch the same URL once on `@general-free` before marking FAILED. Provider-side errors include Venice, Diem, Chutes, HTTP 402/429, insufficient credits/funds/balance, overload, and temporarily unavailable.
+  why: OpenCode paid-tier routing can still use free OpenRouter model IDs; backend pool limits are not evidence that a procedural free-tier worker cannot complete the same form after preflight gates pass
 
 ## Procedure
 
@@ -54,14 +60,16 @@ Live application assistant. Reads the active application form in Chrome (via Geo
 5. Compare role on screen vs evaluated role [D3].
 6. If different, pause for the candidate's decision [D3].
 7. Before dispatch, run Geometra cleanup [H4] and location filter [D1].
-8. Extract form questions; classify each Section-G vs new.
-9. Generate answers from Block B + Block F + Section G + JD.
-10. Submit as ONE `run_actions` call [H1] using labels [D6] with `imeFriendly: true` [D4].
-11. On session error, run the 4-step recovery; only one retry [H2].
-12. On OTP prompt, fetch the code from Gmail via `gmail_get_message`.
-13. Submit the OTP with `geometra_fill_otp` and click Submit.
-14. Write outcome as `batch/tracker-additions/*.tsv` [H3].
-15. Cap parallelism at 2 per round [H5]; one in-flight per company.
+8. Route high-stakes applications through `@general-paid` [D8].
+9. Extract form questions; classify each Section-G vs new.
+10. Generate answers from Block B + Block F + Section G + JD.
+11. Submit as ONE `run_actions` call [H1] using labels [D6] with `imeFriendly: true` [D4].
+12. On session error, run the 4-step recovery; only one retry [H2].
+13. On upgraded-provider failure, downgrade once to `@general-free` [D9].
+14. On OTP prompt, fetch the code from Gmail via `gmail_get_message`.
+15. Submit the OTP with `geometra_fill_otp` and click Submit.
+16. Write outcome as `batch/tracker-additions/*.tsv` [H3].
+17. Cap parallelism at 2 per round [H5]; one in-flight per company.
 
 ## Routing
 
