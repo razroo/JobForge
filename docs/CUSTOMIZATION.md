@@ -98,13 +98,23 @@ Some forks use a **single** `data/applications.md` instead. That is fine if you 
 
 ## Transcript observability (iso-trace)
 
-To inspect real agent sessions locally (tool mix, redundant fetches, Geometra churn) without uploading transcripts, use Razroo's [`@razroo/iso-trace`](https://github.com/razroo/iso/tree/main/packages/iso-trace).
+To inspect real agent sessions locally (tool mix, redundant fetches, Geometra churn) without uploading transcripts, use the `job-forge trace:*` commands. JobForge depends on Razroo's [`@razroo/iso-trace`](https://github.com/razroo/iso/tree/main/packages/iso-trace), so consumer projects do not need to install it separately.
 
-This harness also ships npm scripts (from the package root): `npm run trace:list`, `npm run trace:stats`, and `npm run trace:show -- <id>` — they wrap `iso-trace` with sensible defaults when the CLI is on `PATH`.
+Common commands default to OpenCode sessions for the current project and use a 7-day window:
+
+```bash
+npx job-forge trace:list
+npx job-forge trace:stats
+npx job-forge trace:show <session-id-or-prefix>
+```
+
+Scaffolded projects also include npm aliases: `npm run trace:list`, `npm run trace:stats`, and `npm run trace:show -- <id>`.
+
+For raw iso-trace commands, use `npx job-forge trace sources`, `npx job-forge trace where`, or any other `iso-trace` subcommand after `trace`.
 
 **Where Claude Code writes JSONL:** `~/.claude/projects/<encoded-cwd>/*.jsonl`.
 
-**CLI (install once per machine):** `npx -y @razroo/iso-trace@latest stats --source "$HOME/.claude/projects/<encoded-dir>/<session>.jsonl"`
+**Direct CLI fallback:** `npx -y @razroo/iso-trace@latest stats --source "$HOME/.claude/projects/<encoded-dir>/<session>.jsonl"`
 
 **Performance:** `iso-trace list --cwd /path/to/repo` walks all of `~/.claude/projects` before filtering; on large machines prefer `stats --source <one.jsonl>` or the library's `discoverSessions({ roots: ["<one encoded project dir>"] })` (see the iso-trace README).
 

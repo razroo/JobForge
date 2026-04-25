@@ -1,6 +1,6 @@
 {
   "name": "job-forge",
-  "version": "2.14.9",
+  "version": "2.14.10",
   "description": "AI-powered job search pipeline built on opencode",
   "type": "module",
   "bin": {
@@ -18,9 +18,9 @@
     "tokens": "node scripts/token-usage-report.mjs",
     "tokens:today": "node scripts/token-usage-report.mjs --days 1",
     "tokens:log": "node scripts/token-usage-report.mjs --days 1 --append",
-    "trace:list": "iso-trace list --since 7d --cwd .",
-    "trace:stats": "iso-trace stats --since 7d --cwd .",
-    "trace:show": "iso-trace show",
+    "trace:list": "node bin/job-forge.mjs trace:list",
+    "trace:stats": "node bin/job-forge.mjs trace:stats",
+    "trace:show": "node bin/job-forge.mjs trace:show",
     "plan": "iso plan .",
     "lint:agentmd": "agentmd lint iso/instructions.md",
     "lint:modes": "isolint lint modes/",
@@ -85,6 +85,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@razroo/iso-trace": "^0.4.0",
     "playwright": "^1.58.1"
   },
   "devDependencies": {
@@ -93,7 +94,6 @@
     "@razroo/iso-eval": "^0.4.0",
     "@razroo/iso-harness": "^0.6.1",
     "@razroo/iso-route": "^0.5.3",
-    "@razroo/iso-trace": "^0.4.0",
     "@razroo/opencode-model-fallback": "^0.3.1"
   }
 }

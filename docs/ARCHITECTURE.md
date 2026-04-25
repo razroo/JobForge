@@ -203,6 +203,7 @@ Scripts maintain data consistency. In a consumer project they're invoked via the
 | `generate-pdf.mjs` | `npx job-forge pdf` | Renders HTML to PDF via Geometra MCP (`geometra_generate_pdf`) or standalone Playwright/Chromium (`npx job-forge pdf <input.html> <output.pdf>`) |
 | `cv-sync-check.mjs` | `npx job-forge sync-check` | Setup lint: `cv.md` + `config/profile.yml`, hardcoded-metric scan on `modes/_shared.md` and `batch/batch-prompt.md`, optional `article-digest.md` freshness |
 | `scripts/token-usage-report.mjs` | `npx job-forge tokens` | Per-session opencode token/cost report from the SQLite DB |
+| `scripts/trace.mjs` | `npx job-forge trace:list` / `trace:stats` / `trace:show` | Local transcript observability via `@razroo/iso-trace`; common commands default to OpenCode sessions for the consumer project |
 | `tracker-lib.mjs` | _(library)_ | Shared helpers for reading/writing day-based tracker files — imported by merge/dedup/verify/normalize |
 | `bin/sync.mjs` | `npx job-forge sync` | Creates the harness symlinks in a consumer project (also runs as `postinstall`) |
 | `bin/create-job-forge.mjs` | `npx create-job-forge <dir>` | Scaffolds a new personal project |

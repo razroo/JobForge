@@ -28,6 +28,9 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [H7] Load-bearing facts passed to downstream subagents must originate from a file, not from prior subagent prose. Authoritative sources: `data/pipeline.md`, `data/scan-history.tsv`, `batch/scan-output-*.md`, `reports/{num}-*.md` with `**URL:**` / `**Score:**` headers, `batch/tracker-additions/*.tsv`.
   why: 2026-04-18 scan subagent returned 30 fabricated Greenhouse IDs in prose (plausible-looking, non-existent); orchestrator dispatched 30 downstream subagents that all 404'd. Subagents can hallucinate IDs, scores, and confirmation text — round-trip through a file or don't trust the value
 
+- [H8] Never paste proxy values from `config/profile.yml` into `task` prompts, status text, or summaries. If a proxy is configured, tell the subagent exactly: "Proxy is configured; read `config/profile.yml` and pass its top-level `proxy:` object to every `geometra_connect` call." Do not transcribe `server`, `username`, `password`, or `bypass`, even if you just read them from disk.
+  why: a 2026-04-25 OpenCode trace showed raw proxy credentials copied into an apply subagent prompt; trace logs are local, but prompts must still avoid replicating secrets across subagent sessions
+
 ## Defaults
 
 - [D1] Delegate to a subagent (`task`) only when the work involves repeated tool-heavy steps that bloat the cache prefix: applying to N≥2 jobs, batch scans hitting ≥3 companies, or any "apply to… / process pipeline / batch evaluate" user phrasing. Single-offer evals, dev work, file edits, `tracker` mode, single-URL checks, and one-shot questions stay inline.
@@ -53,7 +56,7 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
 3. Read the active mode file [D3]; decide inline vs delegated work [D1].
-4. Prepare Geometra dispatches: cleanup [H3], dedupe [H2], location filter [D5], routing [D2].
+4. Prepare Geometra dispatches: cleanup [H3], dedupe [H2], location filter [D5], routing [D2], proxy prompt hygiene [H8].
 5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b].
 6. Keep multi-job form-filling out of the orchestrator [H4].
 7. Cross-check subagent facts against authoritative files [H7].

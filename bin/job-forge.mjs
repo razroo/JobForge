@@ -17,6 +17,7 @@
  *   pdf            Run generate-pdf.mjs
  *   sync-check     Run cv-sync-check.mjs
  *   tokens         Run scripts/token-usage-report.mjs
+ *   trace:*        Inspect local agent transcripts via iso-trace
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
  */
@@ -28,6 +29,7 @@ import { existsSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = resolve(__dirname, '..');
+const PROJECT_DIR = process.env.JOB_FORGE_PROJECT || process.cwd();
 
 const commands = {
   merge:        'merge-tracker.mjs',
@@ -52,6 +54,12 @@ const commands = {
   'render-report-header': 'scripts/render-report-header.mjs',
 };
 
+const traceAliases = {
+  'trace:list': 'list',
+  'trace:stats': 'stats',
+  'trace:show': 'show',
+};
+
 const [, , cmd, ...rest] = process.argv;
 
 function printHelp() {
@@ -68,6 +76,10 @@ Commands:
   pdf            Generate ATS-optimized CV PDF from cv.md
   sync-check     Lint: verify cv.md and profile.yml are filled in
   tokens         Show opencode token usage and cost by session/day
+  trace          Pass through to iso-trace (e.g. job-forge trace sources)
+  trace:list     List recent local agent sessions (defaults: --since 7d --cwd project)
+  trace:stats    Show trace stats (defaults: --since 7d --cwd project)
+  trace:show ID  Show one trace by id or prefix
   sync           Re-create harness symlinks in the current project
 
 Deterministic helpers (prefer these over LLM-derived values):
@@ -90,6 +102,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge merge --help
   job-forge tokens --days 1
   job-forge slugify "Anthropic, PBC"
+  job-forge trace:list --since 24h
+  job-forge trace:show ses_...
 
 Project directory resolves to $JOB_FORGE_PROJECT or cwd.`);
 }
@@ -97,6 +111,21 @@ Project directory resolves to $JOB_FORGE_PROJECT or cwd.`);
 if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
   printHelp();
   process.exit(0);
+}
+
+if (cmd === 'trace' || traceAliases[cmd]) {
+  const traceArgs = cmd === 'trace'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [traceAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/trace.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...traceArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
 }
 
 const rel = commands[cmd];

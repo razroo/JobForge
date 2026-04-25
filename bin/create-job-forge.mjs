@@ -110,6 +110,9 @@ const consumerPkg = {
     tokens: 'job-forge tokens',
     'tokens:today': 'job-forge tokens --days 1',
     'tokens:log': 'job-forge tokens --days 1 --append',
+    'trace:list': 'job-forge trace:list',
+    'trace:stats': 'job-forge trace:stats',
+    'trace:show': 'job-forge trace:show',
     // One command to pull the latest harness, companion plugin, and any
     // locally-pinned MCP packages. npm update is a no-op on packages not
     // in package.json, so listing @razroo/gmail-mcp + @geometra/mcp is
