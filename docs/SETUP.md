@@ -133,6 +133,9 @@ From your project root, these commands maintain the tracker and pipeline checks.
 | List recent OpenCode traces for this project | `npx job-forge trace:list` | `npm run trace:list` |
 | Summarize trace tool/file/token usage | `npx job-forge trace:stats` | `npm run trace:stats` |
 | Show one trace by session id/prefix | `npx job-forge trace:show <id>` | `npm run trace:show -- <id>` |
+| List recent JobForge runs with outcomes/issues | `npx job-forge telemetry:list` | `npm run telemetry:list` |
+| Show latest run status + pending TSVs | `npx job-forge telemetry:status` | `npm run telemetry:status` |
+| Show one JobForge run by session id/prefix | `npx job-forge telemetry:show <id>` | `npm run telemetry:show -- <id>` |
 | Re-create harness symlinks | `npx job-forge sync` | `npm run sync` |
 | Build optional dashboard TUI (Go on `PATH`) | `(cd node_modules/job-forge/dashboard && go build .)` | `npm run build:dashboard` (harness repo only) |
 

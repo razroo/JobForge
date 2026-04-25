@@ -1,6 +1,6 @@
 {
   "name": "job-forge",
-  "version": "2.14.10",
+  "version": "2.14.11",
   "description": "AI-powered job search pipeline built on opencode",
   "type": "module",
   "bin": {
@@ -21,6 +21,10 @@
     "trace:list": "node bin/job-forge.mjs trace:list",
     "trace:stats": "node bin/job-forge.mjs trace:stats",
     "trace:show": "node bin/job-forge.mjs trace:show",
+    "telemetry:list": "node bin/job-forge.mjs telemetry:list",
+    "telemetry:status": "node bin/job-forge.mjs telemetry:status",
+    "telemetry:show": "node bin/job-forge.mjs telemetry:show",
+    "telemetry:watch": "node bin/job-forge.mjs telemetry:watch",
     "plan": "iso plan .",
     "lint:agentmd": "agentmd lint iso/instructions.md",
     "lint:modes": "isolint lint modes/",

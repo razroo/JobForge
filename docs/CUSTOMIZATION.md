@@ -112,6 +112,19 @@ Scaffolded projects also include npm aliases: `npm run trace:list`, `npm run tra
 
 For raw iso-trace commands, use `npx job-forge trace sources`, `npx job-forge trace where`, or any other `iso-trace` subcommand after `trace`.
 
+## JobForge telemetry
+
+Trace is the raw transcript view. Telemetry is the JobForge operational view: it summarizes task dispatches, child session outcomes, provider errors, policy issues, and pending tracker TSVs.
+
+```bash
+npx job-forge telemetry:list
+npx job-forge telemetry:status
+npx job-forge telemetry:show <session-id-or-prefix>
+npx job-forge telemetry:watch
+```
+
+Telemetry is also local-only and passive. It reads OpenCode's SQLite DB and files under `batch/tracker-additions/`; agents do not need to remember to emit custom events.
+
 **Where Claude Code writes JSONL:** `~/.claude/projects/<encoded-cwd>/*.jsonl`.
 
 **Direct CLI fallback:** `npx -y @razroo/iso-trace@latest stats --source "$HOME/.claude/projects/<encoded-dir>/<session>.jsonl"`

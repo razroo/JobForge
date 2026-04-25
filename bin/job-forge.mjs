@@ -18,6 +18,7 @@
  *   sync-check     Run cv-sync-check.mjs
  *   tokens         Run scripts/token-usage-report.mjs
  *   trace:*        Inspect local agent transcripts via iso-trace
+ *   telemetry:*    Summarize JobForge pipeline status from traces + tracker files
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
  */
@@ -60,6 +61,13 @@ const traceAliases = {
   'trace:show': 'show',
 };
 
+const telemetryAliases = {
+  'telemetry:list': 'list',
+  'telemetry:status': 'status',
+  'telemetry:show': 'show',
+  'telemetry:watch': 'watch',
+};
+
 const [, , cmd, ...rest] = process.argv;
 
 function printHelp() {
@@ -80,6 +88,10 @@ Commands:
   trace:list     List recent local agent sessions (defaults: --since 7d --cwd project)
   trace:stats    Show trace stats (defaults: --since 7d --cwd project)
   trace:show ID  Show one trace by id or prefix
+  telemetry:list    List recent JobForge runs with tasks/outcomes/issues
+  telemetry:status  Show latest JobForge run + pending tracker state
+  telemetry:show ID Show one run with child sessions, provider errors, next actions
+  telemetry:watch   Watch latest run status
   sync           Re-create harness symlinks in the current project
 
 Deterministic helpers (prefer these over LLM-derived values):
@@ -104,6 +116,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge slugify "Anthropic, PBC"
   job-forge trace:list --since 24h
   job-forge trace:show ses_...
+  job-forge telemetry:status
+  job-forge telemetry:show ses_...
 
 Project directory resolves to $JOB_FORGE_PROJECT or cwd.`);
 }
@@ -120,6 +134,21 @@ if (cmd === 'trace' || traceAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/trace.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...traceArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'telemetry' || telemetryAliases[cmd]) {
+  const telemetryArgs = cmd === 'telemetry'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [telemetryAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/telemetry.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...telemetryArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,
