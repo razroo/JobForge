@@ -25,7 +25,13 @@ npm install
 opencode
 ```
 
-The scaffolded `opencode.json` already has the Geometra MCP (browser automation + PDF) and Gmail MCP (reading replies) wired up — they launch automatically the first time opencode starts. `npm install` also materializes symlinks for every supported agent harness — OpenCode, Cursor, Claude Code, and Codex — so you can run `opencode`, `cursor`, `claude`, or `codex` in the same project and each picks up the shared MCP config and instructions.
+The scaffolded `opencode.json` already has three MCPs wired up — they launch automatically the first time opencode starts:
+
+- **Geometra** — browser automation + PDF generation
+- **Gmail** — reads replies from recruiters
+- **state-trace** — typed working memory for cross-session context (resumed batches, recent decisions, repeated portal quirks). Spawned via `uvx`; install once with `brew install uv` (or `pipx install uv`) — no other setup.
+
+`npm install` also materializes symlinks for every supported agent harness — OpenCode, Cursor, Claude Code, and Codex — so you can run `opencode`, `cursor`, `claude`, or `codex` in the same project and each picks up the shared MCP config and instructions.
 
 Then fill in `cv.md`, `config/profile.yml`, and `portals.yml` with your personal data, paste a job URL into opencode, and JobForge evaluates + tracks it.
 
