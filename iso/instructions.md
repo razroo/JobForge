@@ -5,7 +5,7 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 ## Hard limits
 
 - [H1] Max 2 parallel `task` dispatches per message. For N jobs, run `ceil(N/2)` sequential rounds of 2. A round is not complete until both subagents return a final outcome (`APPLIED`, `APPLY FAILED`, `SKIP`, `Discarded`, or a written TSV path). A `task` tool result that only gives a session id / title is a launch acknowledgement, not completion. Applies in all modes, for all user phrasings ("urgent", "apply to 10 jobs now").
-  why: higher parallelism blows through free-tier rate limits; each subagent requires post-cleanup and racing more than 2 reliably loses at least one result. On 2026-04-25 the orchestrator launched round 2 while round 1 had only returned task ids, leaving four application subagents in flight and losing two provider-fallback recoveries
+  why: each subagent requires post-cleanup and racing more than 2 reliably loses at least one result. On 2026-04-25 the orchestrator launched round 2 while round 1 had only returned task ids, leaving four application subagents in flight and losing two provider recoveries
 
 - [H2] Max 1 application per company+role. Before every `apply` dispatch, grep all four sources for the URL and for `company+role`: `data/pipeline.md`, all `data/applications/*.md` day files, `batch/tracker-additions/*.tsv`, `batch/tracker-additions/merged/*.tsv`. If any source shows APPLIED / Applied, skip the dispatch.
   why: 2026-04 same-day batch collision — when two batches target the same role, `npx job-forge merge` updates the existing day-file row rather than appending, so grepping day files alone misses earlier-batch applies; merged/*.tsv is the only place the breadcrumb remains
@@ -37,7 +37,7 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
   why: iso-trace showed 0.25% Agent calls across 5174 turns under a prior over-broad "delegate before 2nd tool call" rule — the rule was ignored in practice; narrowing matches the original cache-bust incident
 
 - [D2] Route subagent work by cost tier. `@general-free`: procedural — form-fill, TSV merge, verify, OTP retrieval, portal scan metadata extraction, one-shot structured-field transforms. `@general-paid`: quality-sensitive — offer evaluation narrative Blocks A-F, cover letters, "Why X?" answers, STAR interview stories, LinkedIn outreach. `@glm-minimal`: narrow ≤5K-input one-shot extract/classify jobs that do not need context.
-  why: GLM 5.1 doesn't discount cache reads so procedural work there costs ~10×; free-tier models handle procedural work fine empirically (`opencode/big-pickle` processed 1000+ messages at $0)
+  why: OpenCode routes all JobForge tiers through DeepSeek V4 Flash by default now; recent traces showed free OpenRouter fallbacks freezing or hitting provider balance errors during applications
 
 - [D3] Read the active mode file before dispatch. Mode files own score gates, provider fallback, portal runbooks, and output shape.
   why: mode-specific rules change faster than global orchestration rules; keeping them out of the shared prefix preserves cache efficiency and prevents stale branches

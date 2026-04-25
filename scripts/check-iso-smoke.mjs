@@ -21,9 +21,9 @@ const checks = [
   ["H7 distrusts subagent prose", () => every(files.instructions, ["must originate from a file", "not from prior subagent prose"])],
   ["shared prompt points to on-demand references", () => every(files.instructions, ["modes/{mode}.md", "modes/reference-setup.md", "modes/reference-portals.md", "modes/reference-geometra.md"])],
   ["apply mode owns high-stakes upgrade", () => every(files.apply, ["[D8]", "@general-paid", "4.0/5", "high-stakes"])],
-  ["apply mode owns provider downgrade", () => every(files.apply, ["[D9]", "@general-free", "HTTP 402/429", "insufficient credits/funds/balance"])],
-  ["models policy extends free OpenRouter preset", () => /extends:\s*openrouter-free/.test(files.models)],
-  ["OpenCode fallback plugin is configured", () => every(files.config, ["opencodeModelFallback", "@razroo/opencode-model-fallback"])],
+  ["apply mode blocks provider auto-downgrade", () => every(files.apply, ["[D9]", "do not auto-downgrade", "inspect telemetry before retrying"])],
+  ["models policy pins OpenCode to DeepSeek V4 Flash", () => /extends:\s*standard/.test(files.models) && count(files.models, "opencode-go/deepseek-v4-flash") >= 4],
+  ["OpenCode fallback plugin is not configured", () => !every(files.config, ["opencodeModelFallback", "@razroo/opencode-model-fallback"])],
 ];
 
 const failures = checks
@@ -40,4 +40,8 @@ console.log(`JobForge iso smoke passed (${checks.length} checks).`);
 
 function every(source, needles) {
   return needles.every((needle) => source.includes(needle));
+}
+
+function count(source, needle) {
+  return source.split(needle).length - 1;
 }

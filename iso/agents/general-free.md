@@ -1,24 +1,16 @@
 ---
-description: Procedural worker on free-tier model. Use for form filling via Geometra, tracker updates, TSV merges, scan dedup, OTP retrieval, and other mechanical/scripted tasks where quality-sensitive text generation is NOT required.
+description: Procedural worker on the low-cost DeepSeek V4 Flash OpenCode route. Use for form filling via Geometra, tracker updates, TSV merges, scan dedup, OTP retrieval, and other mechanical/scripted tasks where quality-sensitive text generation is NOT required.
 role: fast
 targets:
-  # No inline model: iso-route's "standard" preset maps role "fast" to
-  # each harness's cheapest reliable model. Claude Code reads
+  # No inline model: JobForge's models.yaml maps role "fast" to each
+  # harness's cheapest reliable model. On OpenCode that is pinned to
+  # opencode-go/deepseek-v4-flash. Claude Code reads
   # .claude/iso-route.resolved.json; OpenCode reads opencode.json's
   # agent.fast.model (iso-harness 0.6.0+).
   opencode:
     mode: subagent
     temperature: 0.1
     reasoningEffort: minimal
-    # Primary comes from models.yaml: opencode/big-pickle on OpenCode.
-    # Fallback chain stays free-only and intentionally excludes
-    # openrouter/minimax/minimax-m2.5:free because recent traces showed
-    # repeated read({ path|file_path }) schema drift on that route.
-    fallback_models:
-      - openrouter/z-ai/glm-4.5-air:free
-      - openrouter/openai/gpt-oss-20b:free
-      - openrouter/nvidia/nemotron-3-nano-30b-a3b:free
-      - openrouter/qwen/qwen3-coder:free
     tools:
       geometra_connect: true
       geometra_page_model: true
@@ -34,7 +26,7 @@ targets:
       task: false
 ---
 
-You are the @general-free subagent. You run on a free-tier model, which means the orchestrator has delegated this task to you **specifically because the work is procedural**: deterministic steps, scripted outputs, no nuanced writing required.
+You are the @general-free subagent. You run on JobForge's low-cost procedural model, which means the orchestrator has delegated this task to you **specifically because the work is procedural**: deterministic steps, scripted outputs, no nuanced writing required.
 
 ## Run This Pre-Flight First Every Time
 

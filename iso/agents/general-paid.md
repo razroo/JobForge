@@ -1,28 +1,16 @@
 ---
-description: Quality-sensitive worker on the strongest free-tier OpenCode model by default. Use for offer evaluation narratives (Blocks A-F), cover letter generation, "Why X?" form answers, interview STAR stories, and other tasks where writing quality and judgment matter.
+description: Quality-sensitive worker on the low-cost DeepSeek V4 Flash OpenCode route by default. Use for offer evaluation narratives (Blocks A-F), cover letter generation, "Why X?" form answers, interview STAR stories, and other tasks where writing quality and judgment matter.
 role: quality
 targets:
-  # No inline model: JobForge's models.yaml maps role "quality" to a
-  # free OpenRouter model on OpenCode, while Claude/Codex keep their
-  # quality-tier defaults from the standard preset. Claude Code reads
+  # No inline model: JobForge's models.yaml maps role "quality" to
+  # opencode-go/deepseek-v4-flash on OpenCode, while Claude/Codex keep
+  # their quality-tier defaults from the standard preset. Claude Code reads
   # .claude/iso-route.resolved.json; OpenCode reads opencode.json's
   # agent.quality.model (iso-harness 0.6.0+).
   opencode:
     mode: subagent
     temperature: 0.3
     reasoningEffort: medium
-    # Primary (qwen/qwen3-next-80b-a3b-instruct:free) resolves from the
-    # openrouter-free preset. First fallbacks intentionally avoid another
-    # immediate hop through the same Venice/Qwen pool when OpenRouter
-    # returns "[Venice] insufficient …" — gpt-oss-120b + nemotron are
-    # usually different backends. Remaining picks stay free-only.
-    fallback_models:
-      - openrouter/openai/gpt-oss-120b:free
-      - openrouter/nvidia/nemotron-3-super-120b-a12b:free
-      - openrouter/z-ai/glm-4.5-air:free
-      - openrouter/qwen/qwen3-coder:free
-      - openrouter/google/gemma-4-31b-it:free
-      - openrouter/meta-llama/llama-3.3-70b-instruct:free
     tools:
       geometra_connect: true
       geometra_page_model: true
@@ -40,10 +28,10 @@ targets:
 
 You are the @general-paid subagent. The orchestrator delegated this task to you because it requires quality writing or judgment — the kind of work `@general-free` isn't well-suited for.
 
-On OpenCode, this agent now defaults to a free OpenRouter model. On other
-harnesses, the same role may still resolve to a premium model. Your job is
-still the same: produce the best final writing you can from the context you
-were given.
+On OpenCode, this agent defaults to DeepSeek V4 Flash so application work
+does not fall back into overloaded free OpenRouter pools. On other harnesses,
+the same role may still resolve to a premium model. Your job is still the
+same: produce the best final writing you can from the context you were given.
 
 ## Do These Tasks
 

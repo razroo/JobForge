@@ -1,49 +1,8 @@
 {
-  "opencodeModelFallback": {
-    "cooldown_seconds": 60,
-    "timeout_seconds": 30,
-    "notify_on_fallback": true,
-    "fallback_models": [
-      "openrouter/openai/gpt-oss-120b:free",
-      "openrouter/z-ai/glm-4.5-air:free",
-      "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
-      "openrouter/qwen/qwen3-next-80b-a3b-instruct:free"
-    ],
-    "retryable_error_patterns": [
-      "\\bvenice\\b",
-      "insufficient\\s+usd",
-      "insufficient\\s+.*\\s+diem",
-      "diem\\s+balance",
-      "add\\s+credits",
-      "chutes",
-      "insufficient\\s+(?:credits?|funds?|balance)",
-      "credit.*balance.*too.*low",
-      "(?:temporarily\\s+)?unavailable|overloaded|try\\s+again"
-    ]
-  },
   "targets": {
     "opencode": {
-      "plugin": ["@razroo/opencode-model-fallback"],
       "instructions": ["templates/states.yml"],
-      "small_model": "openrouter/google/gemma-4-26b-a4b-it:free",
-      "provider": {
-        "openrouter": {
-          "models": {
-            "qwen/qwen3-coder:free": {},
-            "z-ai/glm-4.5-air:free": {},
-            "qwen/qwen3-next-80b-a3b-instruct:free": {},
-            "openai/gpt-oss-20b:free": {},
-            "openai/gpt-oss-120b:free": {},
-            "minimax/minimax-m2.5:free": {},
-            "nvidia/nemotron-3-super-120b-a12b:free": {},
-            "nvidia/nemotron-3-nano-30b-a3b:free": {},
-            "nvidia/nemotron-nano-9b-v2:free": {},
-            "google/gemma-4-26b-a4b-it:free": {},
-            "google/gemma-4-31b-it:free": {},
-            "meta-llama/llama-3.3-70b-instruct:free": {}
-          }
-        }
-      }
+      "small_model": "opencode-go/deepseek-v4-flash"
     }
   }
 }

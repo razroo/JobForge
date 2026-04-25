@@ -4,13 +4,13 @@ JobForge routes each piece of work to the cheapest model that can do it well, in
 
 ## Why routing matters (the cost math)
 
-A two-day trace early in development showed `$48` in spend, with **84% coming from GLM 5.1** despite the majority of the work being procedural (form fills, tracker updates, OTP retrieval). The root cause:
+A two-day trace early in development showed `$48` in spend, with **84% coming from GLM 5.1** despite the majority of the work being procedural (form fills, tracker updates, OTP retrieval). Later traces showed the opposite failure mode: free OpenRouter routes hit shared-pool contention and Venice balance errors during application subagents.
 
 - **GLM 5.1's provider doesn't discount cache reads.** On Anthropic, a 10K-token cached prefix costs ~$0.03. On GLM 5.1 it bills near-full input rate (~$0.35). Every session that re-loads the prefix pays full price.
-- **Procedural work is the high-volume work.** 1000+ messages per day go to form filling, TSV merges, scan dedup. Running that on a paid model is unnecessary when current free models can handle the task.
-- **OpenCode no longer needs one provider for every role.** JobForge now pins the procedural `@general-free` worker to `opencode/big-pickle`, while the quality-sensitive writer tier stays on a free OpenRouter route.
+- **Procedural work is the high-volume work.** 1000+ messages per day go to form filling, TSV merges, scan dedup. It needs a cheap reliable route, not the absolute strongest model.
+- **Free pools are not reliable enough for application runs.** A 2026-04-25 trace showed `@general-paid` hitting `openrouter/qwen/...:free` Venice 402 errors, while `@general-free` fell through `opencode/big-pickle` into `z-ai/glm-4.5-air:free` and `gpt-oss-20b:free`.
 
-Conclusion: route procedural work to free tier, reserve paid models for tasks that actually need the quality.
+Conclusion: keep the subagent split for tool permissions and prompting, but route OpenCode to `opencode-go/deepseek-v4-flash` across all JobForge tiers. It is the best current "affordable and reliable" default for applications.
 
 ## The three subagents
 
@@ -18,9 +18,9 @@ Defined in `.opencode/agents/*.md` (shipped in the harness, symlinked into consu
 
 | Agent | Model | Reasoning | Use for |
 |-------|-------|-----------|---------|
-| `@general-free` | `opencode/big-pickle` | `minimal` | Geometra form fills, tracker TSV merges, scan dedup, OTP retrieval via Gmail, scripted pipeline steps |
-| `@general-paid` | `openrouter/qwen/qwen3-next-80b-a3b-instruct:free` | `medium` | Offer evaluation narratives (Blocks A-F), cover letters, "Why X?" answers, STAR+R interview stories, LinkedIn outreach prose |
-| `@glm-minimal` | `openrouter/openai/gpt-oss-20b:free` | `none` | Narrow one-shot transforms: "extract these 8 fields from this JD text → JSON", "classify this archetype" |
+| `@general-free` | `opencode-go/deepseek-v4-flash` | `minimal` | Geometra form fills, tracker TSV merges, scan dedup, OTP retrieval via Gmail, scripted pipeline steps |
+| `@general-paid` | `opencode-go/deepseek-v4-flash` | `medium` | Offer evaluation narratives (Blocks A-F), cover letters, "Why X?" answers, STAR+R interview stories, LinkedIn outreach prose |
+| `@glm-minimal` | `opencode-go/deepseek-v4-flash` | `none` | Narrow one-shot transforms: "extract these 8 fields from this JD text → JSON", "classify this archetype" |
 
 The full task-to-agent mapping lives in [AGENTS.md → Subagent Routing](../AGENTS.md#subagent-routing--which-agent-for-which-task). The orchestrator (your primary session) is expected to delegate before taking any multi-step action — see the **Pre-flight delegation** rule in AGENTS.md.
 
@@ -64,25 +64,35 @@ Disables ~30 MCP tool schemas globally; each agent re-enables only what it needs
 
 All three layers are designed to be edited — this is your search, your cost budget, your model preferences.
 
-### Swap the paid model
+### Swap the quality model
 
-The default `@general-paid` is `openrouter/qwen/qwen3-next-80b-a3b-instruct:free`. To use Claude instead, edit `.opencode/agents/general-paid.md`:
+The default `@general-paid` OpenCode model is `opencode-go/deepseek-v4-flash`. To use a stronger OpenCode route for quality writing, edit `models.yaml`:
 
 ```yaml
----
-model: opencode/claude-sonnet-4-6
-reasoningEffort: medium
----
+roles:
+  quality:
+    targets:
+      opencode:
+        provider: opencode
+        model: opencode-go/deepseek-v4-pro
 ```
 
-The `.opencode/agents/general-paid.md` file is a symlink into `node_modules/job-forge/` by default. To customize locally without modifying the harness: delete the symlink and create a real file with the same name — `job-forge sync` will skip it on future updates. Or override in `opencode.json` under `agent.general-paid.model`.
+Run `npm run build:config` if you are editing a harness checkout. In a consumer project, keep local overrides in `opencode.json` or replace a symlinked `.opencode/agents/<name>.md` with a real file.
 
-### Swap the free tier
+### Swap the procedural route
 
-The primary `@general-free` model is set in `models.yaml` via the `fast`
-role's `targets.opencode` override. Change that if you want a different
-default. The `fallback_models` list still lives in
-`.opencode/agents/general-free.md` / `iso/agents/general-free.md`.
+The `@general-free` model is set in `models.yaml` via the `fast` role's
+`targets.opencode` override. Change that if you want a different procedural
+default:
+
+```yaml
+roles:
+  fast:
+    targets:
+      opencode:
+        provider: opencode
+        model: opencode-go/deepseek-v4-flash
+```
 
 ### Add a custom agent
 
@@ -125,8 +135,8 @@ npx job-forge tokens --session <session-id>
 ```
 
 Healthy pattern after this architecture lands:
-- **Free OpenRouter defaults** now cover procedural, quality-sensitive, and extractor work on OpenCode
-- If you opt back into a paid model, do it deliberately and only for the role that needs it
+- **DeepSeek V4 Flash defaults** cover procedural, quality-sensitive, and extractor work on OpenCode
+- If you opt into a stronger model, do it deliberately and only for the role that needs it
 - Session titles prefixed `@general-free`, `@general-paid`, `@glm-minimal` appear in the list — confirms delegation actually happened
 - `cache_read` >> `cache_creation` on parallel subagent runs within a 5-min window
 
@@ -134,67 +144,24 @@ Failure pattern to watch for:
 - **All messages showing up under your primary model** (no `@general-*` titles) → orchestrator isn't delegating. Check the Pre-flight delegation rule in AGENTS.md is being followed; tighten wording if not.
 - **High cache-creation with near-zero cache-read across parallel workers** → workers aren't firing within the 5-min cache TTL, or the shared prefix isn't byte-identical (see [batch/README.md](../batch/README.md) for the prompt-cache-friendly batch pattern).
 
-## Automatic fallback on rate limits / 5xx
+## Fallback policy
 
-A rate-limited or overloaded free-tier model would otherwise wedge the whole subagent flow — the delegated task errors and the orchestrator sits stuck. The harness ships with [`@razroo/opencode-model-fallback`](https://www.npmjs.com/package/@razroo/opencode-model-fallback) (added as a dependency in the scaffolder) to rotate agents through a configured `fallback_models` chain automatically.
+JobForge no longer ships automatic free-model fallback for OpenCode. The
+previous free fallback chain solved some transient model outages, but real
+application traces showed it could also freeze runs upstream or route into
+provider balance failures. The default is now simpler: each OpenCode role uses
+`opencode-go/deepseek-v4-flash`, and errors surface directly in telemetry.
 
-Default chains ship upstream in each agent's YAML frontmatter (`node_modules/job-forge/.opencode/agents/*.md`, symlinked into your project's `.opencode/agents/`):
-
-| Agent | Primary | Fallback chain (in order) |
-|-------|---------|---------------------------|
-| `@general-free` | `opencode/big-pickle` | `openrouter/z-ai/glm-4.5-air:free` → `openrouter/openai/gpt-oss-20b:free` → `openrouter/nvidia/nemotron-3-nano-30b-a3b:free` → `openrouter/qwen/qwen3-coder:free` |
-| `@general-paid` | `openrouter/qwen/qwen3-next-80b-a3b-instruct:free` | `openrouter/openai/gpt-oss-120b:free` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` → `openrouter/z-ai/glm-4.5-air:free` → `openrouter/qwen/qwen3-coder:free` → `openrouter/google/gemma-4-31b-it:free` → `openrouter/meta-llama/llama-3.3-70b-instruct:free` |
-| `@glm-minimal` | `openrouter/openai/gpt-oss-20b:free` | `openrouter/google/gemma-4-26b-a4b-it:free` → `openrouter/nvidia/nemotron-nano-9b-v2:free` → `openrouter/google/gemma-4-31b-it:free` → `openrouter/z-ai/glm-4.5-air:free` |
-
-These chains are deliberately free-only so the default OpenCode path never needs to pay. **Note:** OpenCode model IDs must use the provider prefix it expects (`openrouter/...`, `opencode/...`, etc.). The raw OpenRouter model slug by itself is not enough.
-
-Consumers **do not need to configure anything** to get these defaults: the subagent chains arrive via the symlinked agent MD files, and the harness ships `.opencode/opencode-model-fallback.json` for the main orchestrator / any agent without its own list. That JSON is **generated by `@razroo/iso-harness`** from the top-level `opencodeModelFallback` object in the harness's `iso/config.json` (same `iso build` pass as `opencode.json`), so it stays in sync with published releases — not a hand-edited file in git. `@razroo/opencode-model-fallback` (≥0.3.1) reads per-agent chains from the frontmatter-derived `fallback_models` field and falls through to the global file when no per-agent list exists. The consumer's `opencode.json` only needs `"plugin": ["@razroo/opencode-model-fallback"]` — which the scaffolder sets automatically.
-
-**When fallback fires:** the plugin pattern-matches rate-limit / 5xx / quota / "overloaded" / insufficient-balance style errors (including Venice / Diem copy — see `retryable_error_patterns` in the harness source). Failed models enter a cooldown before they're retried. Every rotation logs to `~/.config/opencode/opencode-model-fallback.log` with the trigger error, original model, and target model — grep for `"Auto-retrying with fallback model"` to confirm it fired.
-
-**Orchestrator policy (all harnesses):** if an upgraded `@general-paid` apply still fails after model fallback, follow **[D3f]** in the shared instructions (`AGENTS.md` / `CLAUDE.md` / Cursor rules / Codex `AGENTS.md`) — re-dispatch the same URL once on `@general-free` before marking FAILED.
-
-### Overriding an upstream chain
-
-Add an `agent.<name>.fallback_models` block to your project's `opencode.json`. Top-level entries win over upstream frontmatter:
-
-```json
-{
-  "agent": {
-    "general-free": {
-      "fallback_models": ["my/preferred-free", "my/preferred-paid"]
-    }
-  }
-}
-```
-
-### Global fallback chain (agents without their own)
-
-Source of truth: **`iso/config.json` → `opencodeModelFallback`** (iso-harness writes `.opencode/opencode-model-fallback.json` on `npm run build:config` / `prepack`). Applies to the orchestrator and any agent whose `fallback_models` is empty. Example shape:
-
-```json
-{
-  "cooldown_seconds": 60,
-  "timeout_seconds": 30,
-  "notify_on_fallback": true,
-  "fallback_models": [
-    "openrouter/openai/gpt-oss-120b:free",
-    "openrouter/z-ai/glm-4.5-air:free"
-  ],
-  "retryable_error_patterns": ["(?i)venice.*insufficient"]
-}
-```
-
-`retryable_error_patterns` extends the plugin's built-in matchers — use it for provider-specific strings (Venice Diem balance, etc.) that do not match the stock regexes.
-
-### Disabling fallback
-
-Remove `"@razroo/opencode-model-fallback"` from `opencode.json:plugin` — agents keep their `model:` primary and errors propagate normally.
+Use `npm run telemetry:status` or `npm run telemetry:show -- <session>` to
+inspect provider errors, child outcomes, and pending TSVs after a run. If you
+want a local fallback chain anyway, add it explicitly in your own
+`opencode.json` or agent frontmatter so the cost/reliability tradeoff is
+visible in your project rather than hidden in the harness defaults.
 
 ## Known limitations
 
 - **opencode's 5-minute cache TTL is hardcoded.** The 1-hour cache (Anthropic beta, `extended-cache-ttl-2025-04-11`) is not plumbed through opencode as of 2026-04-15. Long batch runs (>5 min between workers) will miss cache every cycle. Upstream fix would be 2 lines in `packages/opencode/src/provider/`.
-- **`instructions` is top-level, not per-agent.** Files listed in `opencode.json:instructions` load for every agent including free-tier. This is fine for `cv.md` and `_shared.md` (they're small and useful everywhere), but means you can't hide heavy context from free agents via instructions — use per-agent `prompt:` files for that.
+- **`instructions` is top-level, not per-agent.** Files listed in `opencode.json:instructions` load for every agent. This is fine for `cv.md` and `_shared.md` (they're small and useful everywhere), but means you can't hide heavy context from lower-cost agents via instructions — use per-agent `prompt:` files for that.
 - **`reasoningEffort` support varies by provider.** Anthropic accepts `thinking: { type: "disabled" }`; opencode-labs models may need the `variant` pattern. See the `reasoningEffort` values in the opencode docs.
 
 ## See also

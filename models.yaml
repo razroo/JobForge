@@ -1,17 +1,15 @@
 # JobForge model policy.
 #
-# Extends @razroo/iso-route's bundled "openrouter-free" preset — a
-# curated zero-cost routing config that keeps Claude Code / Codex on
-# their native providers but routes OpenCode through explicit free
-# OpenRouter model IDs. Preset content lives in
-# node_modules/@razroo/iso-route/presets/openrouter-free.yaml; run
-# `npx iso-route plan models.yaml` to see the resolved policy.
+# Extends @razroo/iso-route's bundled "standard" preset, then pins every
+# OpenCode route to DeepSeek V4 Flash. Recent traces showed free OpenRouter
+# routes freezing or falling through Venice balance errors, so JobForge's
+# OpenCode default is now "best affordable paid" rather than "free".
 #
 # JobForge's subagents bind to preset roles via the `role:` field in
 # iso/agents/<slug>.md:
-#   @general-free  → role: fast     (Haiku / OpenCode big-pickle / gpt-5.4-mini)
-#   @general-paid  → role: quality  (Opus 4.7 / OpenRouter Qwen3 Next 80B free / gpt-5.4)
-#   @glm-minimal   → role: minimal  (Haiku / OpenRouter GPT-OSS-20B free / gpt-5.4-nano)
+#   @general-free  → role: fast     (Haiku / DeepSeek V4 Flash / gpt-5.4-mini)
+#   @general-paid  → role: quality  (Opus 4.7 / DeepSeek V4 Flash / gpt-5.4)
+#   @glm-minimal   → role: minimal  (Haiku / DeepSeek V4 Flash / gpt-5.4-nano)
 #
 # Override anything by adding fields here. For example, to pin Opus on
 # Claude Code for the @general-paid (quality) role:
@@ -29,11 +27,27 @@
 #           provider: openai
 #           model: gpt-5.4
 
-extends: openrouter-free
+extends: standard
+
+default:
+  targets:
+    opencode:
+      provider: opencode
+      model: opencode-go/deepseek-v4-flash
 
 roles:
   fast:
     targets:
       opencode:
         provider: opencode
-        model: opencode/big-pickle
+        model: opencode-go/deepseek-v4-flash
+  quality:
+    targets:
+      opencode:
+        provider: opencode
+        model: opencode-go/deepseek-v4-flash
+  minimal:
+    targets:
+      opencode:
+        provider: opencode
+        model: opencode-go/deepseek-v4-flash

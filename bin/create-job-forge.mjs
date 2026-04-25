@@ -117,22 +117,14 @@ const consumerPkg = {
     'telemetry:status': 'job-forge telemetry:status',
     'telemetry:show': 'job-forge telemetry:show',
     'telemetry:watch': 'job-forge telemetry:watch',
-    // One command to pull the latest harness, companion plugin, and any
-    // locally-pinned MCP packages. npm update is a no-op on packages not
-    // in package.json, so listing @razroo/gmail-mcp + @geometra/mcp is
-    // safe for consumers that invoke them via `npx -y` without pinning.
-    'update-harness': 'npm update job-forge @razroo/opencode-model-fallback @razroo/gmail-mcp @geometra/mcp && job-forge sync && node -e "console.log(\'✅ harness at\', require(\'./package-lock.json\').packages[\'node_modules/job-forge\'].resolved)"',
+    // One command to pull the latest harness and any locally-pinned MCP
+    // packages. npm update is a no-op on packages not in package.json, so
+    // listing @razroo/gmail-mcp + @geometra/mcp is safe for consumers that
+    // invoke them via `npx -y` without pinning.
+    'update-harness': 'npm update job-forge @razroo/gmail-mcp @geometra/mcp && job-forge sync && node -e "console.log(\'✅ harness at\', require(\'./package-lock.json\').packages[\'node_modules/job-forge\'].resolved)"',
   },
   dependencies: {
     'job-forge': '^2.0.0',
-    // Model-fallback plugin: rotates agents through their fallback_models
-    // chain on rate-limit / 5xx errors so a rate-limited free-tier model
-    // doesn't wedge the whole flow. The chains live upstream in each
-    // agent's MD frontmatter (`.opencode/agents/*.md` in the harness);
-    // consumers can override individual chains by adding their own
-    // agent.<name>.fallback_models block to opencode.json. Requires
-    // 0.3.1+ for the frontmatter-merge path.
-    '@razroo/opencode-model-fallback': '^0.3.1',
   },
   engines: { node: '>=18' },
 };
@@ -142,16 +134,11 @@ write('package.json', JSON.stringify(consumerPkg, null, 2) + '\n');
 
 const opencodeCfg = {
   $schema: 'https://opencode.ai/config.json',
-  // Keep the top-level orchestrator on a free model too. Subagents pin
-  // their own models in .opencode/agents/*.md; this covers the main chat
-  // session and any commands that don't hop to a subagent immediately.
-  model: 'openrouter/qwen/qwen3-coder:free',
-  small_model: 'openrouter/google/gemma-4-26b-a4b-it:free',
-  // Model-fallback plugin: on rate-limit / 5xx / known provider errors,
-  // rotates the agent's model to the next entry in its fallback_models
-  // chain (see `agent` below) and replays the request. Without this, a
-  // rate-limited free-tier model wedges the whole subagent flow.
-  plugin: ['@razroo/opencode-model-fallback'],
+  // Keep the top-level orchestrator on JobForge's low-cost paid OpenCode
+  // route. Subagents pin the same route in .opencode/agents/*.md so job
+  // applications do not fall through overloaded free OpenRouter pools.
+  model: 'opencode-go/deepseek-v4-flash',
+  small_model: 'opencode-go/deepseek-v4-flash',
   // Files listed here load into every session's cached prefix, so they're
   // cached once (on Anthropic) instead of Read-as-tool-call on every session.
   //   AGENTS.harness.md → symlink to node_modules/job-forge/AGENTS.md (harness rules)
@@ -180,31 +167,6 @@ const opencodeCfg = {
       // the HTTP server is unused and its port (default 3000) only
       // causes EADDRINUSE conflicts with other local processes.
       environment: { DISABLE_HTTP: 'true' },
-    },
-  },
-  // Register the exact OpenRouter free models the harness uses so they're
-  // selectable even if they are not in OpenCode's built-in preloaded set.
-  // This list is a superset: role primaries, per-agent fallback chains,
-  // and the orchestrator fallback chain.
-  provider: {
-    openrouter: {
-      models: {
-        // Orchestrator + agentic coding (role default)
-        'qwen/qwen3-coder:free': {},
-        // Role primaries
-        'z-ai/glm-4.5-air:free': {}, // fast
-        'qwen/qwen3-next-80b-a3b-instruct:free': {}, // quality
-        'openai/gpt-oss-20b:free': {}, // minimal
-        // Common fallbacks
-        'openai/gpt-oss-120b:free': {},
-        'minimax/minimax-m2.5:free': {},
-        'nvidia/nemotron-3-super-120b-a12b:free': {},
-        'nvidia/nemotron-3-nano-30b-a3b:free': {},
-        'nvidia/nemotron-nano-9b-v2:free': {},
-        'google/gemma-4-26b-a4b-it:free': {},
-        'google/gemma-4-31b-it:free': {},
-        'meta-llama/llama-3.3-70b-instruct:free': {},
-      },
     },
   },
   // Restrict the primary orchestrator to dispatching only the three harness

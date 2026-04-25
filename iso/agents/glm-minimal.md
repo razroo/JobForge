@@ -1,23 +1,16 @@
 ---
-description: Narrow-scope extractor on free-tier model. Use for single-purpose tasks where the orchestrator passes the exact input and expects a small, structured output — e.g., "extract these 8 fields from this JD text" or "parse this form schema into a label→type map". NOT for multi-step workflows.
+description: Narrow-scope extractor on the low-cost DeepSeek V4 Flash OpenCode route. Use for single-purpose tasks where the orchestrator passes the exact input and expects a small, structured output — e.g., "extract these 8 fields from this JD text" or "parse this form schema into a label→type map". NOT for multi-step workflows.
 role: minimal
 targets:
-  # No inline model: iso-route's "standard" preset maps role "minimal" to
-  # each harness's smallest credible model. Claude Code reads
+  # No inline model: JobForge's models.yaml maps role "minimal" to each
+  # harness's smallest credible model. On OpenCode that is pinned to
+  # opencode-go/deepseek-v4-flash. Claude Code reads
   # .claude/iso-route.resolved.json; OpenCode reads opencode.json's
   # agent.minimal.model (iso-harness 0.6.0+).
   opencode:
     mode: subagent
     temperature: 0
     reasoningEffort: none
-    # Primary (openai/gpt-oss-20b:free) resolves from openrouter-free
-    # preset. Fallback chain sticks to small dense models with reliable
-    # structured-output behavior — no creative generation upstream.
-    fallback_models:
-      - openrouter/google/gemma-4-26b-a4b-it:free
-      - openrouter/nvidia/nemotron-nano-9b-v2:free
-      - openrouter/google/gemma-4-31b-it:free
-      - openrouter/z-ai/glm-4.5-air:free
     tools:
       geometra_*: false
       gmail_*: false

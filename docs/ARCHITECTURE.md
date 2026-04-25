@@ -43,11 +43,11 @@ The consumer's `opencode.json` loads a small set of stable files as always-prese
 
 The skill router (`.opencode/skills/job-forge.md`) loads mode and data files on demand, keeping per-session input tokens low (~20-40K for most modes instead of ~130-170K when everything was force-loaded).
 
-**Cost-tiered subagents** live in `.opencode/agents/` (`general-free`, `general-paid`, `glm-minimal`). On OpenCode, JobForge now uses a mix of native free models and free OpenRouter routes, with different quality/latency tiers per task shape. See [MODEL-ROUTING.md](MODEL-ROUTING.md) for the routing architecture, why it exists, and how to customize.
+**Cost-tiered subagents** live in `.opencode/agents/` (`general-free`, `general-paid`, `glm-minimal`). On OpenCode, JobForge pins all three tiers to `opencode-go/deepseek-v4-flash` by default, while the tiers still differ by tool surface, reasoning budget, and task prompt. See [MODEL-ROUTING.md](MODEL-ROUTING.md) for the routing architecture, why it exists, and how to customize.
 
 **Multi-harness support.** Because `iso/` is the single source of truth, publishing ships config for OpenCode, Cursor, Claude Code, and Codex in one tarball. Consumers run any of `opencode`, `cursor`, `claude`, or `codex` in the project and each picks up the shared MCP config + instructions via the symlinks above.
 
-**Upgrading** the harness in a consumer project is `npm run update-harness` — pulls the latest `job-forge` from npm, refreshes the fallback plugin + pinned MCPs, re-runs symlink sync, and prints the resolved version.
+**Upgrading** the harness in a consumer project is `npm run update-harness` — pulls the latest `job-forge` from npm, refreshes pinned MCPs, re-runs symlink sync, and prints the resolved version.
 
 ## System Overview
 

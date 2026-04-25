@@ -17,7 +17,7 @@ Live application assistant. Reads the active application form in Chrome (via Geo
   why: prior aborted subagents leave Chromium sessions stuck in the pool; next `geometra_connect` fails with "Not connected" (see root `[H3]`)
 
 - [H5] Max 2 parallel `task` dispatches per round. For N jobs, run `ceil(N/2)` sequential rounds of 2. Never emit 3+ dispatches in a single message. Do not start the next round until both current-round subagents return final outcomes (`APPLIED`, `APPLY FAILED`, `SKIP`, `Discarded`, or a written TSV path); task/session ids are only launch receipts.
-  why: free-tier rate limits + subagent post-cleanup cost; racing more than 2 reliably loses at least one result (see root `[H1]`). A 2026-04-25 OpenCode trace launched round 2 while round 1 was still running, then lost two fallback recoveries
+  why: subagent post-cleanup cost and portal state make racing more than 2 unreliable (see root `[H1]`). A 2026-04-25 OpenCode trace launched round 2 while round 1 was still running, then lost two provider recoveries
 
 ## Defaults
 
@@ -46,10 +46,10 @@ Live application assistant. Reads the active application form in Chrome (via Geo
   why: class-B Ashby / Cloudflare-fronted portals need a residential outbound IP; the fix is wired in Geometra MCP v1.59.0 but the orchestrator owns the config pipe. See "BYO Residential Proxy" in modes/reference-portals.md.
 
 - [D8] Upgrade application routing to `@general-paid` when the offer score is ≥ 4.0/5, the user flags "top-tier", "dream job", or "high-stakes", or the candidate is late-stage/post-screen.
-  why: form-fill flows are 6+ steps; free-tier sometimes aborts mid-flow on large Greenhouse/Workday schemas; paid tier has more headroom
+  why: high-stakes applications need the quality-sensitive prompt and medium reasoning budget even though OpenCode now routes both application tiers through DeepSeek V4 Flash by default
 
-- [D9] If an upgraded `@general-paid` subagent fails with provider-side errors, re-dispatch the same URL once on `@general-free` before marking FAILED. Provider-side errors include Venice, Diem, Chutes, HTTP 402/429, insufficient credits/funds/balance, overload, and temporarily unavailable.
-  why: OpenCode paid-tier routing can still use free OpenRouter model IDs; backend pool limits are not evidence that a procedural free-tier worker cannot complete the same form after preflight gates pass
+- [D9] If a subagent fails with provider-side errors, do not auto-downgrade or re-dispatch the same URL. Report the provider failure, leave any TSV untouched unless there is a confirmed outcome, and inspect telemetry before retrying.
+  why: OpenCode now pins all JobForge application tiers to DeepSeek V4 Flash; switching `@general-paid` → `@general-free` changes the prompt/tool budget but not the provider route, so automatic duplicate dispatches add risk without fixing provider availability
 
 ## Procedure
 
@@ -65,7 +65,7 @@ Live application assistant. Reads the active application form in Chrome (via Geo
 10. Generate answers from Block B + Block F + Section G + JD.
 11. Submit as ONE `run_actions` call [H1] using labels [D6] with `imeFriendly: true` [D4].
 12. On session error, run the 4-step recovery; only one retry [H2].
-13. On upgraded-provider failure, downgrade once to `@general-free` [D9].
+13. On provider failure, stop and inspect telemetry before any retry [D9].
 14. On OTP prompt, fetch the code from Gmail via `gmail_get_message`.
 15. Submit the OTP with `geometra_fill_otp` and click Submit.
 16. Write outcome as `batch/tracker-additions/*.tsv` [H3].
@@ -98,7 +98,7 @@ Or, on failure:
 APPLY FAILED AFTER RECOVERY: <url>
   Error 1: <first error>
   Error 2: <post-recovery error>
-  Recommend: re-dispatch on @general-paid
+  Recommend: inspect telemetry before retrying this URL
 ```
 
 ---
@@ -359,10 +359,10 @@ Call 4:  geometra_run_actions({
    APPLY FAILED AFTER RECOVERY: <URL>
    Error 1: <first error message>
    Error 2: <error after recovery>
-   Recommend: re-dispatch on @general-paid
+   Recommend: inspect telemetry before retrying this URL
    ```
 
-   Do NOT try a third time. Do NOT try a different approach. The orchestrator will decide whether to re-dispatch on a bigger model.
+   Do NOT try a third time. Do NOT try a different approach. The orchestrator will decide whether to retry after inspecting telemetry.
 
 ### Skip schema re-fetches mid-flow (Rule D)
 

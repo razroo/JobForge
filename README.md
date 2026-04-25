@@ -74,8 +74,8 @@ JobForge turns opencode into a full job search command center. Instead of manual
 | **Portal Scanner** | 45+ companies pre-configured with fuzzy dedup for reposts |
 | **Batch Processing** | Parallel evaluation with `opencode run` workers, with honest verification flagging |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
-| **Cost-Aware Agent Routing** | Three subagents (`@general-free`, `@general-paid`, `@glm-minimal`) with per-task model tiers. On OpenCode, JobForge mixes native free models with free OpenRouter routes so the harness stays no-cost without forcing every task through the same provider. See [Subagent Routing in AGENTS.md](AGENTS.md) for the task-to-agent mapping. |
-| **Automatic Model Fallback** | When a model rate-limits or 5xx's, [`@razroo/opencode-model-fallback`](https://www.npmjs.com/package/@razroo/opencode-model-fallback) rotates the agent through a configured `fallback_models` chain and replays the request. JobForge's OpenCode defaults stay on free models for both primaries and fallbacks. |
+| **Cost-Aware Agent Routing** | Three subagents (`@general-free`, `@general-paid`, `@glm-minimal`) with per-task tool surfaces. On OpenCode, JobForge pins all tiers to `opencode-go/deepseek-v4-flash` so application runs avoid overloaded free-model pools. See [Subagent Routing in AGENTS.md](AGENTS.md) for the task-to-agent mapping. |
+| **Trace + Telemetry** | `job-forge trace:*` exposes local OpenCode transcripts, and `job-forge telemetry:*` summarizes runs, child outcomes, provider errors, and pending tracker TSVs. |
 | **Token Cost Visibility** | `job-forge tokens --days 1` for per-session breakdown; `job-forge session-report --since-minutes 60 --log` to flag sessions over budget and append history to `data/token-usage.tsv`. Auto-logged after every batch run. |
 
 ## Usage

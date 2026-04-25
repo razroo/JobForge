@@ -75,7 +75,6 @@ const links = [
 
   // OpenCode: skill router + subagent definitions. Users can override any
   // single subagent by replacing its symlink with a local file.
-  { src: '.opencode/opencode-model-fallback.json', dst: '.opencode/opencode-model-fallback.json' },
   { src: '.opencode/skills/job-forge.md',  dst: '.opencode/skills/job-forge.md' },
   { src: '.opencode/agents',               dst: '.opencode/agents' },
 
