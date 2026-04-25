@@ -158,7 +158,11 @@ Step 4  — Loop in rounds of 2 (Hard Limit #1)
     # Dispatch 1 or 2 task() calls in ONE message (never 3+)
     task(subagent_type=<tier per AGENTS.md routing>, prompt=<apply prompt for pair[0]>)
     task(subagent_type=<tier>, prompt=<apply prompt for pair[1]>)  # only if pair has 2
-    # WAIT for both subagents to return before proceeding
+    # WAIT for both subagents to return final APPLIED / APPLY FAILED / SKIP /
+    # Discarded outcomes or TSV paths before proceeding.
+    # A returned task/session id is only a launch receipt, not completion.
+    # Do not create a "check task status" task; inspect tracker files or
+    # iso-trace if the user asks for status later.
     # Read their return values, log outcomes
 
 Step 5  — Between rounds: clean sessions again

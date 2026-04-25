@@ -188,7 +188,8 @@ Step 2:  geometra_disconnect({ closeBrowser: true })
 Step 3:  geometra_connect({ pageUrl: "<the URL the orchestrator gave you>", isolated: true, headless: true, slowMo: 350 })
 ```
 
-**If the orchestrator passed a `proxy` object in the task prompt** (sourced from `config/profile.yml`), add it to Step 3:
+**If the orchestrator says proxy is configured,** read the top-level
+`proxy:` block from `config/profile.yml` and add it to Step 3:
 
 ```
 Step 3:  geometra_connect({
@@ -197,7 +198,7 @@ Step 3:  geometra_connect({
          })
 ```
 
-Pass the proxy object through unchanged. Do NOT paraphrase or drop fields — `username`/`password`/`bypass` are optional, so only include what the orchestrator gave you. See the "BYO Residential Proxy" reference section for the why.
+Pass the proxy object through unchanged. Do NOT paraphrase or drop fields — `username`/`password`/`bypass` are optional, so only include what exists in `config/profile.yml`. Do not echo proxy credentials in status text. See the "BYO Residential Proxy" reference section for the why.
 
 **DO NOT** skip Step 1 or Step 2. **DO NOT** think about whether it's needed. **DO NOT** look at `geometra_list_sessions` output and reason about it — just always call `geometra_disconnect({ closeBrowser: true })` next. The disconnect is a no-op if the pool is empty, and a poison-cure if it isn't.
 

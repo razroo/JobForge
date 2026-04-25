@@ -16,8 +16,8 @@ Live application assistant. Reads the active application form in Chrome (via Geo
 - [H4] Before dispatching the first subagent in a multi-job run, the orchestrator MUST call `geometra_list_sessions` then `geometra_disconnect({closeBrowser: true})`. Every dispatch-round, no exceptions.
   why: prior aborted subagents leave Chromium sessions stuck in the pool; next `geometra_connect` fails with "Not connected" (see root `[H3]`)
 
-- [H5] Max 2 parallel `task` dispatches per round. For N jobs, run `ceil(N/2)` sequential rounds of 2. Never emit 3+ dispatches in a single message.
-  why: free-tier rate limits + subagent post-cleanup cost; racing more than 2 reliably loses at least one result (see root `[H1]`)
+- [H5] Max 2 parallel `task` dispatches per round. For N jobs, run `ceil(N/2)` sequential rounds of 2. Never emit 3+ dispatches in a single message. Do not start the next round until both current-round subagents return final outcomes (`APPLIED`, `APPLY FAILED`, `SKIP`, `Discarded`, or a written TSV path); task/session ids are only launch receipts.
+  why: free-tier rate limits + subagent post-cleanup cost; racing more than 2 reliably loses at least one result (see root `[H1]`). A 2026-04-25 OpenCode trace launched round 2 while round 1 was still running, then lost two fallback recoveries
 
 ## Defaults
 
@@ -42,7 +42,7 @@ Live application assistant. Reads the active application form in Chrome (via Geo
 - [D6] Use `fieldLabel` over `fieldId` everywhere it works.
   why: labels are stable across DOM refreshes; IDs are regenerated
 
-- [D7] If the orchestrator's task prompt includes a `proxy` object (sourced from `config/profile.yml`), pass it verbatim into every `geometra_connect` call — including Call 3 of the recovery sequence. If absent, run without one; never invent a proxy URL.
+- [D7] If the orchestrator says a proxy is configured, read the top-level `proxy:` block from `config/profile.yml` and pass that object into every `geometra_connect` call — including Call 3 of the recovery sequence. If the task prompt includes a legacy inline `proxy` object, pass it through, but do not echo credentials in status text. If absent, run without one; never invent a proxy URL.
   why: class-B Ashby / Cloudflare-fronted portals need a residential outbound IP; the fix is wired in Geometra MCP v1.59.0 but the orchestrator owns the config pipe. See "BYO Residential Proxy" in modes/reference-portals.md.
 
 - [D8] Upgrade application routing to `@general-paid` when the offer score is ≥ 4.0/5, the user flags "top-tier", "dream job", or "high-stakes", or the candidate is late-stage/post-screen.
@@ -115,6 +115,13 @@ Sections below are the detailed runbooks, decision tables, and portal-specific e
 
 **DO NOT dispatch 3+ `task` calls in one message.** Two is the absolute ceiling. This is non-negotiable, even when the user asks for "apply to 10 jobs" — that becomes 5 rounds of 2, not one message with 10 dispatches.
 
+**A task/session id is not a result.** If OpenCode gives you a `ses_...`
+id or title after dispatch, do not treat that as the subagent return.
+Do not create another `task` to check it. Stop the round, report the
+in-flight ids, and resume only after a real outcome is visible in the
+subagent return or in an authoritative file (`batch/tracker-additions/`,
+`batch/tracker-additions/merged/`, or the day file).
+
 For a single application interactively, carry on in the current session — the rule targets multi-job loops.
 
 ## Apply Preflight — Location Filter (orchestrator runs before dispatch)
@@ -176,7 +183,8 @@ Step 4  — For round in ceil(N/2):
             # ONE message, 1 or 2 task() calls. Never 3.
             task(apply to pair[0])
             task(apply to pair[1])  # only if pair has 2
-            # WAIT for both returns. Do not proceed until both done.
+            # WAIT for both final outcomes. A session id is not completion.
+            # Do not dispatch round N+1 while round N is still in flight.
 Step 5  — Between rounds: geometra_list_sessions() + geometra_disconnect({closeBrowser: true})
 Step 6  — Reconcile outcomes (Hard Limit #6):
             bash: npx job-forge merge       # TSVs → day file

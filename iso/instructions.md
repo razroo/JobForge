@@ -4,8 +4,8 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 
 ## Hard limits
 
-- [H1] Max 2 parallel `task` dispatches per message. For N jobs, run `ceil(N/2)` sequential rounds of 2. Applies in all modes, for all user phrasings ("urgent", "apply to 10 jobs now").
-  why: higher parallelism blows through free-tier rate limits; each subagent requires post-cleanup and racing more than 2 reliably loses at least one result
+- [H1] Max 2 parallel `task` dispatches per message. For N jobs, run `ceil(N/2)` sequential rounds of 2. A round is not complete until both subagents return a final outcome (`APPLIED`, `APPLY FAILED`, `SKIP`, `Discarded`, or a written TSV path). A `task` tool result that only gives a session id / title is a launch acknowledgement, not completion. Applies in all modes, for all user phrasings ("urgent", "apply to 10 jobs now").
+  why: higher parallelism blows through free-tier rate limits; each subagent requires post-cleanup and racing more than 2 reliably loses at least one result. On 2026-04-25 the orchestrator launched round 2 while round 1 had only returned task ids, leaving four application subagents in flight and losing two provider-fallback recoveries
 
 - [H2] Max 1 application per company+role. Before every `apply` dispatch, grep all four sources for the URL and for `company+role`: `data/pipeline.md`, all `data/applications/*.md` day files, `batch/tracker-additions/*.tsv`, `batch/tracker-additions/merged/*.tsv`. If any source shows APPLIED / Applied, skip the dispatch.
   why: 2026-04 same-day batch collision — when two batches target the same role, `npx job-forge merge` updates the existing day-file row rather than appending, so grepping day files alone misses earlier-batch applies; merged/*.tsv is the only place the breadcrumb remains
@@ -18,6 +18,9 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 
 - [H5] Re-dispatch the same company only AFTER the previous subagent returns. Never fire the same `task` twice while the first is still in flight.
   why: two in-flight subagents for the same URL race on Geometra sessions and on tracker TSV writes, corrupting state and sometimes double-submitting
+
+- [H5b] Do not use `task` to poll task status. If OpenCode returns a task/session id without a final result, record the id, stop dispatching new rounds, and tell the user the round is still in flight. When the user asks to check later, inspect authoritative files (`batch/tracker-additions/*.tsv`, `batch/tracker-additions/merged/*.tsv`, day files, or `iso-trace`) rather than spawning a "check task status" subagent.
+  why: OpenCode status prompts can be delivered into the target subagent as a new user message; a 2026-04-25 trace caused a subagent to call `task` recursively instead of finishing the application
 
 - [H6] Application outcomes flow through `batch/tracker-additions/*.tsv`, not `data/pipeline.md`. After any multi-apply run, the orchestrator MUST run `npx job-forge merge` then `npx job-forge verify` before ending the session.
   why: `pipeline.md` is the URL inbox (`[ ]` pending → `[x]` processed); `data/applications/YYYY-MM-DD.md` is the outcome log; the TSV pathway is the only safe bridge because `merge` handles column order and duplicate detection
@@ -51,7 +54,7 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
 3. Read the active mode file [D3]; decide inline vs delegated work [D1].
 4. Prepare Geometra dispatches: cleanup [H3], dedupe [H2], location filter [D5], routing [D2].
-5. Dispatch at most 2 tasks per round [H1]; wait per company [H5].
+5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b].
 6. Keep multi-job form-filling out of the orchestrator [H4].
 7. Cross-check subagent facts against authoritative files [H7].
 8. Apply score gate [D4].

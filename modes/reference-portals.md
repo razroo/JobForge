@@ -75,16 +75,17 @@ See `config/profile.example.yml` for the commented-out template.
 
 **Orchestrator responsibilities:**
 
-1. On session start, read `config/profile.yml` once. If a `proxy:` block is present, capture it as the `PROXY_CONFIG` for the session.
-2. When dispatching any subagent whose work involves a `geometra_connect` call, include `PROXY_CONFIG` verbatim in the task prompt. Example dispatch prompt line: "Pass `proxy: { server: ..., username: ..., password: ..., bypass: ... }` to every `geometra_connect` call you make."
-3. When the orchestrator itself opens a Chromium session (single-application interactive flow), include the same `proxy` object in its own `geometra_connect` call.
+1. On session start, read `config/profile.yml` once. If a `proxy:` block is present, remember that a proxy is configured, but do not paste username/password values into task prompts or user-visible status.
+2. When dispatching any subagent whose work involves a `geometra_connect` call, tell it to read `config/profile.yml` and pass the top-level `proxy:` block to every `geometra_connect` call. Example dispatch prompt line: "Proxy is configured; read `config/profile.yml` and pass its top-level `proxy:` object to every `geometra_connect` call."
+3. When the orchestrator itself opens a Chromium session (single-application interactive flow), include the same `proxy` object from `config/profile.yml` in its own `geometra_connect` call.
 4. If `proxy:` is absent from `profile.yml`, skip the param entirely. Do NOT invent a proxy URL or leave a stale placeholder.
 
 **Subagent responsibilities:**
 
-1. If the task prompt includes a `proxy` object, pass it through to `geometra_connect` and any `geometra_prepare_browser` calls unchanged.
-2. If the task prompt does NOT include a proxy object, run without one.
-3. Never second-guess the proxy field — if the orchestrator sourced it from `profile.yml`, it's authoritative.
+1. If the task prompt says proxy is configured, read `config/profile.yml` and pass the top-level `proxy:` object through to `geometra_connect` and any `geometra_prepare_browser` calls unchanged.
+2. If the task prompt includes a legacy inline `proxy` object, pass it through unchanged, but never print the credentials back in status text.
+3. If the task prompt does NOT mention a proxy and `config/profile.yml` has no `proxy:` block, run without one.
+4. Never second-guess the proxy field — if it comes from `profile.yml`, it's authoritative.
 
 ### When proxy use is load-bearing
 
