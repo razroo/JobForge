@@ -176,7 +176,10 @@ When `location_constraints` is absent, use the prose fields:
 
 ```
 Step 1  — Build the job list (N items)
-Step 2  — Dedup: Grep data/pipeline.md + today's day file for each company+role. Drop any already APPLIED.
+Step 2  — Dedup: for each candidate, grep all four sources for the URL and for company+role:
+          data/pipeline.md, all data/applications/*.md day files,
+          batch/tracker-additions/*.tsv, batch/tracker-additions/merged/*.tsv.
+          Drop any already APPLIED before counting toward N; pick replacements from the remaining list.
 Step 3  — geometra_list_sessions() + geometra_disconnect({closeBrowser: true})  [once, before loop]
 Step 4  — For round in ceil(N/2):
             pair = jobs[round*2 : round*2 + 2]
@@ -192,7 +195,7 @@ Step 6  — Reconcile outcomes (Hard Limit #6):
 Step 7  — Summarize outcomes; do NOT auto-retry failures.
 ```
 
-If a subagent fails, report it in the summary and let the user decide whether to retry. Never auto-retry — re-running a submit step risks duplicate applications.
+If a subagent fails, report it in the summary and let the user decide whether to retry. Never auto-retry — re-running a submit step risks duplicate applications. If a subagent returns SKIP because it discovered a duplicate, treat that as a missed preflight check: finish the current round, then choose a replacement candidate only after re-running dedupe against all four sources.
 
 **Outcome routing (Hard Limit #6 in `AGENTS.md`):**
 - Subagents write `batch/tracker-additions/{num}-{slug}.tsv` — one TSV per job.

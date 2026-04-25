@@ -140,13 +140,18 @@ When the user says "apply to N jobs", "process the pipeline", or similar, execut
 
 ```
 Step 1  — Enumerate candidates
-  - Grep data/applications/$(date +%Y-%m-%d).md and the last 3 day files for status "Evaluated"
+  - Grep data/applications/*.md for status "Evaluated" without loading every file into context
   - Also read data/pipeline.md for unprocessed URLs
   - Build ordered list: candidates = [job_1, job_2, ..., job_N]
 
 Step 2  — Dedup against already-applied
-  - For each candidate, Grep data/pipeline.md + today's day file for "APPLIED" + company+role
-  - Drop any match. Never re-apply.
+  - For each candidate, grep all four sources for URL and company+role:
+    data/pipeline.md, data/applications/*.md, batch/tracker-additions/*.tsv,
+    batch/tracker-additions/merged/*.tsv
+  - Drop any APPLIED / Applied match before counting toward N. Never re-apply.
+  - If a subagent later returns SKIP because it found a duplicate, treat that as
+    a missed preflight check; finish the current round, re-run dedupe, then pick
+    a replacement from the remaining candidates.
 
 Step 3  — Pre-flight cleanup (once, before the loop)
   - geometra_list_sessions()

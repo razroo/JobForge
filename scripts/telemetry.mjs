@@ -142,15 +142,32 @@ function analyzeSession(session, allSessions, opts) {
   const parts = rows.parts.map((row) => ({ row, data: parseJson(row.data) }));
   const messageById = new Map(messages.map((m) => [m.row.id, m.data]));
   const textParts = parts.filter((p) => p.data.type === 'text');
-  const userPrompt = firstUserText(textParts, messageById);
   const taskCalls = parts.filter((p) => p.data.type === 'tool' && p.data.tool === 'task').map(taskCallSummary);
+  const userRequests = userRequestSummaries(textParts, messageById);
+  const activeRequest = userRequests.at(-1) || null;
+  const userPrompt = activeRequest?.prompt || userRequests[0]?.prompt || '';
+  const latestTaskCalls = activeRequest
+    ? taskCalls.filter((task) => task.atMs >= activeRequest.atMs)
+    : taskCalls;
   const providerErrors = messages.map(providerErrorSummary).filter(Boolean);
-  const policyIssues = detectPolicyIssues(session, parts, textParts, messageById, providerErrors);
+  const rootModels = modelUsageFromMessages(messages);
   const tracker = trackerStatus(opts.cwd);
   const children = allSessions
     .filter((candidate) => candidate.parentId === session.id)
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt))
     .map((child) => childSummary(child));
+  const latestChildren = activeRequest
+    ? children.filter((child) => child.startedAtMs >= activeRequest.atMs)
+    : children;
+  const models = mergeModelUsage([rootModels, ...children.map((child) => child.models)]);
+  const policyIssues = detectPolicyIssues(session, parts, textParts, messageById, providerErrors, {
+    taskCalls,
+    latestTaskCalls,
+    children,
+    latestChildren,
+    activeRequest,
+    models,
+  });
   const childOutcomes = children.filter((child) => child.outcome !== 'unknown').length;
   const childProviderErrors = children.reduce((sum, child) => sum + child.providerErrors, 0);
   const status = sessionStatus({ session, taskCalls, children, childOutcomes, childProviderErrors, policyIssues, providerErrors });
@@ -161,17 +178,27 @@ function analyzeSession(session, allSessions, opts) {
     projectDir: opts.cwd,
     status,
     prompt: userPrompt,
+    userRequests,
+    latestRequest: activeRequest ? {
+      ...activeRequest,
+      taskDispatches: latestTaskCalls.filter((task) => !task.isStatusPoll).length,
+      children: latestChildren.length,
+      childOutcomes: latestChildren.filter((child) => child.outcome !== 'unknown').length,
+    } : null,
     tasks: {
       total: taskCalls.length,
       statusPolls: taskCalls.filter((task) => task.isStatusPoll).length,
+      running: taskCalls.filter((task) => task.status && task.status !== 'completed').length,
       calls: taskCalls,
     },
     children: {
       total: children.length,
       withOutcomes: childOutcomes,
       providerErrors: childProviderErrors,
+      toolErrors: children.reduce((sum, child) => sum + child.toolErrors, 0),
       sessions: children,
     },
+    models,
     providerErrors,
     policyIssues,
     tracker,
@@ -179,13 +206,19 @@ function analyzeSession(session, allSessions, opts) {
   };
 }
 
-function firstUserText(textParts, messageById) {
-  for (const part of textParts) {
-    if (messageById.get(part.row.message_id)?.role === 'user') {
-      return clean(redactSecrets(part.data.text || ''));
-    }
-  }
-  return '';
+function userRequestSummaries(textParts, messageById) {
+  return textParts
+    .filter((part) => messageById.get(part.row.message_id)?.role === 'user')
+    .map((part) => {
+      const prompt = clean(redactSecrets(part.data.text || ''));
+      return {
+        at: msToIso(part.row.time_created),
+        atMs: Number(part.row.time_created),
+        prompt,
+        requestedJobs: requestedJobCount(prompt),
+      };
+    })
+    .filter((request) => request.prompt.length > 0);
 }
 
 function taskCallSummary(part) {
@@ -201,6 +234,7 @@ function taskCallSummary(part) {
 
   return {
     at: msToIso(part.row.time_created),
+    atMs: Number(part.row.time_created),
     description,
     subagentType,
     sessionId,
@@ -208,6 +242,7 @@ function taskCallSummary(part) {
     isStatusPoll,
     promptBytes: Buffer.byteLength(prompt, 'utf8'),
     proxyLeak: hasProxyLeak(prompt),
+    url: firstUrl(prompt),
   };
 }
 
@@ -226,10 +261,15 @@ function providerErrorSummary(message) {
   };
 }
 
-function detectPolicyIssues(session, parts, textParts, messageById, providerErrors) {
+function detectPolicyIssues(session, parts, textParts, messageById, providerErrors, context = {}) {
   const issues = [];
   const taskParts = parts.filter((p) => p.data.type === 'tool' && p.data.tool === 'task');
-  const statusPolls = taskParts.map(taskCallSummary).filter((task) => task.isStatusPoll);
+  const taskCalls = context.taskCalls || taskParts.map(taskCallSummary);
+  const latestTaskCalls = context.latestTaskCalls || taskCalls;
+  const children = context.children || [];
+  const latestChildren = context.latestChildren || children;
+  const activeRequest = context.activeRequest || null;
+  const statusPolls = taskCalls.filter((task) => task.isStatusPoll);
   if (statusPolls.length > 0) {
     issues.push({
       type: 'task_status_poll',
@@ -269,12 +309,90 @@ function detectPolicyIssues(session, parts, textParts, messageById, providerErro
     });
   }
 
+  const dedupeMisses = children.filter((child) => child.dedupeMiss).length;
+  if (dedupeMisses > 0) {
+    issues.push({
+      type: 'dedupe_preflight_missed',
+      severity: 'high',
+      count: dedupeMisses,
+      detail: 'One or more child sessions found an already-applied duplicate that should have been filtered before dispatch.',
+    });
+  }
+
+  const freeModels = context.models?.filter((model) => isFreeModelRoute(model.provider, model.model)) || [];
+  if (freeModels.length > 0) {
+    issues.push({
+      type: 'free_model_usage',
+      severity: 'high',
+      count: freeModels.reduce((sum, model) => sum + model.count, 0),
+      detail: `Trace used free/legacy model routes: ${freeModels.map(modelLabel).join(', ')}.`,
+    });
+  }
+
+  const duplicateUrlCount = duplicateTaskUrlCount(taskCalls);
+  if (duplicateUrlCount > 0) {
+    issues.push({
+      type: 'duplicate_task_url',
+      severity: 'high',
+      count: duplicateUrlCount,
+      detail: 'The same job URL was dispatched more than once in this root session.',
+    });
+  }
+
+  const runningTasks = taskCalls.filter((task) => task.status && task.status !== 'completed');
+  if (runningTasks.length > 0) {
+    const consumed = runningTasks.filter((task) => {
+      if (!task.sessionId) return false;
+      const child = children.find((candidate) => candidate.id === task.sessionId);
+      return child && child.outcome !== 'unknown';
+    }).length;
+    issues.push({
+      type: consumed === runningTasks.length ? 'task_result_not_consumed' : 'task_still_running',
+      severity: consumed === runningTasks.length ? 'medium' : 'high',
+      count: runningTasks.length,
+      detail: consumed === runningTasks.length
+        ? 'One or more task calls still show running even though child sessions have terminal-looking outcomes; root did not consume the final task result.'
+        : 'One or more task calls still show running and do not have terminal child outcomes.',
+    });
+  }
+
+  const latestAssistantText = textParts
+    .filter((part) => messageById.get(part.row.message_id)?.role === 'assistant')
+    .filter((part) => !activeRequest || Number(part.row.time_created) >= activeRequest.atMs)
+    .map((part) => part.data.text || '')
+    .join('\n');
+  const latestDispatches = latestTaskCalls.filter((task) => !task.isStatusPoll).length;
+  if (activeRequest?.requestedJobs && latestDispatches > 0 && latestDispatches < activeRequest.requestedJobs && !mentionsLimitedCandidatePool(latestAssistantText)) {
+    issues.push({
+      type: 'requested_count_not_met',
+      severity: 'high',
+      count: activeRequest.requestedJobs - latestDispatches,
+      detail: `Latest request asked for ${activeRequest.requestedJobs} jobs, but only ${latestDispatches} task dispatches are visible after that prompt.`,
+    });
+  }
+
+  if (latestDispatches > 0 && latestChildren.some((child) => child.outcome === 'unknown') && !/round .*in flight|still running|waiting/i.test(latestAssistantText)) {
+    issues.push({
+      type: 'latest_children_missing_outcomes',
+      severity: 'high',
+      count: latestChildren.filter((child) => child.outcome === 'unknown').length,
+      detail: 'Latest request has child sessions without visible terminal outcomes.',
+    });
+  }
+
   const finalText = textParts
     .filter((part) => messageById.get(part.row.message_id)?.role === 'assistant')
     .slice(-5)
     .map((part) => part.data.text || '')
     .join('\n');
-  if (taskParts.length > 0 && !hasOutcome(finalText) && !/round .*in flight|still running|waiting/i.test(finalText)) {
+  if (latestDispatches > 0 && !hasOutcome(latestAssistantText) && !/round .*in flight|still running|waiting/i.test(latestAssistantText)) {
+    issues.push({
+      type: 'latest_request_no_visible_final_outcome',
+      severity: 'high',
+      count: 1,
+      detail: 'Latest request dispatched task work but assistant text after that request has no final outcome or in-flight notice.',
+    });
+  } else if (taskParts.length > 0 && !hasOutcome(finalText) && !/round .*in flight|still running|waiting/i.test(finalText)) {
     issues.push({
       type: 'no_visible_final_outcome',
       severity: 'medium',
@@ -297,39 +415,68 @@ function childSummary(session) {
   const rows = loadRows(session.id);
   const messages = rows.messages.map((row) => ({ row, data: parseJson(row.data) }));
   const parts = rows.parts.map((row) => ({ row, data: parseJson(row.data) }));
-  const text = parts.filter((p) => p.data.type === 'text').map((p) => p.data.text || '').join('\n');
+  const messageById = new Map(messages.map((m) => [m.row.id, m.data]));
+  const assistantTexts = parts
+    .filter((p) => p.data.type === 'text' && messageById.get(p.row.message_id)?.role === 'assistant')
+    .map((p) => p.data.text || '');
+  const finalText = assistantTexts.slice(-5).join('\n');
   const providerErrors = messages.map(providerErrorSummary).filter(Boolean);
   const taskCalls = parts.filter((p) => p.data.type === 'tool' && p.data.tool === 'task').length;
   const trackerWrites = parts.filter((p) => p.data.type === 'tool' && /batch\/tracker-additions\/.*\.tsv/.test(JSON.stringify(p.data.state?.input || {}))).length;
+  const toolErrors = parts.filter((p) => p.data.type === 'tool' && (p.data.state?.status === 'error' || p.data.state?.error)).length;
+  const dedupeMiss = /\b(DUPLICATE|already\s+\*{0,2}Applied|already applied|per \[H2\]|Hard Limit #2|No re-dispatch needed)\b/i.test(finalText) ||
+    /\bpreviously applied (on|as|under)\b/i.test(finalText);
 
   return {
     id: session.id,
     title: session.title,
     startedAt: session.startedAt,
+    startedAtMs: Date.parse(session.startedAt),
     endedAt: session.endedAt,
-    outcome: outcomeFromText(text, trackerWrites),
+    outcome: outcomeFromText(finalText, trackerWrites),
     providerErrors: providerErrors.length,
     taskCalls,
+    toolErrors,
+    dedupeMiss,
     trackerWrites,
+    models: modelUsageFromMessages(messages),
   };
 }
 
 function outcomeFromText(text, trackerWrites = 0) {
-  if (/\bAPPLIED\b|status[^\n|]*Applied|successfully submitted|Applied via/i.test(text)) return 'Applied';
-  if (/\bDiscarded\b|\bSKIP\b/i.test(text)) return 'Discarded';
-  if (/\bAPPLY FAILED\b|\bFailed\b|\bFAILED\b/i.test(text)) return 'Failed';
+  const explicitFailed = /\b(APPLICATION OUTCOME|RESULT|STATUS)(?:\*\*)?\s*[:|-]\s*\*{0,2}\s*(FAILED|APPLY FAILED)\b/i.test(text) ||
+    /\|\s*\*\*?Status\*\*?\s*\|\s*\*\*?Failed\*\*?/i.test(text);
+  const explicitSkipped = /\b(APPLICATION OUTCOME|RESULT|STATUS)(?:\*\*)?\s*[:|-]\s*\*{0,2}\s*(SKIP|SKIPPED|DISCARDED|DISCARD)\b/i.test(text) ||
+    /\|\s*\*\*?Status\*\*?\s*\|\s*\*\*?(SKIP|SKIPPED|Discarded|DISCARDED)\*\*?/i.test(text);
+  const explicitApplied = /\b(APPLICATION OUTCOME|RESULT|STATUS)(?:\*\*)?\s*[:|-]\s*\*{0,2}\s*APPLIED\b/i.test(text) ||
+    /\|\s*\*\*?Status\*\*?\s*\|\s*\*\*?Applied\*\*?/i.test(text);
+
+  if (explicitFailed) return 'Failed';
+  if (explicitSkipped) return 'Discarded';
+  if (explicitApplied) return 'Applied';
+
+  if (/\bAPPLY FAILED\b/i.test(text) || /^\s*(FAILED|Failed)\b/m.test(text)) return 'Failed';
+  if (/^\s*(SKIP|SKIPPED|DISCARDED|Discarded)\b/m.test(text) ||
+    /\b(DUPLICATE|job posting closed|role no longer available)\b/i.test(text)) return 'Discarded';
+  if (/\bwith\s+\*\*?Applied\*\*?\s+status\b/i.test(text) ||
+    /\bAPPLIED\s+https?:\/\//i.test(text) ||
+    /\b(successfully submitted|Applied via|Thank you for applying|confirmation page)\b/i.test(text)) return 'Applied';
   if (trackerWrites > 0) return 'TSV written';
   return 'unknown';
 }
 
 function hasOutcome(text) {
-  return outcomeFromText(text) !== 'unknown' || /tracker-additions\/.*\.tsv/i.test(text);
+  return outcomeFromText(text) !== 'unknown' ||
+    /tracker-additions\/.*\.tsv/i.test(text) ||
+    /\bAll\s+\d+\s+jobs?\s+dispatched\b/i.test(text) ||
+    /\*\*(Applied|Skipped|Failed|Discarded)\s*\(\d+\):\*\*/i.test(text);
 }
 
 function sessionStatus({ taskCalls, children, childOutcomes, childProviderErrors, policyIssues, providerErrors }) {
   if (policyIssues.some((issue) => issue.severity === 'high')) return 'attention';
   if (providerErrors.length > 0) return 'attention';
   if (childProviderErrors > 0) return 'attention';
+  if (taskCalls.some((task) => task.status && task.status !== 'completed')) return 'in-flight-or-incomplete';
   if (taskCalls.length > 0 && children.length > childOutcomes) return 'in-flight-or-incomplete';
   if (taskCalls.length > 0 && children.length === childOutcomes) return 'complete';
   return 'observed';
@@ -361,6 +508,12 @@ function nextActions({ tracker, policyIssues, providerErrors, children }) {
   if (tracker.pending.length > 0) actions.push('Run `npm run merge && npm run verify` when you are ready to fold pending TSV outcomes into day files.');
   if (policyIssues.some((issue) => issue.type === 'task_status_poll')) actions.push('Avoid resuming by spawning "check task status" tasks; inspect telemetry/trace and tracker files instead.');
   if (policyIssues.some((issue) => issue.type === 'proxy_prompt_leak')) actions.push('Restart OpenCode after updating the harness so new sessions load the proxy prompt hygiene rule.');
+  if (policyIssues.some((issue) => issue.type === 'free_model_usage')) actions.push('Restart OpenCode and rerun `npm run update-harness` so application tiers use the bundled DeepSeek V4 Flash route.');
+  if (policyIssues.some((issue) => issue.type === 'requested_count_not_met')) actions.push('Resume the latest apply request or start a new run for the remaining requested jobs; telemetry did not see enough dispatches after the latest prompt.');
+  if (policyIssues.some((issue) => issue.type === 'latest_request_no_visible_final_outcome')) actions.push('Inspect the latest child sessions before treating the current OpenCode run as complete.');
+  if (policyIssues.some((issue) => issue.type === 'task_result_not_consumed')) actions.push('Resume the root session only to collect final task results and summarize; do not dispatch new applications until it reconciles current children.');
+  if (policyIssues.some((issue) => issue.type === 'duplicate_task_url')) actions.push('Do not re-dispatch duplicate URLs automatically; inspect the prior child result and tracker TSV before retrying.');
+  if (policyIssues.some((issue) => issue.type === 'dedupe_preflight_missed')) actions.push('Tighten candidate preflight: grep all application day files plus pending/merged TSVs before dispatching replacements.');
   if (providerErrors.some((err) => err.statusCode === 402)) actions.push('Provider balance errors occurred; use a non-402 fallback or add provider credits before retrying paid routes.');
   if (children.some((child) => child.outcome === 'unknown')) actions.push('Some child sessions have no visible final outcome; inspect them with `npm run telemetry:show -- <child-session-id>`.');
   return actions;
@@ -379,6 +532,78 @@ function summaryForList(telemetry) {
     issues: telemetry.policyIssues.length,
     providerErrors: telemetry.providerErrors.length + telemetry.children.providerErrors,
   };
+}
+
+function modelUsageFromMessages(messages) {
+  const counts = new Map();
+  for (const message of messages) {
+    const provider = stringValue(message.data.providerID);
+    const model = stringValue(message.data.modelID);
+    if (!provider && !model) continue;
+    const key = `${provider}\u0000${model}`;
+    const current = counts.get(key) || { provider, model, count: 0 };
+    current.count += 1;
+    counts.set(key, current);
+  }
+  return [...counts.values()].sort((a, b) => b.count - a.count || modelLabel(a).localeCompare(modelLabel(b)));
+}
+
+function mergeModelUsage(groups) {
+  const counts = new Map();
+  for (const group of groups) {
+    for (const item of group || []) {
+      const provider = stringValue(item.provider);
+      const model = stringValue(item.model);
+      const key = `${provider}\u0000${model}`;
+      const current = counts.get(key) || { provider, model, count: 0 };
+      current.count += Number(item.count || 0);
+      counts.set(key, current);
+    }
+  }
+  return [...counts.values()].sort((a, b) => b.count - a.count || modelLabel(a).localeCompare(modelLabel(b)));
+}
+
+function modelLabel(model) {
+  return `${model.provider || '(unknown)'}/${model.model || '(unknown)'} x${model.count}`;
+}
+
+function isFreeModelRoute(provider, model) {
+  const route = `${provider}/${model}`.toLowerCase();
+  return route.includes(':free') ||
+    route.includes('/big-pickle') ||
+    route.includes('minimax-m2.5-free') ||
+    route.includes('glm-4.5-air') ||
+    route.includes('gpt-oss-20b') ||
+    route.includes('qwen3-next-80b-a3b-instruct:free');
+}
+
+function requestedJobCount(prompt) {
+  const text = String(prompt || '').toLowerCase();
+  if (!/\b(job|jobs|application|applications)\b/.test(text)) return null;
+  if (!/\b(apply|applt|another|nother|more|process)\b/.test(text)) return null;
+  const match = text.match(/\b(\d{1,3})\b/);
+  return match ? Number(match[1]) : null;
+}
+
+function firstUrl(text) {
+  const match = String(text || '').match(/https?:\/\/[^\s)>\]]+/i);
+  return match ? match[0].replace(/[.,;]+$/, '') : '';
+}
+
+function duplicateTaskUrlCount(taskCalls) {
+  const seen = new Set();
+  const duplicates = new Set();
+  for (const task of taskCalls) {
+    if (!task.url || task.isStatusPoll) continue;
+    if (seen.has(task.url)) duplicates.add(task.url);
+    seen.add(task.url);
+  }
+  return duplicates.size;
+}
+
+function mentionsLimitedCandidatePool(text) {
+  return /\b(only|just)\s+\d+\s+(candidate|candidates|jobs?|applications?)\b/i.test(text) ||
+    /\b(no more|not enough|ran out of|exhausted)\s+(candidate|candidates|jobs?|applications?|pipeline)\b/i.test(text);
 }
 
 function printList(items) {
@@ -401,10 +626,18 @@ function printStatus(telemetry) {
   console.log(`status:    ${telemetry.status}`);
   console.log(`started:   ${telemetry.session.startedAt}`);
   console.log(`prompt:    ${shorten(telemetry.prompt || '', 100)}`);
-  console.log(`tasks:     ${telemetry.tasks.total} (${telemetry.tasks.statusPolls} status-poll)`);
+  if (telemetry.userRequests.length > 1 || telemetry.latestRequest?.requestedJobs) {
+    const latest = telemetry.latestRequest;
+    const requestDetail = latest?.requestedJobs
+      ? `latest ${latest.taskDispatches}/${latest.requestedJobs} dispatches`
+      : `latest ${latest?.taskDispatches ?? 0} dispatches`;
+    console.log(`requests:  ${telemetry.userRequests.length} user prompt${telemetry.userRequests.length === 1 ? '' : 's'} (${requestDetail})`);
+  }
+  console.log(`tasks:     ${telemetry.tasks.total} (${telemetry.tasks.statusPolls} status-poll, ${telemetry.tasks.running} running)`);
   console.log(`children:  ${telemetry.children.withOutcomes}/${telemetry.children.total} with outcomes`);
   console.log(`tracker:   ${telemetry.tracker.pending.length} pending TSVs, ${telemetry.tracker.mergedCount} merged TSVs`);
-  console.log(`errors:    ${telemetry.providerErrors.length} root, ${telemetry.children.providerErrors} child provider errors`);
+  console.log(`models:    ${telemetry.models.slice(0, 3).map(modelLabel).join(', ') || 'none'}`);
+  console.log(`errors:    ${telemetry.providerErrors.length} root, ${telemetry.children.providerErrors} child provider errors, ${telemetry.children.toolErrors} child tool errors`);
   console.log(`issues:    ${telemetry.policyIssues.length}`);
 
   if (telemetry.policyIssues.length > 0) {
@@ -427,6 +660,8 @@ function printStatus(telemetry) {
     for (const child of telemetry.children.sessions) {
       const alerts = [];
       if (child.providerErrors) alerts.push(`${child.providerErrors} provider error`);
+      if (child.toolErrors) alerts.push(`${child.toolErrors} tool error`);
+      if (child.dedupeMiss) alerts.push('dedupe miss');
       if (child.taskCalls) alerts.push(`${child.taskCalls} task call`);
       console.log(`  - ${child.id}  ${child.outcome}  ${child.title}${alerts.length ? ` (${alerts.join(', ')})` : ''}`);
     }
@@ -445,6 +680,7 @@ function printShow(telemetry) {
     for (const task of telemetry.tasks.calls) {
       const flags = [
         task.isStatusPoll ? 'status-poll' : '',
+        task.status && task.status !== 'completed' ? task.status : '',
         task.proxyLeak ? 'proxy-values-detected' : '',
       ].filter(Boolean).join(', ');
       console.log(`  - ${task.at} ${task.description || '(no description)'} ${task.sessionId || ''} ${task.subagentType || ''}${flags ? ` [${flags}]` : ''}`);
