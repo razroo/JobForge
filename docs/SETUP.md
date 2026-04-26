@@ -136,6 +136,8 @@ From your project root, these commands maintain the tracker and pipeline checks.
 | List recent JobForge runs with outcomes/issues | `npx job-forge telemetry:list` | `npm run telemetry:list` |
 | Show latest run status + pending TSVs | `npx job-forge telemetry:status` | `npm run telemetry:status` |
 | Show one JobForge run by session id/prefix | `npx job-forge telemetry:show <id>` | `npm run telemetry:show -- <id>` |
+| Audit latest JobForge trace policy | `npx job-forge guard:audit` | `npm run guard:audit` |
+| Show the active guard policy | `npx job-forge guard:explain` | `npm run guard:explain` |
 | Re-create harness symlinks | `npx job-forge sync` | `npm run sync` |
 | Build optional dashboard TUI (Go on `PATH`) | `(cd node_modules/job-forge/dashboard && go build .)` | `npm run build:dashboard` (harness repo only) |
 

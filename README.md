@@ -76,7 +76,7 @@ JobForge turns opencode into a full job search command center. Instead of manual
 | **Durable Batch Orchestration** | `batch-runner.sh` uses `@razroo/iso-orchestrator` for resumable bundle execution, bounded fan-out, mutexed state writes, and workflow records in `.jobforge-runs/`. |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
 | **Cost-Aware Agent Routing** | Three subagents (`@general-free`, `@general-paid`, `@glm-minimal`) with per-task tool surfaces. On OpenCode, JobForge pins all tiers to `opencode-go/deepseek-v4-flash` so application runs avoid overloaded free-model pools. See [Subagent Routing in AGENTS.md](AGENTS.md) for the task-to-agent mapping. |
-| **Trace + Telemetry** | `job-forge trace:*` exposes local OpenCode transcripts, and `job-forge telemetry:*` summarizes runs, child outcomes, provider errors, and pending tracker TSVs. |
+| **Trace + Telemetry + Guard** | `job-forge trace:*` exposes local OpenCode transcripts, `job-forge telemetry:*` summarizes runs, and `job-forge guard:*` audits deterministic JobForge policy rules with `@razroo/iso-guard`. |
 | **Token Cost Visibility** | `job-forge tokens --days 1` for per-session breakdown; `job-forge session-report --since-minutes 60 --log` to flag sessions over budget and append history to `data/token-usage.tsv`. Auto-logged after every batch run. |
 
 ## Usage

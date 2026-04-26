@@ -1,0 +1,50 @@
+version: 1
+rules:
+  - id: JF-H1
+    type: max-per-group
+    severity: error
+    description: Do not dispatch more than two task subagents from one assistant message.
+    match:
+      type: tool_call
+      name: task
+    groupBy: sessionMessageId
+    max: 2
+
+  - id: JF-H5b
+    type: forbid-text
+    severity: error
+    description: Do not use task to poll task/session status.
+    match:
+      type: tool_call
+      name: task
+    patterns:
+      - source: '"task_id"\s*:'
+      - source: '\b(return your final outcome now|report your current status|current status|still working|still running)\b'
+        flags: i
+      - source: '\b(check|poll|fetch|ask)\b.{0,80}\b(task|session)\b.{0,60}\b(status|state|result|outcome)\b'
+        flags: i
+
+  - id: JF-H5-child-no-task
+    type: forbid-text
+    severity: error
+    description: Child/subagent sessions must not spawn more task subagents.
+    match:
+      type: tool_call
+      name: task
+      fields:
+        isChildSession: true
+    patterns:
+      - source: '[\s\S]'
+
+  - id: JF-H8
+    type: forbid-text
+    severity: error
+    description: Task prompts must not inline proxy configuration or proxy credentials.
+    match:
+      type: tool_call
+      name: task
+    patterns:
+      - source: '\bproxy\s*:\s*\{'
+        flags: i
+      - source: '\bproxy[_.-]?(server|username|password|bypass)\b\s*[:=]'
+        flags: i

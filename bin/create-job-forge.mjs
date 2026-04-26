@@ -117,6 +117,8 @@ const consumerPkg = {
     'telemetry:status': 'job-forge telemetry:status',
     'telemetry:show': 'job-forge telemetry:show',
     'telemetry:watch': 'job-forge telemetry:watch',
+    'guard:audit': 'job-forge guard:audit',
+    'guard:explain': 'job-forge guard:explain',
     // One command to pull the latest harness and any locally-pinned MCP
     // packages. npm update is a no-op on packages not in package.json, so
     // listing @razroo/gmail-mcp + @geometra/mcp is safe for consumers that

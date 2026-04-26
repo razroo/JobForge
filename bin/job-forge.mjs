@@ -19,6 +19,7 @@
  *   tokens         Run scripts/token-usage-report.mjs
  *   trace:*        Inspect local agent transcripts via iso-trace
  *   telemetry:*    Summarize JobForge pipeline status from traces + tracker files
+ *   guard:*        Audit JobForge trace policy with iso-guard
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
  */
@@ -68,6 +69,11 @@ const telemetryAliases = {
   'telemetry:watch': 'watch',
 };
 
+const guardAliases = {
+  'guard:audit': 'audit',
+  'guard:explain': 'explain',
+};
+
 const [, , cmd, ...rest] = process.argv;
 
 function printHelp() {
@@ -92,6 +98,8 @@ Commands:
   telemetry:status  Show latest JobForge run + pending tracker state
   telemetry:show ID Show one run with child sessions, provider errors, next actions
   telemetry:watch   Watch latest run status
+  guard:audit        Audit latest/local trace policy with iso-guard
+  guard:explain      Show the active iso-guard policy
   sync           Re-create harness symlinks in the current project
 
 Deterministic helpers (prefer these over LLM-derived values):
@@ -118,6 +126,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge trace:show ses_...
   job-forge telemetry:status
   job-forge telemetry:show ses_...
+  job-forge guard:audit
+  job-forge guard:explain
 
 Project directory resolves to $JOB_FORGE_PROJECT or cwd.`);
 }
@@ -149,6 +159,21 @@ if (cmd === 'telemetry' || telemetryAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/telemetry.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...telemetryArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'guard' || guardAliases[cmd]) {
+  const guardArgs = cmd === 'guard'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [guardAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/guard.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...guardArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

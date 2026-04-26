@@ -31,7 +31,7 @@ The harness exposes a single CLI (`job-forge`) installed as a `bin` entry. In a 
 
 | What you need | Where to read |
 |---------------|---------------|
-| Full command list (`verify`, `merge`, `dedup`, `normalize`, `pdf`, `sync-check`, `tokens`, `sync`). | [SETUP.md — Tracker and scripts (terminal)](SETUP.md#tracker-and-scripts-terminal). |
+| Full command list (`verify`, `merge`, `dedup`, `normalize`, `pdf`, `sync-check`, `tokens`, `trace`, `telemetry`, `guard`, `sync`). | [SETUP.md — Tracker and scripts (terminal)](SETUP.md#tracker-and-scripts-terminal). |
 | What each harness `.mjs` script does. | [ARCHITECTURE.md — Pipeline integrity](ARCHITECTURE.md#pipeline-integrity) and the scripts table underneath. |
 | Batch runner, TSV layout, and `batch/tracker-additions/` merge flow. | [batch/README.md](../batch/README.md). |
 | PR gate for harness contributions (`npm run verify` + `npm run build:dashboard`). | [CONTRIBUTING.md — Development](../CONTRIBUTING.md#development). |

@@ -125,6 +125,18 @@ npx job-forge telemetry:watch
 
 Telemetry is also local-only and passive. It reads OpenCode's SQLite DB and files under `batch/tracker-additions/`; agents do not need to remember to emit custom events.
 
+## JobForge guard audits
+
+Guard audits run deterministic `@razroo/iso-guard` policies over the same local OpenCode traces. The default policy lives at `templates/guards/jobforge-baseline.yaml` and checks rules that are reliable from transcript data, including max two task dispatches per assistant message, no task-status polling via `task`, no raw proxy configuration in task prompts, and no child session task recursion.
+
+```bash
+npx job-forge guard:audit
+npx job-forge guard:audit <session-id-or-prefix>
+npx job-forge guard:explain
+```
+
+Use `--policy <path>` to audit with a custom policy. This does not add prompt, token, or MCP overhead; JobForge converts local trace rows into guard events inside the CLI process.
+
 **Where Claude Code writes JSONL:** `~/.claude/projects/<encoded-cwd>/*.jsonl`.
 
 **Direct CLI fallback:** `npx -y @razroo/iso-trace@latest stats --source "$HOME/.claude/projects/<encoded-dir>/<session>.jsonl"`
