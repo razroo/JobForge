@@ -24,6 +24,7 @@
  *   capabilities:* Query role capability policy via iso-capabilities
  *   context:*      Query/render deterministic context bundles via iso-context
  *   cache:*        Reuse local deterministic artifacts via iso-cache
+ *   index:*        Query local artifacts via iso-index
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
  */
@@ -116,6 +117,16 @@ const cacheAliases = {
   'cache:path': 'path',
 };
 
+const indexAliases = {
+  'index:build': 'build',
+  'index:status': 'status',
+  'index:query': 'query',
+  'index:has': 'has',
+  'index:verify': 'verify',
+  'index:explain': 'explain',
+  'index:path': 'path',
+};
+
 const [, , cmd, ...rest] = process.argv;
 
 function printHelp() {
@@ -161,6 +172,11 @@ Commands:
   cache:get               Read cached JD/artifact content
   cache:put               Store JD/artifact content
   cache:verify            Validate local artifact cache integrity
+  index:status            Show local artifact index status
+  index:build             Rebuild .jobforge-index.json from templates/index.json
+  index:has               Check indexed URL/company-role/report facts without loading source files
+  index:query             Query indexed reports, tracker rows, TSVs, scan history, pipeline, and ledger
+  index:verify            Validate local artifact index integrity
   sync           Re-create harness symlinks in the current project
 
 Deterministic helpers (prefer these over LLM-derived values):
@@ -197,6 +213,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge cache:has --url https://example.test/jobs/123
   job-forge cache:get --url https://example.test/jobs/123
   job-forge cache:put --url https://example.test/jobs/123 --input @jds/example.md
+  job-forge index:has --key "company-role:acme:staff-engineer"
+  job-forge index:query "acme"
 
 Project directory resolves to $JOB_FORGE_PROJECT or cwd.`);
 }
@@ -303,6 +321,21 @@ if (cmd === 'cache' || cacheAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/cache.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...cacheArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'index' || indexAliases[cmd]) {
+  const indexArgs = cmd === 'index'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [indexAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/index.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...indexArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

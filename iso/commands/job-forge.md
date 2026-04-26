@@ -76,6 +76,11 @@ Local workflow ledger (terminal, outside opencode):
   npx job-forge ledger:status          # .jobforge-ledger/events.jsonl summary
   npx job-forge ledger:has --company "Acme" --role "Staff Engineer" --status Applied
 
+Local artifact index (terminal, outside opencode):
+  npx job-forge index:status           # .jobforge-index.json summary
+  npx job-forge index:has --key "company-role:acme:staff-engineer"
+  npx job-forge index:query "acme"
+
 Artifact contracts (terminal, outside opencode):
   npx iso-contract explain jobforge.tracker-row --contracts templates/contracts.json
   npx job-forge tracker-line ... --write   # renders + validates tracker TSV locally
@@ -161,6 +166,11 @@ Step 1  — Enumerate candidates
   - Build ordered list: candidates = [job_1, job_2, ..., job_N]
 
 Step 2  — Dedup against already-applied
+  - Run npx job-forge index:has --key "company-role:<company-slug>:<role-slug>"
+    as a fast local artifact prefilter when company+role is known. It rebuilds
+    .jobforge-index.json on demand from templates/index.json. A hit means the
+    role has already appeared in tracker files or tracker TSVs and can be
+    dropped before dispatch.
   - If .jobforge-ledger/events.jsonl exists, use npx job-forge ledger:has as a
     fast prefilter for obvious company+role Applied duplicates. A ledger match
     can be dropped before dispatch without loading tracker files into context.

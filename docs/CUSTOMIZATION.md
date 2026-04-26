@@ -150,6 +150,10 @@ Role capability boundaries live in `templates/capabilities.json` and are enforce
 
 Mode/reference context bundles live in `templates/context.json` and are planned locally by `@razroo/iso-context`. Use `job-forge context:plan <mode>` to see the files and estimated tokens, `job-forge context:check <mode>` to fail on budget drift, and `job-forge context:render <mode>` when you intentionally need a compact markdown or JSON context bundle. This is not an MCP and does not add tool-schema tokens; rendered context only consumes prompt tokens when a workflow deliberately asks for it.
 
+## JobForge artifact index
+
+Artifact lookup policy lives in `templates/index.json` and is built locally by `@razroo/iso-index`. Use `job-forge index:has --key "company-role:acme:staff-engineer"` as a cheap duplicate/source prefilter, `job-forge index:query "acme"` to get compact source path/line pointers, and `job-forge index:verify` to validate `.jobforge-index.json`. Query, has, and verify rebuild the index on demand, so scaffolded projects need no setup. This is not an MCP and does not add tool-schema tokens.
+
 ## JobForge guard audits
 
 Guard audits run deterministic `@razroo/iso-guard` policies over the same local OpenCode traces. The default policy lives at `templates/guards/jobforge-baseline.yaml` and checks rules that are reliable from transcript data, including max two task dispatches per assistant message, no task-status polling via `task`, no raw proxy configuration in task prompts, and no child session task recursion.

@@ -17,6 +17,7 @@
  * 8. No markdown bold in score column
  * 9. Drift warning if states.yml ids differ from the built-in fallback list
  * 10. Ledger file verifies if .jobforge-ledger/events.jsonl exists
+ * 11. Artifact index verifies if .jobforge-index.json exists
  *
  * Run: node verify-pipeline.mjs   (from repo root; same as npm run verify)
  */
@@ -29,6 +30,7 @@ import {
   usesDayFiles, readAllEntries, listDayFiles, dayFilePath,
 } from './tracker-lib.mjs';
 import { jobForgeLedgerPath, ledgerExists, verifyJobForgeLedger } from './lib/jobforge-ledger.mjs';
+import { indexExists, jobForgeIndexPath, verifyJobForgeIndex } from './lib/jobforge-index.mjs';
 import {
   canonicalStatusValues,
   formatContractIssues,
@@ -153,6 +155,22 @@ function verifyLedgerIfPresent() {
   }
 }
 
+function verifyIndexIfPresent() {
+  if (!indexExists(PROJECT_DIR)) {
+    ok('Artifact index not initialized');
+    return;
+  }
+  const result = verifyJobForgeIndex({ rebuild: false }, PROJECT_DIR);
+  for (const issue of result.issues) {
+    const msg = `index: ${issue.kind}: ${issue.message}`;
+    if (issue.severity === 'error') error(msg);
+    else warn(msg);
+  }
+  if (result.ok) {
+    ok(`Artifact index valid (${result.records} records at ${relative(PROJECT_DIR, jobForgeIndexPath(PROJECT_DIR))})`);
+  }
+}
+
 // --- Read entries ---
 const { entries, source } = readAllEntries();
 
@@ -162,6 +180,7 @@ if (entries.length === 0) {
   checkPendingTrackerAdditions();
   verifyStatesYamlDrift();
   verifyLedgerIfPresent();
+  verifyIndexIfPresent();
   console.log('\n' + '='.repeat(50));
   console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);
   if (errors === 0 && warnings === 0) console.log('🟢 Pipeline is clean!');
@@ -297,6 +316,7 @@ if (boldScores === 0) ok('No bold in scores');
 
 verifyStatesYamlDrift();
 verifyLedgerIfPresent();
+verifyIndexIfPresent();
 
 console.log('\n' + '='.repeat(50));
 console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);

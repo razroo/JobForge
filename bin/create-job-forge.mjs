@@ -124,6 +124,11 @@ const consumerPkg = {
     'ledger:verify': 'job-forge ledger:verify',
     'ledger:has': 'job-forge ledger:has',
     'ledger:query': 'job-forge ledger:query',
+    'index:build': 'job-forge index:build',
+    'index:status': 'job-forge index:status',
+    'index:verify': 'job-forge index:verify',
+    'index:has': 'job-forge index:has',
+    'index:query': 'job-forge index:query',
     // One command to pull the latest harness and any locally-pinned MCP
     // packages. npm update is a no-op on packages not in package.json, so
     // listing @razroo/gmail-mcp + @geometra/mcp is safe for consumers that
@@ -224,6 +229,7 @@ Before doing any work, remember where things live in *this* project:
 | Inbox of pending URLs | \`data/pipeline.md\` | The queue for \`/job-forge pipeline\` |
 | Scanner dedup history | \`data/scan-history.tsv\` | Only touch in \`/job-forge scan\` |
 | Local workflow ledger | \`.jobforge-ledger/events.jsonl\` | Deterministic append-only state; use \`job-forge ledger:*\` |
+| Local artifact index | \`.jobforge-index.json\` | Deterministic file/line lookup; use \`job-forge index:*\` |
 | Scanner config | \`portals.yml\` (project root) | Company configs |
 | Profile / identity | \`config/profile.yml\` | Candidate name, email, target roles |
 | CV | \`cv.md\` (project root) | Markdown, source of truth |
@@ -369,6 +375,7 @@ job-forge sync             # re-run if symlinks drift
 job-forge merge            # merge batch/tracker-additions/*.tsv into the tracker
 job-forge verify           # verify pipeline integrity
 job-forge ledger:status    # local deterministic workflow ledger status
+job-forge index:status     # local artifact index status
 job-forge pdf cv.md out.pdf
 job-forge tokens --days 1  # per-session opencode token usage
 \`\`\`

@@ -12,6 +12,7 @@
           "npx job-forge capabilities:*",
           "npx job-forge context:*",
           "npx job-forge cache:*",
+          "npx job-forge index:*",
           "rg *"
         ],
         "deny": [
@@ -58,7 +59,8 @@
           "npx job-forge verify",
           "npx job-forge ledger:*",
           "npx job-forge capabilities:*",
-          "npx job-forge cache:*"
+          "npx job-forge cache:*",
+          "npx job-forge index:*"
         ],
         "deny": [
           "task *"

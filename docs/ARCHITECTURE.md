@@ -161,6 +161,7 @@ config/profile.yml       →  Candidate identity
 portals.yml              →  Scanner configuration
 data/pipeline.md        →  Pending URLs and `local:jds/...` inbox (see modes/pipeline.md)
 .jobforge-ledger/events.jsonl → Append-only workflow events for cheap local duplicate/status checks
+.jobforge-index.json     →  Deterministic artifact lookup index built from templates/index.json
 jds/*.md                 →  Saved job descriptions referenced from the pipeline (`local:jds/{file}`)
 templates/states.yml     →  Canonical status values
 templates/context.json    →  Deterministic mode/reference context bundle policy
@@ -176,12 +177,13 @@ Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeli
 - PDFs: `cv-candidate-{company-slug}-{YYYY-MM-DD}.pdf`
 - Tracker TSVs: `batch/tracker-additions/{num}-{company-slug}.tsv` (one file per evaluation; merged files move under `batch/tracker-additions/merged/`; shape enforced by `templates/contracts.json`)
 - Ledger: `.jobforge-ledger/events.jsonl` (created by `job-forge ledger:rebuild`, `tracker-line --write`, or `merge`; gitignored personal state)
+- Index: `.jobforge-index.json` (created on demand by `job-forge index:*`; gitignored local lookup state)
 - Capabilities: `templates/capabilities.json` (role boundary policy inspected with `job-forge capabilities:*`)
 - Context: `templates/context.json` (mode/reference file bundles inspected with `job-forge context:*`)
 
 ## Pipeline Integrity
 
-From the project root, `npx job-forge verify` (or `npm run verify`) runs `verify-pipeline.mjs`. When a tracker file exists, it validates canonical statuses (using `templates/states.yml` when that file is present and parseable), validates every tracker row against `templates/contracts.json`, warns on probable duplicate company/role rows, checks that report column markdown links resolve to files in the repo, validates score column format (`X.X/5`, `N/A`, or `DUP`), rejects table rows with too few columns, flags markdown bold inside the score column, and warns if any `batch/tracker-additions/*.tsv` files are still waiting to be merged. If `.jobforge-ledger/events.jsonl` exists, verify also validates the append-only ledger. It also compares state ids from `templates/states.yml` to an internal fallback list and warns when the two sets drift. **Fresh clone:** the command exits successfully when neither `data/applications.md` nor root `applications.md` exists yet; pending-TSV and states-drift checks still run so contributors see unmerged batch output early. Optional setup validation after you add `cv.md` and `config/profile.yml`: `npm run sync-check` (`cv-sync-check.mjs`).
+From the project root, `npx job-forge verify` (or `npm run verify`) runs `verify-pipeline.mjs`. When a tracker file exists, it validates canonical statuses (using `templates/states.yml` when that file is present and parseable), validates every tracker row against `templates/contracts.json`, warns on probable duplicate company/role rows, checks that report column markdown links resolve to files in the repo, validates score column format (`X.X/5`, `N/A`, or `DUP`), rejects table rows with too few columns, flags markdown bold inside the score column, and warns if any `batch/tracker-additions/*.tsv` files are still waiting to be merged. If `.jobforge-ledger/events.jsonl` exists, verify also validates the append-only ledger. If `.jobforge-index.json` exists, verify validates the artifact index. It also compares state ids from `templates/states.yml` to an internal fallback list and warns when the two sets drift. **Fresh clone:** the command exits successfully when neither `data/applications.md` nor root `applications.md` exists yet; pending-TSV and states-drift checks still run so contributors see unmerged batch output early. Optional setup validation after you add `cv.md` and `config/profile.yml`: `npm run sync-check` (`cv-sync-check.mjs`).
 
 **`verify-pipeline.mjs` checks (same order as the script header):**
 
@@ -195,8 +197,9 @@ From the project root, `npx job-forge verify` (or `npm run verify`) runs `verify
 8. Score column has no markdown bold.
 9. Warn when state ids in `templates/states.yml` drift from the script’s built-in fallback list (or when the file exists but ids failed to parse).
 10. Validate `.jobforge-ledger/events.jsonl` when present.
+11. Validate `.jobforge-index.json` when present.
 
-When the tracker file is missing, checks 1-6 and 8 are skipped; checks 7, 9, and 10 still run when applicable.
+When the tracker file is missing, checks 1-6 and 8 are skipped; checks 7, 9, 10, and 11 still run when applicable.
 
 ## Contributing touchpoints
 
@@ -219,6 +222,7 @@ Scripts maintain data consistency. In a consumer project they're invoked via the
 | `scripts/telemetry.mjs` | `npx job-forge telemetry:status` / `telemetry:show` | JobForge operational telemetry derived from OpenCode traces plus tracker TSV state |
 | `scripts/guard.mjs` | `npx job-forge guard:audit` / `guard:explain` | Deterministic `@razroo/iso-guard` policy audits over local OpenCode traces |
 | `scripts/ledger.mjs` | `npx job-forge ledger:status` / `ledger:has` / `ledger:rebuild` | Deterministic `@razroo/iso-ledger` state over tracker, TSV, and pipeline files |
+| `scripts/index.mjs` | `npx job-forge index:status` / `index:has` / `index:query` | Deterministic `@razroo/iso-index` lookup over reports, tracker rows, TSVs, pipeline, scan history, and ledger events |
 | `scripts/context.mjs` | `npx job-forge context:list` / `context:plan` / `context:check` / `context:render` | Deterministic `@razroo/iso-context` mode/reference context bundle planning and rendering |
 | `tracker-lib.mjs` | _(library)_ | Shared helpers for reading/writing day-based tracker files — imported by merge/dedup/verify/normalize |
 | `bin/sync.mjs` | `npx job-forge sync` | Creates the harness symlinks in a consumer project (also runs as `postinstall`) |
