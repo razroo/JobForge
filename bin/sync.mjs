@@ -23,6 +23,11 @@
 import { existsSync, lstatSync, readlinkSync, symlinkSync, mkdirSync, readFileSync } from 'fs';
 import { dirname, join, resolve, relative } from 'path';
 import { fileURLToPath } from 'url';
+import {
+  loadMigrationConfig,
+  parseJson,
+  runMigrations,
+} from '@razroo/iso-migrate';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = resolve(__dirname, '..');
@@ -149,4 +154,29 @@ for (const { src, dst } of links) {
   }
 }
 
+try {
+  const migrationResult = applyConsumerMigrations();
+  if (migrationResult?.changeCount > 0) {
+    console.log(`\njob-forge migrate: applied ${migrationResult.changeCount} change(s)`);
+  }
+} catch (error) {
+  console.warn(`\n  warn: job-forge migrations skipped: ${error instanceof Error ? error.message : String(error)}`);
+  warned++;
+}
+
 console.log(`\njob-forge sync: ${created} created, ${skipped} up-to-date, ${warned} warnings (project: ${PROJECT_DIR})`);
+
+function applyConsumerMigrations() {
+  const skip = process.env.JOB_FORGE_SKIP_MIGRATIONS;
+  if (skip === '1' || skip === 'true') return null;
+  if (!existsSync(join(PROJECT_DIR, 'package.json'))) return null;
+
+  const configPath = process.env.JOB_FORGE_MIGRATIONS_CONFIG || join(PKG_ROOT, 'templates', 'migrations.json');
+  if (!existsSync(configPath)) return null;
+
+  const config = loadMigrationConfig(parseJson(readFileSync(configPath, 'utf8'), configPath));
+  return runMigrations(config, {
+    root: PROJECT_DIR,
+    dryRun: false,
+  });
+}

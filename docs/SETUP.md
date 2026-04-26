@@ -130,6 +130,7 @@ From your project root, these commands maintain the tracker and pipeline checks.
 | Inspect context bundle budget | `npx job-forge context:plan apply` | `npm run context:plan -- apply` |
 | Inspect local JD/artifact cache | `npx job-forge cache:status` | `npm run cache:status` |
 | Inspect local artifact index | `npx job-forge index:status` | `npm run index:status` |
+| Inspect pending consumer migrations | `npx job-forge migrate:plan` | `npm run migrate:plan` |
 | Map status column to canonical labels | `npx job-forge normalize` | `npm run normalize` |
 | Merge duplicate company/role rows | `npx job-forge dedup` | `npm run dedup` |
 | Generate ATS-optimized CV PDF | `npx job-forge pdf` | `npm run pdf` |
@@ -148,6 +149,7 @@ From your project root, these commands maintain the tracker and pipeline checks.
 | Check duplicate/status event without loading tracker files | `npx job-forge ledger:has --company "Acme" --role "Staff Engineer" --status Applied` | `npm run ledger:has -- --company ...` |
 | Check/reuse cached JD content | `npx job-forge cache:has --url <url>` / `npx job-forge cache:get --url <url>` | `npm run cache:has -- --url ...` |
 | Query local artifact pointers | `npx job-forge index:query "Acme"` / `npx job-forge index:has --key company-role:acme:staff-engineer` | `npm run index:query -- Acme` |
+| Apply safe consumer migrations | `npx job-forge migrate:apply` | `npm run migrate:apply` |
 | Re-create harness symlinks | `npx job-forge sync` | `npm run sync` |
 | Build optional dashboard TUI (Go on `PATH`) | `(cd node_modules/job-forge/dashboard && go build .)` | `npm run build:dashboard` (harness repo only) |
 

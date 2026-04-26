@@ -154,6 +154,10 @@ Mode/reference context bundles live in `templates/context.json` and are planned 
 
 Artifact lookup policy lives in `templates/index.json` and is built locally by `@razroo/iso-index`. Use `job-forge index:has --key "company-role:acme:staff-engineer"` as a cheap duplicate/source prefilter, `job-forge index:query "acme"` to get compact source path/line pointers, and `job-forge index:verify` to validate `.jobforge-index.json`. Query, has, and verify rebuild the index on demand, so scaffolded projects need no setup. This is not an MCP and does not add tool-schema tokens.
 
+## JobForge consumer migrations
+
+Consumer-project migrations live in `templates/migrations.json` and are applied locally by `@razroo/iso-migrate`. `job-forge sync` applies safe migrations automatically after refreshing symlinks; use `JOB_FORGE_SKIP_MIGRATIONS=1` to opt out. Use `job-forge migrate:plan`, `job-forge migrate:apply`, and `job-forge migrate:check` to inspect or enforce script/gitignore drift explicitly. This is not an MCP and does not add prompt or tool-schema tokens.
+
 ## JobForge guard audits
 
 Guard audits run deterministic `@razroo/iso-guard` policies over the same local OpenCode traces. The default policy lives at `templates/guards/jobforge-baseline.yaml` and checks rules that are reliable from transcript data, including max two task dispatches per assistant message, no task-status polling via `task`, no raw proxy configuration in task prompts, and no child session task recursion.

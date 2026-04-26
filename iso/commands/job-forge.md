@@ -81,6 +81,11 @@ Local artifact index (terminal, outside opencode):
   npx job-forge index:has --key "company-role:acme:staff-engineer"
   npx job-forge index:query "acme"
 
+Consumer migrations (terminal, outside opencode):
+  npx job-forge migrate:plan           # preview package.json/.gitignore drift
+  npx job-forge migrate:apply          # apply safe harness upgrade migrations
+  npx job-forge migrate:check          # fail if migrations are pending
+
 Artifact contracts (terminal, outside opencode):
   npx iso-contract explain jobforge.tracker-row --contracts templates/contracts.json
   npx job-forge tracker-line ... --write   # renders + validates tracker TSV locally

@@ -48,7 +48,7 @@ The skill router (`.opencode/skills/job-forge.md`) loads mode and data files on 
 
 **Multi-harness support.** Because `iso/` is the single source of truth, publishing ships config for OpenCode, Cursor, Claude Code, and Codex in one tarball. Consumers run any of `opencode`, `cursor`, `claude`, or `codex` in the project and each picks up the shared MCP config + instructions via the symlinks above.
 
-**Upgrading** the harness in a consumer project is `npm run update-harness` — pulls the latest `job-forge` from npm, refreshes pinned MCPs, re-runs symlink sync, and prints the resolved version.
+**Upgrading** the harness in a consumer project is `npm run update-harness` — pulls the latest `job-forge` from npm, refreshes pinned MCPs, re-runs symlink sync, applies safe consumer migrations, and prints the resolved version.
 
 ## System Overview
 
@@ -165,6 +165,7 @@ data/pipeline.md        →  Pending URLs and `local:jds/...` inbox (see modes/p
 jds/*.md                 →  Saved job descriptions referenced from the pipeline (`local:jds/{file}`)
 templates/states.yml     →  Canonical status values
 templates/context.json    →  Deterministic mode/reference context bundle policy
+templates/migrations.json → Safe consumer-project upgrade policy
 templates/cv-template.html → PDF generation template
 examples/*.md            →  Fictional layouts only (not read by scripts; see examples/README.md)
 ```
@@ -178,6 +179,7 @@ Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeli
 - Tracker TSVs: `batch/tracker-additions/{num}-{company-slug}.tsv` (one file per evaluation; merged files move under `batch/tracker-additions/merged/`; shape enforced by `templates/contracts.json`)
 - Ledger: `.jobforge-ledger/events.jsonl` (created by `job-forge ledger:rebuild`, `tracker-line --write`, or `merge`; gitignored personal state)
 - Index: `.jobforge-index.json` (created on demand by `job-forge index:*`; gitignored local lookup state)
+- Migrations: `templates/migrations.json` (applied by `job-forge sync` and inspectable with `job-forge migrate:*`)
 - Capabilities: `templates/capabilities.json` (role boundary policy inspected with `job-forge capabilities:*`)
 - Context: `templates/context.json` (mode/reference file bundles inspected with `job-forge context:*`)
 
@@ -224,8 +226,9 @@ Scripts maintain data consistency. In a consumer project they're invoked via the
 | `scripts/ledger.mjs` | `npx job-forge ledger:status` / `ledger:has` / `ledger:rebuild` | Deterministic `@razroo/iso-ledger` state over tracker, TSV, and pipeline files |
 | `scripts/index.mjs` | `npx job-forge index:status` / `index:has` / `index:query` | Deterministic `@razroo/iso-index` lookup over reports, tracker rows, TSVs, pipeline, scan history, and ledger events |
 | `scripts/context.mjs` | `npx job-forge context:list` / `context:plan` / `context:check` / `context:render` | Deterministic `@razroo/iso-context` mode/reference context bundle planning and rendering |
+| `scripts/migrate.mjs` | `npx job-forge migrate:plan` / `migrate:apply` / `migrate:check` | Deterministic `@razroo/iso-migrate` consumer-project upgrades for scripts and generated-artifact ignores |
 | `tracker-lib.mjs` | _(library)_ | Shared helpers for reading/writing day-based tracker files — imported by merge/dedup/verify/normalize |
-| `bin/sync.mjs` | `npx job-forge sync` | Creates the harness symlinks in a consumer project (also runs as `postinstall`) |
+| `bin/sync.mjs` | `npx job-forge sync` | Creates the harness symlinks in a consumer project and applies safe migrations (also runs as `postinstall`) |
 | `bin/create-job-forge.mjs` | `npx create-job-forge <dir>` | Scaffolds a new personal project |
 
 All scripts resolve the consumer project dir via `process.env.JOB_FORGE_PROJECT || process.cwd()`, so running the CLI from anywhere in the consumer project Just Works.

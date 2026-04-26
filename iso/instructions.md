@@ -72,11 +72,14 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D13] Use `job-forge index:*` for deterministic artifact lookup when available. `index:has` and `index:query` rebuild `.jobforge-index.json` from `templates/index.json` on demand, covering reports, tracker day files, tracker TSVs, pipeline URLs, scan history, and ledger events without loading those growing files into prompt context.
   why: `iso-index` is not an MCP and adds no prompt/tool-schema tokens; it gives agents compact file/line pointers and duplicate prefilters before expensive reads or browser dispatches
 
+- [D14] Treat `templates/migrations.json` as the source of truth for consumer-project upgrades. Use `npx job-forge migrate:plan` or `npx job-forge migrate:check` when diagnosing harness drift; `job-forge sync` applies safe migrations automatically unless `JOB_FORGE_SKIP_MIGRATIONS=1` is set.
+  why: `iso-migrate` is not an MCP and adds no prompt/tool-schema tokens; it prevents stale consumer scripts and generated-artifact ignores without asking agents to hand-edit package.json
+
 ## Procedure
 
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
-3. Read the active mode file [D3]. Use context bundle checks when changing context loads [D11]. Check cached artifacts before URL/JD refetches [D12]. Use artifact index lookups before broad file reads when they can answer the question [D13]. Decide inline vs delegated work [D1].
+3. Read the active mode file [D3]. Use context bundle checks when changing context loads [D11]. Check cached artifacts before URL/JD refetches [D12]. Use artifact index lookups before broad file reads when they can answer the question [D13]. Use migration checks for harness drift [D14]. Decide inline vs delegated work [D1].
 4. Prepare Geometra dispatches: cleanup [H3], index/ledger prefilter when useful [D8, D13], dedupe [H2], location filter [D5], routing [D2, D10], proxy prompt hygiene [H8].
 5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b].
 6. Keep multi-job form-filling out of the orchestrator [H4].

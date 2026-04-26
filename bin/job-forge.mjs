@@ -25,6 +25,7 @@
  *   context:*      Query/render deterministic context bundles via iso-context
  *   cache:*        Reuse local deterministic artifacts via iso-cache
  *   index:*        Query local artifacts via iso-index
+ *   migrate:*      Apply deterministic consumer-project migrations via iso-migrate
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
  */
@@ -127,6 +128,14 @@ const indexAliases = {
   'index:path': 'path',
 };
 
+const migrateAliases = {
+  'migrate:plan': 'plan',
+  'migrate:apply': 'apply',
+  'migrate:check': 'check',
+  'migrate:explain': 'explain',
+  'migrate:path': 'path',
+};
+
 const [, , cmd, ...rest] = process.argv;
 
 function printHelp() {
@@ -177,6 +186,10 @@ Commands:
   index:has               Check indexed URL/company-role/report facts without loading source files
   index:query             Query indexed reports, tracker rows, TSVs, scan history, pipeline, and ledger
   index:verify            Validate local artifact index integrity
+  migrate:plan            Preview deterministic consumer-project migrations
+  migrate:apply           Apply deterministic consumer-project migrations
+  migrate:check           Fail if migrations are pending
+  migrate:explain         Show the active migration policy
   sync           Re-create harness symlinks in the current project
 
 Deterministic helpers (prefer these over LLM-derived values):
@@ -215,6 +228,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge cache:put --url https://example.test/jobs/123 --input @jds/example.md
   job-forge index:has --key "company-role:acme:staff-engineer"
   job-forge index:query "acme"
+  job-forge migrate:check
+  job-forge migrate:apply
 
 Project directory resolves to $JOB_FORGE_PROJECT or cwd.`);
 }
@@ -336,6 +351,21 @@ if (cmd === 'index' || indexAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/index.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...indexArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'migrate' || migrateAliases[cmd]) {
+  const migrateArgs = cmd === 'migrate'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [migrateAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/migrate.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...migrateArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

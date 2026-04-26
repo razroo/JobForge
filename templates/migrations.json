@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "migrations": [
+    {
+      "id": "jobforge-managed-scripts",
+      "description": "Expose JobForge's deterministic consumer-project helper commands.",
+      "operations": [
+        {
+          "type": "json-merge",
+          "path": "package.json",
+          "pointer": "/scripts",
+          "value": {
+            "capabilities:list": "job-forge capabilities:list",
+            "capabilities:explain": "job-forge capabilities:explain",
+            "capabilities:check": "job-forge capabilities:check",
+            "capabilities:render": "job-forge capabilities:render",
+            "context:list": "job-forge context:list",
+            "context:explain": "job-forge context:explain",
+            "context:plan": "job-forge context:plan",
+            "context:check": "job-forge context:check",
+            "context:render": "job-forge context:render",
+            "cache:key": "job-forge cache:key",
+            "cache:has": "job-forge cache:has",
+            "cache:get": "job-forge cache:get",
+            "cache:put": "job-forge cache:put",
+            "cache:status": "job-forge cache:status",
+            "cache:list": "job-forge cache:list",
+            "cache:verify": "job-forge cache:verify",
+            "cache:prune": "job-forge cache:prune",
+            "index:build": "job-forge index:build",
+            "index:status": "job-forge index:status",
+            "index:verify": "job-forge index:verify",
+            "index:has": "job-forge index:has",
+            "index:query": "job-forge index:query",
+            "index:explain": "job-forge index:explain",
+            "migrate:plan": "job-forge migrate:plan",
+            "migrate:apply": "job-forge migrate:apply",
+            "migrate:check": "job-forge migrate:check",
+            "migrate:explain": "job-forge migrate:explain"
+          }
+        }
+      ]
+    },
+    {
+      "id": "jobforge-generated-ignores",
+      "description": "Keep generated JobForge runtime artifacts out of consumer git state.",
+      "operations": [
+        {
+          "type": "ensure-lines",
+          "path": ".gitignore",
+          "create": true,
+          "after": "# Generated",
+          "lines": [
+            ".jobforge-runs/",
+            ".jobforge-ledger/",
+            ".jobforge-cache/",
+            ".jobforge-index.json"
+          ]
+        }
+      ]
+    }
+  ]
+}
