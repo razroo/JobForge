@@ -86,9 +86,10 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=18"
+    "node": ">=20.6.0"
   },
   "dependencies": {
+    "@razroo/iso-orchestrator": "^0.1.0",
     "@razroo/iso-trace": "^0.4.0",
     "playwright": "^1.58.1"
   },

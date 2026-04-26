@@ -6,13 +6,20 @@ The `batch/` folder holds the **parallel batch runner** for processing 10+ job U
 
 | Path | Role |
 |------|------|
-| `batch-runner.sh` | Orchestrator: parallelism, state, retries, resume |
+| `batch-runner.sh` | Compatibility entrypoint; delegates to the durable Node orchestrator by default |
 | `batch-prompt.md` | Prompt template passed to each worker (keep evaluation and scoring instructions aligned with the canonical model in [`modes/_shared.md`](../modes/_shared.md) so batch scores match single-offer runs) |
 | `README.md` | This file |
 
 ## Local-only files (gitignored when present)
 
-Per [`.gitignore`](../.gitignore): `batch-input.tsv`, `batch-state.tsv`, `logs/*`, and `tracker-additions/*.tsv`. Empty dirs (`logs/`, `tracker-additions/`) use `.gitkeep` so the tree exists in a fresh clone.
+Per [`.gitignore`](../.gitignore): `batch-input.tsv`, `batch-state.tsv`, `logs/*`, `tracker-additions/*.tsv`, and `.jobforge-runs/`. Empty dirs (`logs/`, `tracker-additions/`) use `.gitkeep` so the tree exists in a fresh clone.
+
+The default runner uses `@razroo/iso-orchestrator` through
+`scripts/batch-orchestrator.mjs`. It persists bundle steps and events in
+`.jobforge-runs/`, caps worker fan-out with `workflow.forEach`, and serializes
+state/report-number writes while parallel bundles run. Use
+`JOBFORGE_LEGACY_BATCH_RUNNER=1 ./batch/batch-runner.sh` only to fall back to
+the old shell loop.
 
 ## Input: `batch-input.tsv`
 

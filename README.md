@@ -73,6 +73,7 @@ JobForge turns opencode into a full job search command center. Instead of manual
 | **Smart LinkedIn Outreach** | Reads evaluation reports to craft targeted messages using top proof points |
 | **Portal Scanner** | 45+ companies pre-configured with fuzzy dedup for reposts |
 | **Batch Processing** | Parallel evaluation with `opencode run` workers, with honest verification flagging |
+| **Durable Batch Orchestration** | `batch-runner.sh` uses `@razroo/iso-orchestrator` for resumable bundle execution, bounded fan-out, mutexed state writes, and workflow records in `.jobforge-runs/`. |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
 | **Cost-Aware Agent Routing** | Three subagents (`@general-free`, `@general-paid`, `@glm-minimal`) with per-task tool surfaces. On OpenCode, JobForge pins all tiers to `opencode-go/deepseek-v4-flash` so application runs avoid overloaded free-model pools. See [Subagent Routing in AGENTS.md](AGENTS.md) for the task-to-agent mapping. |
 | **Trace + Telemetry** | `job-forge trace:*` exposes local OpenCode transcripts, and `job-forge telemetry:*` summarizes runs, child outcomes, provider errors, and pending tracker TSVs. |
@@ -144,6 +145,7 @@ my-search/
 ├── data/                         # applications, pipeline, scan history (personal, gitignored)
 ├── reports/                      # generated evaluation reports (personal, gitignored)
 ├── batch/{batch-input,batch-state}.tsv, tracker-additions/, logs/   # personal
+├── .jobforge-runs/                # durable batch workflow records (generated)
 ├── AGENTS.md                     # personal overrides (opencode + codex)
 ├── CLAUDE.md                     # personal overrides (Claude Code), @-imports CLAUDE.harness.md
 │
@@ -187,6 +189,7 @@ JobForge/
 ├── config/profile.example.yml    # template for consumer's profile.yml
 ├── batch/{batch-prompt.md,batch-runner.sh}   # batch orchestrator
 ├── scripts/
+│   ├── batch-orchestrator.mjs    # iso-orchestrator-backed batch control loop
 │   ├── token-usage-report.mjs    # opencode cost analyzer
 │   └── release/check-source.mjs  # version gate for npm publish
 ├── tracker-lib.mjs / merge-tracker.mjs / dedup-tracker.mjs / verify-pipeline.mjs

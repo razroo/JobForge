@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - [opencode](https://opencode.ai) installed and configured
-- Node.js 18+ (for the CLI, PDF generation, and tracker scripts)
+- Node.js 20.6+ (for the CLI, PDF generation, tracker scripts, and durable batch orchestration)
 - [`uv`](https://docs.astral.sh/uv/) installed (`brew install uv` on macOS, or `pipx install uv`). Used by the state-trace MCP to spawn its Python entry point on demand via `uvx`. Without `uv`, the state-trace MCP fails to start; the rest of JobForge keeps working.
 - (Optional) Go (for the dashboard TUI) — use a toolchain that satisfies the `go` directive in [`dashboard/go.mod`](../dashboard/go.mod)
 

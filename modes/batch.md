@@ -30,6 +30,7 @@ Each worker is a child `opencode run` with a clean 200K token context. The condu
 ## Read These Files
 
 ```
+.jobforge-runs/                  # Durable iso-orchestrator records (gitignored)
 batch/
   batch-input.tsv               # URLs (from conductor or manual)
   batch-state.tsv               # Progress (auto-generated, gitignored)
@@ -66,12 +67,19 @@ d. Execute via Bash:
 batch/batch-runner.sh [OPTIONS]
 ```
 
+`batch-runner.sh` delegates to `scripts/batch-orchestrator.mjs` by default.
+That Node runner uses `@razroo/iso-orchestrator` to persist workflow records in
+`.jobforge-runs/`, cap bundle fan-out with `workflow.forEach`, and serialize
+report-number/state writes while workers run in parallel. If a regression
+requires the old shell loop, run with `JOBFORGE_LEGACY_BATCH_RUNNER=1`.
+
 Options:
 - `--dry-run` — list pending without executing
 - `--retry-failed` — only retry failed ones
 - `--start-from N` — start from ID N
 - `--parallel N` — N workers in parallel
 - `--max-retries N` — attempts per offer (default: 2)
+- `--workflow-id ID` — durable workflow id (default: `jobforge-batch`)
 
 ## Read batch-state.tsv Format
 
@@ -85,6 +93,7 @@ id	url	status	started_at	completed_at	report_num	score	error	retries
 ## Use Resumability
 
 - If it dies → re-run → reads `batch-state.tsv` → skips completed
+- `.jobforge-runs/` keeps the durable run record, step outcomes, and bundle events
 - Lock file (`batch-runner.pid`) prevents double execution
 - Each worker is independent: failure on offer #47 does not affect the rest
 

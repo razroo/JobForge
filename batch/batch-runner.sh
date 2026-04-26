@@ -6,8 +6,24 @@ set -euo pipefail
 # tracks state in batch-state.tsv for resumability.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-BATCH_DIR="$SCRIPT_DIR"
+PROJECT_DIR="${JOB_FORGE_PROJECT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+
+# Default path: delegate to the durable Node orchestrator. Keep the legacy
+# shell implementation below as an escape hatch while the new runner settles.
+SOURCE="${BASH_SOURCE[0]}"
+while [[ -L "$SOURCE" ]]; do
+  SOURCE_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$SOURCE_DIR/$SOURCE"
+done
+HARNESS_BATCH_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+HARNESS_DIR="$(cd "$HARNESS_BATCH_DIR/.." && pwd)"
+if [[ "${JOBFORGE_LEGACY_BATCH_RUNNER:-}" != "1" && -f "$HARNESS_DIR/scripts/batch-orchestrator.mjs" ]]; then
+  export JOB_FORGE_PROJECT="$PROJECT_DIR"
+  exec node "$HARNESS_DIR/scripts/batch-orchestrator.mjs" "$@"
+fi
+
+BATCH_DIR="$PROJECT_DIR/batch"
 INPUT_FILE="$BATCH_DIR/batch-input.tsv"
 STATE_FILE="$BATCH_DIR/batch-state.tsv"
 PROMPT_FILE="$BATCH_DIR/batch-prompt.md"
