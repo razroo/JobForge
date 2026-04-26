@@ -29,6 +29,7 @@ import {
 import {
   DEFAULT_STATES, loadCanonicalStates, buildStatusDetectionRegex,
 } from './lib/canonical-states.mjs';
+import { recordTrackerMergeResult } from './lib/jobforge-ledger.mjs';
 
 const ADDITIONS_DIR = join(PROJECT_DIR, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
@@ -288,6 +289,7 @@ let added = 0;
 let updated = 0;
 let skipped = 0;
 const newEntries = [];
+const ledgerRecords = [];
 
 for (const file of tsvFiles) {
   const content = readFileSync(join(ADDITIONS_DIR, file), 'utf-8').trim();
@@ -359,12 +361,15 @@ for (const file of tsvFiles) {
         }
       }
       updated++;
+      ledgerRecords.push({ addition, outcome: 'updated', sourceFile: join(ADDITIONS_DIR, file), duplicateNum: duplicate.num, reason });
     } else if (statusRegresses) {
       console.log(`⏭️  Skip: ${addition.company} — ${addition.role} (existing #${duplicate.num} status ${duplicate.status} outranks new ${addition.status})`);
       skipped++;
+      ledgerRecords.push({ addition, outcome: 'skipped', sourceFile: join(ADDITIONS_DIR, file), duplicateNum: duplicate.num, reason: 'status-regression' });
     } else {
       console.log(`⏭️  Skip: ${addition.company} — ${addition.role} (existing #${duplicate.num} ${oldScore} >= new ${newScore})`);
       skipped++;
+      ledgerRecords.push({ addition, outcome: 'skipped', sourceFile: join(ADDITIONS_DIR, file), duplicateNum: duplicate.num, reason: 'no-improvement' });
     }
   } else {
     const entryNum = addition.num > maxNum ? addition.num : ++maxNum;
@@ -376,6 +381,7 @@ for (const file of tsvFiles) {
     });
     added++;
     console.log(`➕ Add #${entryNum}: ${addition.company} — ${addition.role} (${addition.score})`);
+    ledgerRecords.push({ addition: { ...addition, num: entryNum }, outcome: 'added', sourceFile: join(ADDITIONS_DIR, file), reason: 'new-entry' });
   }
 }
 
@@ -410,6 +416,23 @@ if (!DRY_RUN) {
     renameSync(join(ADDITIONS_DIR, file), join(MERGED_DIR, file));
   }
   console.log(`\n✅ Moved ${tsvFiles.length} TSVs to merged/`);
+
+  let ledgerEvents = 0;
+  for (const record of ledgerRecords) {
+    try {
+      const result = recordTrackerMergeResult(record.addition, {
+        projectDir: PROJECT_DIR,
+        sourceFile: record.sourceFile,
+        outcome: record.outcome,
+        duplicateNum: record.duplicateNum,
+        reason: record.reason,
+      });
+      if (result.appended) ledgerEvents++;
+    } catch (error) {
+      console.warn(`⚠️  Could not append ledger event for ${record.sourceFile}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  console.log(`🧾 Ledger: ${ledgerEvents} event(s) appended`);
 }
 
 console.log(`\n📊 Summary: +${added} added, 🔄${updated} updated, ⏭️${skipped} skipped`);

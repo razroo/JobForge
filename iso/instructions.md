@@ -7,7 +7,7 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [H1] Max 2 parallel `task` dispatches per message. For N jobs, run `ceil(N/2)` sequential rounds of 2. A round is not complete until both subagents return a final outcome (`APPLIED`, `APPLY FAILED`, `SKIP`, `Discarded`, or a written TSV path). A `task` tool result that only gives a session id / title is a launch acknowledgement, not completion. Applies in all modes, for all user phrasings ("urgent", "apply to 10 jobs now").
   why: each subagent requires post-cleanup and racing more than 2 reliably loses at least one result. On 2026-04-25 the orchestrator launched round 2 while round 1 had only returned task ids, leaving four application subagents in flight and losing two provider recoveries
 
-- [H2] Max 1 application per company+role. Before every `apply` dispatch, grep all four sources for the URL and for `company+role`: `data/pipeline.md`, all `data/applications/*.md` day files, `batch/tracker-additions/*.tsv`, `batch/tracker-additions/merged/*.tsv`. If any source shows APPLIED / Applied, skip the dispatch and pick a replacement from the remaining candidate list. Do not count duplicates toward a requested "apply to N jobs" total, and do not delegate obvious duplicates just so a subagent can return SKIP.
+- [H2] Max 1 application per company+role. Before every `apply` dispatch, grep all four sources for the URL and for `company+role`: `data/pipeline.md`, all `data/applications/*.md` day files, `batch/tracker-additions/*.tsv`, `batch/tracker-additions/merged/*.tsv`. If `.jobforge-ledger/events.jsonl` exists, `npx job-forge ledger:has --company "..." --role "..." --status Applied` may be used as a fast prefilter; a match is enough to drop that duplicate before dispatch. For candidates not rejected by the ledger, the four-source grep is still mandatory. If any source shows APPLIED / Applied, skip the dispatch and pick a replacement from the remaining candidate list. Do not count duplicates toward a requested "apply to N jobs" total, and do not delegate obvious duplicates just so a subagent can return SKIP.
   why: 2026-04 same-day batch collision — when two batches target the same role, `npx job-forge merge` updates the existing day-file row rather than appending, so grepping day files alone misses earlier-batch applies; merged/*.tsv is the only place the breadcrumb remains
 
 - [H3] Before every batch of `task` dispatches that will use Geometra, call `geometra_list_sessions` then `geometra_disconnect({closeBrowser: true})`. Every round, no exceptions. Name this cleanup as an explicit "step 0" in your first-response plan for any multi-apply request — it is the most frequently skipped guardrail in practice, and skipping it produces cascade "Not connected" failures on the next dispatch.
@@ -19,7 +19,7 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [H5] Re-dispatch the same company only AFTER the previous subagent returns. Never fire the same `task` twice while the first is still in flight.
   why: two in-flight subagents for the same URL race on Geometra sessions and on tracker TSV writes, corrupting state and sometimes double-submitting
 
-- [H5b] Do not use `task` to poll task status. If OpenCode returns a task/session id without a final result, record the id, stop dispatching new rounds, and tell the user the round is still in flight. When the user asks to check later, inspect authoritative files (`batch/tracker-additions/*.tsv`, `batch/tracker-additions/merged/*.tsv`, day files, or `iso-trace`) rather than spawning a "check task status" subagent.
+- [H5b] Do not use `task` to poll task status. If OpenCode returns a task/session id without a final result, record the id, stop dispatching new rounds, and tell the user the round is still in flight. When the user asks to check later, inspect authoritative files (`batch/tracker-additions/*.tsv`, `batch/tracker-additions/merged/*.tsv`, day files, `.jobforge-ledger/events.jsonl`, or `iso-trace`) rather than spawning a "check task status" subagent.
   why: OpenCode status prompts can be delivered into the target subagent as a new user message; a 2026-04-25 trace caused a subagent to call `task` recursively instead of finishing the application
 
 - [H6] Application outcomes flow through `batch/tracker-additions/*.tsv`, not `data/pipeline.md`. After any multi-apply run, the orchestrator MUST run `npx job-forge merge` then `npx job-forge verify` before ending the session.
@@ -54,12 +54,15 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D7] For standalone `batch` runs, prefer `batch/batch-runner.sh` instead of hand-rolling the loop. It delegates to `@razroo/iso-orchestrator`, persists workflow records in `.jobforge-runs/`, caps bundle fan-out, and mutexes state/report-number writes. Use `JOBFORGE_LEGACY_BATCH_RUNNER=1` only as a fallback.
   why: the old Bash loop encoded resumability and parallelism manually; the iso-orchestrator path makes the durable control state inspectable and prevents report-number collisions under parallel bundles
 
+- [D8] Use `job-forge ledger:*` for cheap local workflow-state checks when available. `iso-ledger` is not an MCP and adds no prompt/tool schema tokens; it records tracker TSV writes, merge outcomes, rebuilt tracker snapshots, and pipeline items in `.jobforge-ledger/events.jsonl`.
+  why: state-trace remains working memory, while iso-ledger is deterministic append-only workflow truth that can answer duplicate/status questions without loading growing markdown/TSV files into the model context
+
 ## Procedure
 
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
 3. Read the active mode file [D3]; decide inline vs delegated work [D1].
-4. Prepare Geometra dispatches: cleanup [H3], dedupe [H2], location filter [D5], routing [D2], proxy prompt hygiene [H8].
+4. Prepare Geometra dispatches: cleanup [H3], ledger prefilter when present [D8], dedupe [H2], location filter [D5], routing [D2], proxy prompt hygiene [H8].
 5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b].
 6. Keep multi-job form-filling out of the orchestrator [H4].
 7. Cross-check subagent facts against authoritative files [H7].

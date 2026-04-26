@@ -20,6 +20,7 @@
  *   trace:*        Inspect local agent transcripts via iso-trace
  *   telemetry:*    Summarize JobForge pipeline status from traces + tracker files
  *   guard:*        Audit JobForge trace policy with iso-guard
+ *   ledger:*       Query local deterministic workflow state via iso-ledger
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
  */
@@ -74,6 +75,15 @@ const guardAliases = {
   'guard:explain': 'explain',
 };
 
+const ledgerAliases = {
+  'ledger:status': 'status',
+  'ledger:rebuild': 'rebuild',
+  'ledger:verify': 'verify',
+  'ledger:has': 'has',
+  'ledger:query': 'query',
+  'ledger:path': 'path',
+};
+
 const [, , cmd, ...rest] = process.argv;
 
 function printHelp() {
@@ -100,6 +110,10 @@ Commands:
   telemetry:watch   Watch latest run status
   guard:audit        Audit latest/local trace policy with iso-guard
   guard:explain      Show the active iso-guard policy
+  ledger:status      Show local workflow ledger status
+  ledger:rebuild     Rebuild .jobforge-ledger/events.jsonl from tracker/pipeline files
+  ledger:has         Check URL or company+role state without loading tracker files
+  ledger:verify      Validate the local workflow ledger
   sync           Re-create harness symlinks in the current project
 
 Deterministic helpers (prefer these over LLM-derived values):
@@ -128,6 +142,7 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge telemetry:show ses_...
   job-forge guard:audit
   job-forge guard:explain
+  job-forge ledger:has --company "Acme" --role "Staff Engineer" --status Applied
 
 Project directory resolves to $JOB_FORGE_PROJECT or cwd.`);
 }
@@ -174,6 +189,21 @@ if (cmd === 'guard' || guardAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/guard.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...guardArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'ledger' || ledgerAliases[cmd]) {
+  const ledgerArgs = cmd === 'ledger'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [ledgerAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/ledger.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...ledgerArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

@@ -15,6 +15,7 @@
  * 6. No pending TSVs in tracker-additions/ (runs even when tracker file is missing)
  * 7. No markdown bold in score column
  * 8. Drift warning if states.yml ids differ from the built-in fallback list
+ * 9. Ledger file verifies if .jobforge-ledger/events.jsonl exists
  *
  * Run: node verify-pipeline.mjs   (from repo root; same as npm run verify)
  */
@@ -26,6 +27,7 @@ import {
   PROJECT_DIR, DATA_APPS_DIR, DATA_APPS_FILE, ROOT_APPS_FILE,
   usesDayFiles, readAllEntries, listDayFiles, dayFilePath,
 } from './tracker-lib.mjs';
+import { jobForgeLedgerPath, ledgerExists, verifyJobForgeLedger } from './lib/jobforge-ledger.mjs';
 
 const ADDITIONS_DIR = join(PROJECT_DIR, 'batch/tracker-additions');
 const STATES_FILE = existsSync(join(PROJECT_DIR, 'templates/states.yml'))
@@ -127,6 +129,23 @@ function verifyStatesYamlDrift() {
   }
 }
 
+function verifyLedgerIfPresent() {
+  if (!ledgerExists(PROJECT_DIR)) {
+    ok('Ledger not initialized');
+    return;
+  }
+  const result = verifyJobForgeLedger(PROJECT_DIR);
+  for (const issue of result.issues) {
+    const prefix = issue.line ? `ledger line ${issue.line}` : 'ledger';
+    const msg = `${prefix}: ${issue.code}: ${issue.message}`;
+    if (issue.severity === 'error') error(msg);
+    else warn(msg);
+  }
+  if (result.errors === 0) {
+    ok(`Ledger valid (${result.eventCount} events at ${relative(PROJECT_DIR, jobForgeLedgerPath(PROJECT_DIR))})`);
+  }
+}
+
 // --- Read entries ---
 const { entries, source } = readAllEntries();
 
@@ -135,6 +154,7 @@ if (entries.length === 0) {
   console.log('   This is normal for a fresh setup.\n');
   checkPendingTrackerAdditions();
   verifyStatesYamlDrift();
+  verifyLedgerIfPresent();
   console.log('\n' + '='.repeat(50));
   console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);
   if (errors === 0 && warnings === 0) console.log('🟢 Pipeline is clean!');
@@ -254,6 +274,7 @@ for (const e of entries) {
 if (boldScores === 0) ok('No bold in scores');
 
 verifyStatesYamlDrift();
+verifyLedgerIfPresent();
 
 console.log('\n' + '='.repeat(50));
 console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);

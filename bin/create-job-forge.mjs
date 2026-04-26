@@ -119,6 +119,11 @@ const consumerPkg = {
     'telemetry:watch': 'job-forge telemetry:watch',
     'guard:audit': 'job-forge guard:audit',
     'guard:explain': 'job-forge guard:explain',
+    'ledger:status': 'job-forge ledger:status',
+    'ledger:rebuild': 'job-forge ledger:rebuild',
+    'ledger:verify': 'job-forge ledger:verify',
+    'ledger:has': 'job-forge ledger:has',
+    'ledger:query': 'job-forge ledger:query',
     // One command to pull the latest harness and any locally-pinned MCP
     // packages. npm update is a no-op on packages not in package.json, so
     // listing @razroo/gmail-mcp + @geometra/mcp is safe for consumers that
@@ -128,7 +133,7 @@ const consumerPkg = {
   dependencies: {
     'job-forge': '^2.0.0',
   },
-  engines: { node: '>=18' },
+  engines: { node: '>=20.6.0' },
 };
 write('package.json', JSON.stringify(consumerPkg, null, 2) + '\n');
 
@@ -218,6 +223,7 @@ Before doing any work, remember where things live in *this* project:
 | Application tracker | \`data/applications/YYYY-MM-DD.md\` | **Day-based**. One markdown table per day. **There is NO \`applications.md\` — do not look for it.** |
 | Inbox of pending URLs | \`data/pipeline.md\` | The queue for \`/job-forge pipeline\` |
 | Scanner dedup history | \`data/scan-history.tsv\` | Only touch in \`/job-forge scan\` |
+| Local workflow ledger | \`.jobforge-ledger/events.jsonl\` | Deterministic append-only state; use \`job-forge ledger:*\` |
 | Scanner config | \`portals.yml\` (project root) | Company configs |
 | Profile / identity | \`config/profile.yml\` | Candidate name, email, target roles |
 | CV | \`cv.md\` (project root) | Markdown, source of truth |
@@ -305,6 +311,7 @@ data/applications.md
 data/pipeline.md
 data/scan-history.tsv
 data/token-usage.tsv
+.jobforge-ledger/
 reports/
 !reports/.gitkeep
 batch/batch-state.tsv
@@ -361,6 +368,7 @@ job-forge sync             # re-run if symlinks drift
 \`\`\`bash
 job-forge merge            # merge batch/tracker-additions/*.tsv into the tracker
 job-forge verify           # verify pipeline integrity
+job-forge ledger:status    # local deterministic workflow ledger status
 job-forge pdf cv.md out.pdf
 job-forge tokens --days 1  # per-session opencode token usage
 \`\`\`

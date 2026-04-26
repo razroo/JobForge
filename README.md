@@ -31,6 +31,8 @@ The scaffolded `opencode.json` already has three MCPs wired up — they launch a
 - **Gmail** — reads replies from recruiters
 - **state-trace** — typed working memory for cross-session context (resumed batches, recent decisions, repeated portal quirks). Install once with `python3 -m pip install "state-trace[mcp]"`; the MCP command is `state-trace-mcp`.
 
+JobForge also keeps an MCP-free local workflow ledger at `.jobforge-ledger/events.jsonl` when you use `job-forge ledger:*`, `tracker-line --write`, or `merge`. This is deterministic state for duplicate/status checks; it does not add prompt or tool-schema tokens.
+
 `npm install` also materializes symlinks for every supported agent harness — OpenCode, Cursor, Claude Code, and Codex — so you can run `opencode`, `cursor`, `claude`, or `codex` in the same project and each picks up the shared MCP config and instructions.
 
 Then fill in `cv.md`, `config/profile.yml`, and `portals.yml` with your personal data, paste a job URL into opencode, and JobForge evaluates + tracks it.
@@ -76,7 +78,7 @@ JobForge turns opencode into a full job search command center. Instead of manual
 | **Durable Batch Orchestration** | `batch-runner.sh` uses `@razroo/iso-orchestrator` for resumable bundle execution, bounded fan-out, mutexed state writes, and workflow records in `.jobforge-runs/`. |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
 | **Cost-Aware Agent Routing** | Three subagents (`@general-free`, `@general-paid`, `@glm-minimal`) with per-task tool surfaces. On OpenCode, JobForge pins all tiers to `opencode-go/deepseek-v4-flash` so application runs avoid overloaded free-model pools. See [Subagent Routing in AGENTS.md](AGENTS.md) for the task-to-agent mapping. |
-| **Trace + Telemetry + Guard** | `job-forge trace:*` exposes local OpenCode transcripts, `job-forge telemetry:*` summarizes runs, and `job-forge guard:*` audits deterministic JobForge policy rules with `@razroo/iso-guard`. |
+| **Trace + Telemetry + Guard + Ledger** | `job-forge trace:*` exposes local OpenCode transcripts, `job-forge telemetry:*` summarizes runs, `job-forge guard:*` audits deterministic policy rules, and `job-forge ledger:*` queries append-only workflow state without MCP/token overhead. |
 | **Token Cost Visibility** | `job-forge tokens --days 1` for per-session breakdown; `job-forge session-report --since-minutes 60 --log` to flag sessions over budget and append history to `data/token-usage.tsv`. Auto-logged after every batch run. |
 
 ## Usage
@@ -143,6 +145,7 @@ my-search/
 ├── portals.yml                   # companies to scan (personal)
 ├── config/profile.yml            # your identity, target roles (personal)
 ├── data/                         # applications, pipeline, scan history (personal, gitignored)
+├── .jobforge-ledger/              # append-only local workflow events (personal, gitignored)
 ├── reports/                      # generated evaluation reports (personal, gitignored)
 ├── batch/{batch-input,batch-state}.tsv, tracker-additions/, logs/   # personal
 ├── .jobforge-runs/                # durable batch workflow records (generated)
@@ -190,6 +193,7 @@ JobForge/
 ├── batch/{batch-prompt.md,batch-runner.sh}   # batch orchestrator
 ├── scripts/
 │   ├── batch-orchestrator.mjs    # iso-orchestrator-backed batch control loop
+│   ├── ledger.mjs                # iso-ledger-backed workflow-state CLI
 │   ├── token-usage-report.mjs    # opencode cost analyzer
 │   └── release/check-source.mjs  # version gate for npm publish
 ├── tracker-lib.mjs / merge-tracker.mjs / dedup-tracker.mjs / verify-pipeline.mjs

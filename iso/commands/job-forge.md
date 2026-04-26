@@ -71,6 +71,10 @@ Or paste a JD directly to run the full pipeline.
 Token usage check (terminal, outside opencode):
   npx job-forge tokens --days 1        # today's sessions with input/cache breakdown
   npx job-forge tokens --session <id>  # drill into one session for cache-bust hunting
+
+Local workflow ledger (terminal, outside opencode):
+  npx job-forge ledger:status          # .jobforge-ledger/events.jsonl summary
+  npx job-forge ledger:has --company "Acme" --role "Staff Engineer" --status Applied
 ```
 
 ---
@@ -145,6 +149,9 @@ Step 1  — Enumerate candidates
   - Build ordered list: candidates = [job_1, job_2, ..., job_N]
 
 Step 2  — Dedup against already-applied
+  - If .jobforge-ledger/events.jsonl exists, use npx job-forge ledger:has as a
+    fast prefilter for obvious company+role Applied duplicates. A ledger match
+    can be dropped before dispatch without loading tracker files into context.
   - For each candidate, grep all four sources for URL and company+role:
     data/pipeline.md, data/applications/*.md, batch/tracker-additions/*.tsv,
     batch/tracker-additions/merged/*.tsv

@@ -4,6 +4,7 @@ import { spawnSync } from 'child_process';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { join, resolve } from 'path';
 import { defaultOpenCodeDbPath, findSessionById, parseSinceCutoff } from '@razroo/iso-trace';
+import { jobForgeLedgerSummary } from '../lib/jobforge-ledger.mjs';
 
 const PROJECT_DIR = process.env.JOB_FORGE_PROJECT || process.cwd();
 const DEFAULT_SINCE = '24h';
@@ -485,9 +486,21 @@ function sessionStatus({ taskCalls, children, childOutcomes, childProviderErrors
 function trackerStatus(projectDir) {
   const pendingDir = join(projectDir, 'batch', 'tracker-additions');
   const mergedDir = join(pendingDir, 'merged');
+  let ledger;
+  try {
+    ledger = jobForgeLedgerSummary(projectDir);
+  } catch (error) {
+    ledger = {
+      exists: true,
+      events: 0,
+      entities: 0,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
   return {
     pending: listTsv(pendingDir),
     mergedCount: listTsv(mergedDir).length,
+    ledger,
   };
 }
 
@@ -636,6 +649,7 @@ function printStatus(telemetry) {
   console.log(`tasks:     ${telemetry.tasks.total} (${telemetry.tasks.statusPolls} status-poll, ${telemetry.tasks.running} running)`);
   console.log(`children:  ${telemetry.children.withOutcomes}/${telemetry.children.total} with outcomes`);
   console.log(`tracker:   ${telemetry.tracker.pending.length} pending TSVs, ${telemetry.tracker.mergedCount} merged TSVs`);
+  console.log(`ledger:    ${telemetry.tracker.ledger.error ? `error: ${telemetry.tracker.ledger.error}` : telemetry.tracker.ledger.exists ? `${telemetry.tracker.ledger.events} events` : 'missing'}`);
   console.log(`models:    ${telemetry.models.slice(0, 3).map(modelLabel).join(', ') || 'none'}`);
   console.log(`errors:    ${telemetry.providerErrors.length} root, ${telemetry.children.providerErrors} child provider errors, ${telemetry.children.toolErrors} child tool errors`);
   console.log(`issues:    ${telemetry.policyIssues.length}`);

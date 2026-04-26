@@ -24,6 +24,7 @@
 
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
+import { recordTrackerAdditionWritten } from '../lib/jobforge-ledger.mjs';
 
 const PROJECT_DIR = process.env.JOB_FORGE_PROJECT || process.cwd();
 
@@ -61,6 +62,13 @@ if (write) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   const path = join(dir, `${num}.tsv`);
   writeFileSync(path, line + '\n', 'utf-8');
+  try {
+    recordTrackerAdditionWritten({
+      num, date, company, role, status, score: scoreField, pdf, report: reportLink, notes,
+    }, { projectDir: PROJECT_DIR, sourceFile: path });
+  } catch (error) {
+    console.warn(`warning: could not append tracker-line ledger event: ${error instanceof Error ? error.message : String(error)}`);
+  }
   console.log(path);
 } else {
   console.log(line);

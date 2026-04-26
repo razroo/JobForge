@@ -125,6 +125,19 @@ npx job-forge telemetry:watch
 
 Telemetry is also local-only and passive. It reads OpenCode's SQLite DB and files under `batch/tracker-additions/`; agents do not need to remember to emit custom events.
 
+## JobForge ledger
+
+The ledger is append-only local workflow state backed by `@razroo/iso-ledger`. It is not an MCP and does not add prompt, tool-schema, or state-trace tokens. Use it when you want a cheap deterministic check before loading growing tracker files:
+
+```bash
+npx job-forge ledger:rebuild
+npx job-forge ledger:status
+npx job-forge ledger:has --company "Acme" --role "Staff Engineer" --status Applied
+npx job-forge ledger:verify
+```
+
+`tracker-line --write` records tracker-addition events, `merge` records add/update/skip outcomes, and `ledger:rebuild` backfills events from `data/applications/`, `batch/tracker-additions/`, `batch/tracker-additions/merged/`, and `data/pipeline.md`.
+
 ## JobForge guard audits
 
 Guard audits run deterministic `@razroo/iso-guard` policies over the same local OpenCode traces. The default policy lives at `templates/guards/jobforge-baseline.yaml` and checks rules that are reliable from transcript data, including max two task dispatches per assistant message, no task-status polling via `task`, no raw proxy configuration in task prompts, and no child session task recursion.

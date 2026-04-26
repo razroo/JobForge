@@ -1,6 +1,6 @@
 {
   "name": "job-forge",
-  "version": "2.14.15",
+  "version": "2.14.16",
   "description": "AI-powered job search pipeline built on opencode",
   "type": "module",
   "bin": {
@@ -27,6 +27,11 @@
     "telemetry:watch": "node bin/job-forge.mjs telemetry:watch",
     "guard:audit": "node bin/job-forge.mjs guard:audit",
     "guard:explain": "node bin/job-forge.mjs guard:explain",
+    "ledger:status": "node bin/job-forge.mjs ledger:status",
+    "ledger:rebuild": "node bin/job-forge.mjs ledger:rebuild",
+    "ledger:verify": "node bin/job-forge.mjs ledger:verify",
+    "ledger:has": "node bin/job-forge.mjs ledger:has",
+    "ledger:query": "node bin/job-forge.mjs ledger:query",
     "plan": "iso plan .",
     "lint:agentmd": "agentmd lint iso/instructions.md",
     "lint:modes": "isolint lint modes/",
@@ -92,6 +97,7 @@
   },
   "dependencies": {
     "@razroo/iso-guard": "^0.1.0",
+    "@razroo/iso-ledger": "^0.1.0",
     "@razroo/iso-orchestrator": "^0.1.0",
     "@razroo/iso-trace": "^0.4.0",
     "playwright": "^1.58.1"
