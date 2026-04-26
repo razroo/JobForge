@@ -46,7 +46,7 @@
         },
         {
           "kind": "jobforge.report-ref",
-          "key": "{Report}",
+          "key": "report-ref:{source}:{line}",
           "value": "{Company} - {Role}",
           "fields": {
             "company": "{Company}",
