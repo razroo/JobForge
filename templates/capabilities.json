@@ -1,0 +1,109 @@
+{
+  "roles": [
+    {
+      "name": "jobforge-base",
+      "description": "Safe local JobForge role for reading project state and running deterministic verification commands.",
+      "tools": ["read", "search", "shell"],
+      "mcp": [],
+      "commands": {
+        "allow": [
+          "npx job-forge verify",
+          "npx job-forge ledger:*",
+          "npx job-forge capabilities:*",
+          "rg *"
+        ],
+        "deny": [
+          "rm -rf *"
+        ]
+      },
+      "filesystem": "read-only",
+      "network": "off",
+      "notes": [
+        "Do not paste secrets from config/profile.yml into prompts, traces, or summaries.",
+        "Prefer deterministic JobForge commands over re-reading growing tracker files when a local command can answer the question."
+      ]
+    },
+    {
+      "name": "orchestrator",
+      "description": "Primary session role that routes work, checks policy, and delegates tool-heavy browser/application work.",
+      "extends": "jobforge-base",
+      "tools": ["task"],
+      "commands": {
+        "allow": [
+          "npx job-forge merge",
+          "npx job-forge guard:*",
+          "npx job-forge telemetry:*",
+          "npx job-forge trace:*"
+        ]
+      },
+      "filesystem": "read-only",
+      "network": "off",
+      "notes": [
+        "Delegate multi-job Geometra work to subagents; do not run browser-heavy application loops inline.",
+        "Use capabilities checks when changing or auditing role boundaries."
+      ]
+    },
+    {
+      "name": "general-free",
+      "description": "Procedural worker for application form fills, TSV writes, merges, verification, OTP retrieval, and portal metadata extraction.",
+      "extends": "jobforge-base",
+      "tools": ["browser", "write"],
+      "mcp": ["geometra", "gmail"],
+      "commands": {
+        "allow": [
+          "npx job-forge tracker-line *",
+          "npx job-forge merge",
+          "npx job-forge verify",
+          "npx job-forge ledger:*",
+          "npx job-forge capabilities:*"
+        ],
+        "deny": [
+          "task *"
+        ]
+      },
+      "filesystem": "project-write",
+      "network": "restricted",
+      "notes": [
+        "Use for procedural, tool-heavy work where output shape is validated by JobForge commands.",
+        "Do not spawn nested tasks."
+      ]
+    },
+    {
+      "name": "general-paid",
+      "description": "Quality-sensitive writing and evaluation worker for reports, cover letters, interview stories, and outreach.",
+      "extends": "jobforge-base",
+      "tools": ["write"],
+      "commands": {
+        "allow": [
+          "npx job-forge render-report-header *",
+          "npx job-forge pdf",
+          "npx job-forge tracker-line *",
+          "npx job-forge verify"
+        ]
+      },
+      "filesystem": "project-write",
+      "network": "restricted",
+      "notes": [
+        "Use for narrative quality, personalization, and scoring explanations rather than browser automation."
+      ]
+    },
+    {
+      "name": "glm-minimal",
+      "description": "Narrow one-shot extractor/classifier role for small structured transforms.",
+      "extends": "jobforge-base",
+      "tools": [],
+      "commands": {
+        "allow": [
+          "npx job-forge slugify *",
+          "npx job-forge today",
+          "npx job-forge next-num"
+        ]
+      },
+      "filesystem": "read-only",
+      "network": "off",
+      "notes": [
+        "Keep input small and output structured; no browser, MCP, or nested task work."
+      ]
+    }
+  ]
+}

@@ -53,6 +53,8 @@ The orchestrator can only dispatch to these three agents. Accidental self-calls 
 ```
 Disables ~30 MCP tool schemas globally; each agent re-enables only what it needs in its own `.opencode/agents/<name>.md` frontmatter. Saves ~2-3K input tokens per request in the orchestrator.
 
+`templates/capabilities.json` is the executable source for intended role boundaries. Inspect it with `job-forge capabilities:explain general-free`, or validate a boundary with `job-forge capabilities:check general-free --tool browser --mcp geometra --command "npx job-forge merge" --filesystem write --network restricted`. Native harness frontmatter still enforces permissions where supported; `iso-capabilities` gives JobForge a local audit/check contract for changes and reviews.
+
 **3. Thinking budgets** (`reasoningEffort` in agent frontmatter):
 - `@general-free`: `minimal` — procedural work shouldn't need chain-of-thought
 - `@general-paid`: `medium` — writing quality benefits from thinking

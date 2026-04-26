@@ -142,6 +142,10 @@ npx job-forge ledger:verify
 
 Machine-readable artifact shapes live in `templates/contracts.json` and are enforced by `@razroo/iso-contract`. `job-forge tracker-line` renders tracker additions through the `jobforge.tracker-row` contract, `merge` validates pending TSV/table rows before writing tracker files, and `verify` validates existing tracker rows against the same contract. Custom forks can extend `templates/contracts.json`, but keep the tracker status enum aligned with `templates/states.yml`.
 
+## JobForge role capabilities
+
+Role capability boundaries live in `templates/capabilities.json` and are enforced locally by `@razroo/iso-capabilities`. Use `job-forge capabilities:explain <role>` to inspect a role and `job-forge capabilities:check <role> ...` to validate a tool, MCP, command, filesystem, or network boundary before changing agent frontmatter. Custom forks can extend the policy, but keep it aligned with `.opencode/agents/` and the routing rules in `iso/instructions.md`.
+
 ## JobForge guard audits
 
 Guard audits run deterministic `@razroo/iso-guard` policies over the same local OpenCode traces. The default policy lives at `templates/guards/jobforge-baseline.yaml` and checks rules that are reliable from transcript data, including max two task dispatches per assistant message, no task-status polling via `task`, no raw proxy configuration in task prompts, and no child session task recursion.

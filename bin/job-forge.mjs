@@ -21,6 +21,7 @@
  *   telemetry:*    Summarize JobForge pipeline status from traces + tracker files
  *   guard:*        Audit JobForge trace policy with iso-guard
  *   ledger:*       Query local deterministic workflow state via iso-ledger
+ *   capabilities:* Query role capability policy via iso-capabilities
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
  */
@@ -84,6 +85,14 @@ const ledgerAliases = {
   'ledger:path': 'path',
 };
 
+const capabilitiesAliases = {
+  'capabilities:list': 'list',
+  'capabilities:explain': 'explain',
+  'capabilities:check': 'check',
+  'capabilities:render': 'render',
+  'capabilities:path': 'path',
+};
+
 const [, , cmd, ...rest] = process.argv;
 
 function printHelp() {
@@ -114,6 +123,10 @@ Commands:
   ledger:rebuild     Rebuild .jobforge-ledger/events.jsonl from tracker/pipeline files
   ledger:has         Check URL or company+role state without loading tracker files
   ledger:verify      Validate the local workflow ledger
+  capabilities:list       List JobForge role capability policies
+  capabilities:explain    Explain one role capability policy
+  capabilities:check      Validate requested tool/MCP/command/fs/network access
+  capabilities:render     Render compact role guidance for an agent harness
   sync           Re-create harness symlinks in the current project
 
 Deterministic helpers (prefer these over LLM-derived values):
@@ -143,6 +156,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge guard:audit
   job-forge guard:explain
   job-forge ledger:has --company "Acme" --role "Staff Engineer" --status Applied
+  job-forge capabilities:explain general-free
+  job-forge capabilities:check general-free --tool browser --mcp geometra --command "npx job-forge merge" --filesystem write
 
 Project directory resolves to $JOB_FORGE_PROJECT or cwd.`);
 }
@@ -204,6 +219,21 @@ if (cmd === 'ledger' || ledgerAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/ledger.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...ledgerArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'capabilities' || capabilitiesAliases[cmd]) {
+  const capabilitiesArgs = cmd === 'capabilities'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [capabilitiesAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/capabilities.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...capabilitiesArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

@@ -79,6 +79,10 @@ Local workflow ledger (terminal, outside opencode):
 Artifact contracts (terminal, outside opencode):
   npx iso-contract explain jobforge.tracker-row --contracts templates/contracts.json
   npx job-forge tracker-line ... --write   # renders + validates tracker TSV locally
+
+Role capabilities (terminal, outside opencode):
+  npx job-forge capabilities:explain general-free
+  npx job-forge capabilities:check general-free --tool browser --mcp geometra --filesystem write
 ```
 
 ---

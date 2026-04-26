@@ -175,6 +175,7 @@ Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeli
 - PDFs: `cv-candidate-{company-slug}-{YYYY-MM-DD}.pdf`
 - Tracker TSVs: `batch/tracker-additions/{num}-{company-slug}.tsv` (one file per evaluation; merged files move under `batch/tracker-additions/merged/`; shape enforced by `templates/contracts.json`)
 - Ledger: `.jobforge-ledger/events.jsonl` (created by `job-forge ledger:rebuild`, `tracker-line --write`, or `merge`; gitignored personal state)
+- Capabilities: `templates/capabilities.json` (role boundary policy inspected with `job-forge capabilities:*`)
 
 ## Pipeline Integrity
 

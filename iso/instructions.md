@@ -60,12 +60,15 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D9] Treat `templates/contracts.json` as the source of truth for machine-readable artifacts. Prefer `npx job-forge tracker-line ... --write` for tracker additions; if emitting TSV manually, inspect `npx iso-contract explain jobforge.tracker-row --contracts templates/contracts.json` first. `merge` and `verify` enforce the tracker-row contract locally.
   why: deterministic code owns the exact tracker TSV/table shape; repeated prose gets re-tokenized and agents occasionally misremember it
 
+- [D10] Treat `templates/capabilities.json` as the source of truth for role capability boundaries. Use `npx job-forge capabilities:explain <role>` or `npx job-forge capabilities:check <role> ...` when changing or validating subagent tool/MCP/filesystem/command permissions; do not paste the full capability matrix into task prompts.
+  why: executable local policy prevents role-permission drift without adding MCP/tool-schema tokens or loading a capability matrix into the shared prefix
+
 ## Procedure
 
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
 3. Read the active mode file [D3]; decide inline vs delegated work [D1].
-4. Prepare Geometra dispatches: cleanup [H3], ledger prefilter when present [D8], dedupe [H2], location filter [D5], routing [D2], proxy prompt hygiene [H8].
+4. Prepare Geometra dispatches: cleanup [H3], ledger prefilter when present [D8], dedupe [H2], location filter [D5], routing [D2, D10], proxy prompt hygiene [H8].
 5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b].
 6. Keep multi-job form-filling out of the orchestrator [H4].
 7. Cross-check subagent facts against authoritative files [H7].
