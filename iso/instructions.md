@@ -25,7 +25,7 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [H6] Application outcomes flow through `batch/tracker-additions/*.tsv`, not `data/pipeline.md`. After any multi-apply run, the orchestrator MUST run `npx job-forge merge` then `npx job-forge verify` before ending the session.
   why: `pipeline.md` is the URL inbox (`[ ]` pending → `[x]` processed); `data/applications/YYYY-MM-DD.md` is the outcome log; the TSV pathway is the only safe bridge because `merge` handles column order and duplicate detection
 
-- [H7] Load-bearing facts passed to downstream subagents must originate from a file, not from prior subagent prose. Authoritative sources: `data/pipeline.md`, `data/scan-history.tsv`, `batch/scan-output-*.md`, `reports/{num}-*.md` with `**URL:**` / `**Score:**` headers, `batch/tracker-additions/*.tsv`.
+- [H7] Load-bearing facts passed to downstream subagents must originate from a file, not from prior subagent prose. Authoritative sources: `data/pipeline.md`, `data/scan-history.tsv`, `batch/scan-output-*.md`, `reports/{num}-*.md` with `**URL:**` / `**Score:**` headers, `batch/tracker-additions/*.tsv`, cached JD content returned by `npx job-forge cache:get --url ...`.
   why: 2026-04-18 scan subagent returned 30 fabricated Greenhouse IDs in prose (plausible-looking, non-existent); orchestrator dispatched 30 downstream subagents that all 404'd. Subagents can hallucinate IDs, scores, and confirmation text — round-trip through a file or don't trust the value
 
 - [H8] Never paste proxy values from `config/profile.yml` into `task` prompts, status text, or summaries. If a proxy is configured, tell the subagent exactly: "Proxy is configured; read `config/profile.yml` and pass its top-level `proxy:` object to every `geometra_connect` call." Do not transcribe `server`, `username`, `password`, or `bypass`, even if you just read them from disk.
@@ -66,11 +66,14 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D11] Treat `templates/context.json` as the source of truth for mode/reference context bundles. Use `npx job-forge context:plan <mode>` or `npx job-forge context:check <mode>` when changing or validating what a mode loads; do not paste the full context matrix into prompts.
   why: deterministic context bundles prevent reference-file drift and accidental token bloat without adding MCP/tool-schema tokens
 
+- [D12] Use `job-forge cache:*` for deterministic local artifact reuse when available. For URL inputs, check `npx job-forge cache:has --url "..."` / `cache:get` before browser or network JD fetches; after a successful fetch, store the exact JD text with `npx job-forge cache:put --url "..." --ttl 14d --input @file` when it is already on disk.
+  why: `iso-cache` is not an MCP and adds no prompt/tool-schema tokens; it avoids repeated JD fetch/render passes and lets future sessions reuse stable content from `.jobforge-cache/`
+
 ## Procedure
 
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
-3. Read the active mode file [D3]; use context bundle checks when changing context loads [D11]; decide inline vs delegated work [D1].
+3. Read the active mode file [D3]; use context bundle checks when changing context loads [D11]; check cached artifacts before URL/JD refetches [D12]; decide inline vs delegated work [D1].
 4. Prepare Geometra dispatches: cleanup [H3], ledger prefilter when present [D8], dedupe [H2], location filter [D5], routing [D2, D10], proxy prompt hygiene [H8].
 5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b].
 6. Keep multi-job form-filling out of the orchestrator [H4].

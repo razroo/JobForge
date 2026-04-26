@@ -23,6 +23,7 @@
  *   ledger:*       Query local deterministic workflow state via iso-ledger
  *   capabilities:* Query role capability policy via iso-capabilities
  *   context:*      Query/render deterministic context bundles via iso-context
+ *   cache:*        Reuse local deterministic artifacts via iso-cache
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
  */
@@ -103,6 +104,18 @@ const contextAliases = {
   'context:path': 'path',
 };
 
+const cacheAliases = {
+  'cache:key': 'key',
+  'cache:status': 'status',
+  'cache:has': 'has',
+  'cache:get': 'get',
+  'cache:put': 'put',
+  'cache:list': 'list',
+  'cache:verify': 'verify',
+  'cache:prune': 'prune',
+  'cache:path': 'path',
+};
+
 const [, , cmd, ...rest] = process.argv;
 
 function printHelp() {
@@ -142,6 +155,12 @@ Commands:
   context:plan            Estimate files/tokens for one context bundle
   context:check           Fail if a context bundle exceeds its budget
   context:render          Render context bundle content as markdown/json
+  cache:status            Show local artifact cache status
+  cache:key               Print deterministic cache key for a job URL
+  cache:has               Check whether a job URL or cache key is cached
+  cache:get               Read cached JD/artifact content
+  cache:put               Store JD/artifact content
+  cache:verify            Validate local artifact cache integrity
   sync           Re-create harness symlinks in the current project
 
 Deterministic helpers (prefer these over LLM-derived values):
@@ -175,6 +194,9 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge capabilities:check general-free --tool browser --mcp geometra --command "npx job-forge merge" --filesystem write
   job-forge context:plan apply
   job-forge context:check apply --budget 23000
+  job-forge cache:has --url https://example.test/jobs/123
+  job-forge cache:get --url https://example.test/jobs/123
+  job-forge cache:put --url https://example.test/jobs/123 --input @jds/example.md
 
 Project directory resolves to $JOB_FORGE_PROJECT or cwd.`);
 }
@@ -266,6 +288,21 @@ if (cmd === 'context' || contextAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/context.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...contextArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'cache' || cacheAliases[cmd]) {
+  const cacheArgs = cmd === 'cache'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [cacheAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/cache.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...cacheArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

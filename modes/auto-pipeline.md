@@ -21,7 +21,9 @@ Fetch the JD content once. If the input is a **URL** (not pasted JD text), fetch
 
 **If the input is JD text** (not a URL): use it directly, no fetching needed.
 
-**Local artifacts before Step 0 methods:** Grep `reports/` for the URL or stable company+role slug; if a report already embeds the full JD, Read it and skip network fetch entirely. If the pipeline row or `jds/` references `local:jds/{file}`, Read that file first. This stacks with the rule above: one fetch per URL per session, and **zero** if the JD is already on disk.
+**Local artifacts before Step 0 methods:** Grep `reports/` for the URL or stable company+role slug; if a report already embeds the full JD, Read it and skip network fetch entirely. If the pipeline row or `jds/` references `local:jds/{file}`, Read that file first. For URL inputs, run `npx job-forge cache:has --url "{url}"` and then `npx job-forge cache:get --url "{url}"` on a hit; cached JD text is authoritative local content and avoids a browser/network fetch. This stacks with the rule above: one fetch per URL per session, and **zero** if the JD is already on disk or in `.jobforge-cache/`.
+
+**Cache after a successful fetch:** If the JD text is written to `jds/` or embedded in a report, store that exact text with `npx job-forge cache:put --url "{url}" --ttl 14d --input @path/to/jd.md`. Do not refetch just to populate the cache.
 
 ## Step 1 — Run Evaluation A-F
 Execute exactly as in the `offer` mode (read `modes/offer.md` for all blocks A-F).
