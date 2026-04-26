@@ -318,6 +318,9 @@ data/pipeline.md
 data/scan-history.tsv
 data/token-usage.tsv
 .jobforge-ledger/
+.jobforge-cache/
+.jobforge-index.json
+.jobforge-runs/
 reports/
 !reports/.gitkeep
 batch/batch-state.tsv
