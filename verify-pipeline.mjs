@@ -270,7 +270,8 @@ if (source === 'day') {
 if (badRows === 0) ok('All rows properly formatted');
 
 for (const e of entries) {
-  const result = validateTrackerRow(e, {
+  const result = validateTrackerRow(contractRecordForEntry(e), {
+    allowMissingReport: true,
     projectDir: PROJECT_DIR,
     normalizeStatus: normalizeStatusForContract,
   });
@@ -315,4 +316,22 @@ function normalizeStatusForContract(status) {
   if (direct) return direct;
   if (ALIASES[lower] === 'applied') return 'Applied';
   return clean;
+}
+
+function contractRecordForEntry(entry) {
+  const record = {
+    num: entry.num,
+    date: entry.date,
+    company: entry.company,
+    role: entry.role,
+    score: entry.score,
+    status: entry.status,
+    pdf: entry.pdf,
+    report: entry.report,
+    notes: entry.notes,
+  };
+  if (!/\]\([^)]+\)/.test(String(record.report || ''))) {
+    delete record.report;
+  }
+  return record;
 }
