@@ -163,6 +163,7 @@ data/pipeline.md        →  Pending URLs and `local:jds/...` inbox (see modes/p
 .jobforge-ledger/events.jsonl → Append-only workflow events for cheap local duplicate/status checks
 jds/*.md                 →  Saved job descriptions referenced from the pipeline (`local:jds/{file}`)
 templates/states.yml     →  Canonical status values
+templates/context.json    →  Deterministic mode/reference context bundle policy
 templates/cv-template.html → PDF generation template
 examples/*.md            →  Fictional layouts only (not read by scripts; see examples/README.md)
 ```
@@ -176,6 +177,7 @@ Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeli
 - Tracker TSVs: `batch/tracker-additions/{num}-{company-slug}.tsv` (one file per evaluation; merged files move under `batch/tracker-additions/merged/`; shape enforced by `templates/contracts.json`)
 - Ledger: `.jobforge-ledger/events.jsonl` (created by `job-forge ledger:rebuild`, `tracker-line --write`, or `merge`; gitignored personal state)
 - Capabilities: `templates/capabilities.json` (role boundary policy inspected with `job-forge capabilities:*`)
+- Context: `templates/context.json` (mode/reference file bundles inspected with `job-forge context:*`)
 
 ## Pipeline Integrity
 
@@ -217,6 +219,7 @@ Scripts maintain data consistency. In a consumer project they're invoked via the
 | `scripts/telemetry.mjs` | `npx job-forge telemetry:status` / `telemetry:show` | JobForge operational telemetry derived from OpenCode traces plus tracker TSV state |
 | `scripts/guard.mjs` | `npx job-forge guard:audit` / `guard:explain` | Deterministic `@razroo/iso-guard` policy audits over local OpenCode traces |
 | `scripts/ledger.mjs` | `npx job-forge ledger:status` / `ledger:has` / `ledger:rebuild` | Deterministic `@razroo/iso-ledger` state over tracker, TSV, and pipeline files |
+| `scripts/context.mjs` | `npx job-forge context:list` / `context:plan` / `context:check` / `context:render` | Deterministic `@razroo/iso-context` mode/reference context bundle planning and rendering |
 | `tracker-lib.mjs` | _(library)_ | Shared helpers for reading/writing day-based tracker files — imported by merge/dedup/verify/normalize |
 | `bin/sync.mjs` | `npx job-forge sync` | Creates the harness symlinks in a consumer project (also runs as `postinstall`) |
 | `bin/create-job-forge.mjs` | `npx create-job-forge <dir>` | Scaffolds a new personal project |

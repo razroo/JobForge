@@ -22,6 +22,7 @@
  *   guard:*        Audit JobForge trace policy with iso-guard
  *   ledger:*       Query local deterministic workflow state via iso-ledger
  *   capabilities:* Query role capability policy via iso-capabilities
+ *   context:*      Query/render deterministic context bundles via iso-context
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
  */
@@ -93,6 +94,15 @@ const capabilitiesAliases = {
   'capabilities:path': 'path',
 };
 
+const contextAliases = {
+  'context:list': 'list',
+  'context:explain': 'explain',
+  'context:plan': 'plan',
+  'context:check': 'check',
+  'context:render': 'render',
+  'context:path': 'path',
+};
+
 const [, , cmd, ...rest] = process.argv;
 
 function printHelp() {
@@ -127,6 +137,11 @@ Commands:
   capabilities:explain    Explain one role capability policy
   capabilities:check      Validate requested tool/MCP/command/fs/network access
   capabilities:render     Render compact role guidance for an agent harness
+  context:list            List JobForge context bundles
+  context:explain         Explain one context bundle
+  context:plan            Estimate files/tokens for one context bundle
+  context:check           Fail if a context bundle exceeds its budget
+  context:render          Render context bundle content as markdown/json
   sync           Re-create harness symlinks in the current project
 
 Deterministic helpers (prefer these over LLM-derived values):
@@ -158,6 +173,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge ledger:has --company "Acme" --role "Staff Engineer" --status Applied
   job-forge capabilities:explain general-free
   job-forge capabilities:check general-free --tool browser --mcp geometra --command "npx job-forge merge" --filesystem write
+  job-forge context:plan apply
+  job-forge context:check apply --budget 23000
 
 Project directory resolves to $JOB_FORGE_PROJECT or cwd.`);
 }
@@ -234,6 +251,21 @@ if (cmd === 'capabilities' || capabilitiesAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/capabilities.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...capabilitiesArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'context' || contextAliases[cmd]) {
+  const contextArgs = cmd === 'context'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [contextAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/context.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...contextArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

@@ -127,6 +127,7 @@ From your project root, these commands maintain the tracker and pipeline checks.
 | Merge `batch/tracker-additions/*.tsv` into the tracker | `npx job-forge merge` | `npm run merge` |
 | Inspect tracker row contract | `npx iso-contract explain jobforge.tracker-row --contracts templates/contracts.json` | _(none)_ |
 | Inspect role capabilities | `npx job-forge capabilities:explain general-free` | `npm run capabilities:explain -- general-free` |
+| Inspect context bundle budget | `npx job-forge context:plan apply` | `npm run context:plan -- apply` |
 | Map status column to canonical labels | `npx job-forge normalize` | `npm run normalize` |
 | Merge duplicate company/role rows | `npx job-forge dedup` | `npm run dedup` |
 | Generate ATS-optimized CV PDF | `npx job-forge pdf` | `npm run pdf` |

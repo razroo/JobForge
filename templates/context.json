@@ -1,0 +1,283 @@
+{
+  "defaults": {
+    "tokenBudget": 12000,
+    "charsPerToken": 4
+  },
+  "bundles": [
+    {
+      "name": "base",
+      "description": "Shared JobForge orchestration contract.",
+      "tokenBudget": 4000,
+      "files": [
+        {
+          "path": "iso/instructions.md",
+          "maxTokens": 3500,
+          "notes": [
+            "Shared contract; mode/reference files should be selected through narrower bundles."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "shared",
+      "extends": "base",
+      "description": "Shared scoring model plus JobForge orchestration contract.",
+      "tokenBudget": 8000,
+      "files": [
+        {
+          "path": "modes/_shared.md",
+          "maxTokens": 4500,
+          "notes": [
+            "Loaded for evaluation-style modes that need archetypes, scoring, and profile references."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "auto-pipeline",
+      "extends": "shared",
+      "description": "Default JD/URL pipeline context.",
+      "tokenBudget": 12000,
+      "files": [
+        {
+          "path": "modes/auto-pipeline.md",
+          "maxTokens": 2000
+        },
+        {
+          "path": "modes/reference-setup.md",
+          "maxTokens": 2600,
+          "required": false,
+          "notes": [
+            "Load when onboarding, tracker layout, or setup rules are the blocker."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "offer",
+      "extends": "shared",
+      "description": "Single-offer evaluation context.",
+      "tokenBudget": 11000,
+      "files": [
+        {
+          "path": "modes/offer.md",
+          "maxTokens": 2400
+        },
+        {
+          "path": "modes/_shared-calibration.md",
+          "maxTokens": 2500,
+          "required": false,
+          "notes": [
+            "Load when score calibration or anchor examples are needed."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "compare",
+      "extends": "shared",
+      "description": "Offer comparison context.",
+      "tokenBudget": 8500,
+      "files": [
+        {
+          "path": "modes/compare.md",
+          "maxTokens": 600
+        }
+      ]
+    },
+    {
+      "name": "contact",
+      "extends": "shared",
+      "description": "LinkedIn outreach context.",
+      "tokenBudget": 9000,
+      "files": [
+        {
+          "path": "modes/contact.md",
+          "maxTokens": 1200
+        }
+      ]
+    },
+    {
+      "name": "pdf",
+      "extends": "shared",
+      "description": "CV/PDF generation context.",
+      "tokenBudget": 10000,
+      "files": [
+        {
+          "path": "modes/pdf.md",
+          "maxTokens": 2200
+        }
+      ]
+    },
+    {
+      "name": "apply",
+      "extends": "shared",
+      "description": "Application form-fill context with Geometra recovery rules.",
+      "tokenBudget": 23000,
+      "files": [
+        {
+          "path": "modes/apply.md",
+          "maxTokens": 7800
+        },
+        {
+          "path": "modes/reference-geometra.md",
+          "maxTokens": 5600
+        },
+        {
+          "path": "modes/reference-portals.md",
+          "maxTokens": 2500,
+          "required": false,
+          "notes": [
+            "Load when OTP, proxy, or portal configuration is the blocker."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "pipeline",
+      "extends": "shared",
+      "description": "Pending URL inbox context.",
+      "tokenBudget": 12000,
+      "files": [
+        {
+          "path": "modes/pipeline.md",
+          "maxTokens": 1500
+        },
+        {
+          "path": "modes/reference-setup.md",
+          "maxTokens": 2600,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "scan",
+      "extends": "shared",
+      "description": "Portal scanning context.",
+      "tokenBudget": 18000,
+      "files": [
+        {
+          "path": "modes/scan.md",
+          "maxTokens": 6500
+        },
+        {
+          "path": "modes/reference-portals.md",
+          "maxTokens": 2500
+        }
+      ]
+    },
+    {
+      "name": "batch",
+      "extends": "shared",
+      "description": "Batch processing and durable runner context.",
+      "tokenBudget": 16000,
+      "files": [
+        {
+          "path": "modes/batch.md",
+          "maxTokens": 1500
+        },
+        {
+          "path": "batch/batch-prompt.md",
+          "maxTokens": 4800,
+          "required": false,
+          "notes": [
+            "Needed when invoking or auditing the standalone batch runner prompt."
+          ]
+        },
+        {
+          "path": "modes/reference-setup.md",
+          "maxTokens": 2600,
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "tracker",
+      "extends": "base",
+      "description": "Tracker/status context with setup reference.",
+      "tokenBudget": 7000,
+      "files": [
+        {
+          "path": "modes/tracker.md",
+          "maxTokens": 500
+        },
+        {
+          "path": "modes/reference-setup.md",
+          "maxTokens": 2600
+        }
+      ]
+    },
+    {
+      "name": "deep",
+      "extends": "base",
+      "description": "Company research context.",
+      "tokenBudget": 5500,
+      "files": [
+        {
+          "path": "modes/deep.md",
+          "maxTokens": 1200
+        }
+      ]
+    },
+    {
+      "name": "training",
+      "extends": "base",
+      "description": "Course/certification evaluation context.",
+      "tokenBudget": 4500,
+      "files": [
+        {
+          "path": "modes/training.md",
+          "maxTokens": 400
+        }
+      ]
+    },
+    {
+      "name": "project",
+      "extends": "base",
+      "description": "Portfolio project evaluation context.",
+      "tokenBudget": 4500,
+      "files": [
+        {
+          "path": "modes/project.md",
+          "maxTokens": 400
+        }
+      ]
+    },
+    {
+      "name": "followup",
+      "extends": "base",
+      "description": "Follow-up triage context.",
+      "tokenBudget": 5500,
+      "files": [
+        {
+          "path": "modes/followup.md",
+          "maxTokens": 1000
+        }
+      ]
+    },
+    {
+      "name": "rejection",
+      "extends": "base",
+      "description": "Rejection logging and pattern review context.",
+      "tokenBudget": 5500,
+      "files": [
+        {
+          "path": "modes/rejection.md",
+          "maxTokens": 1100
+        }
+      ]
+    },
+    {
+      "name": "negotiation",
+      "extends": "base",
+      "description": "Offer negotiation context.",
+      "tokenBudget": 6500,
+      "files": [
+        {
+          "path": "modes/negotiation.md",
+          "maxTokens": 1600
+        }
+      ]
+    }
+  ]
+}

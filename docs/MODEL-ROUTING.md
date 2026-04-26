@@ -55,6 +55,8 @@ Disables ~30 MCP tool schemas globally; each agent re-enables only what it needs
 
 `templates/capabilities.json` is the executable source for intended role boundaries. Inspect it with `job-forge capabilities:explain general-free`, or validate a boundary with `job-forge capabilities:check general-free --tool browser --mcp geometra --command "npx job-forge merge" --filesystem write --network restricted`. Native harness frontmatter still enforces permissions where supported; `iso-capabilities` gives JobForge a local audit/check contract for changes and reviews.
 
+`templates/context.json` is the executable source for intended mode/reference context loads. Inspect a bundle with `job-forge context:plan apply`, fail CI or local reviews on drift with `job-forge context:check apply`, or render the bundle only when a workflow deliberately needs it. `iso-context` is local CLI/library policy, not an MCP, so it avoids tool-schema overhead and prevents accidental "load every mode file" prompt bloat.
+
 **3. Thinking budgets** (`reasoningEffort` in agent frontmatter):
 - `@general-free`: `minimal` — procedural work shouldn't need chain-of-thought
 - `@general-paid`: `medium` — writing quality benefits from thinking

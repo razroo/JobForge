@@ -10,6 +10,7 @@
           "npx job-forge verify",
           "npx job-forge ledger:*",
           "npx job-forge capabilities:*",
+          "npx job-forge context:*",
           "rg *"
         ],
         "deny": [

@@ -1,6 +1,6 @@
 {
   "name": "job-forge",
-  "version": "2.14.19",
+  "version": "2.14.20",
   "description": "AI-powered job search pipeline built on opencode",
   "type": "module",
   "bin": {
@@ -36,6 +36,11 @@
     "capabilities:explain": "node bin/job-forge.mjs capabilities:explain",
     "capabilities:check": "node bin/job-forge.mjs capabilities:check",
     "capabilities:render": "node bin/job-forge.mjs capabilities:render",
+    "context:list": "node bin/job-forge.mjs context:list",
+    "context:explain": "node bin/job-forge.mjs context:explain",
+    "context:plan": "node bin/job-forge.mjs context:plan",
+    "context:check": "node bin/job-forge.mjs context:check",
+    "context:render": "node bin/job-forge.mjs context:render",
     "plan": "iso plan .",
     "lint:agentmd": "agentmd lint iso/instructions.md",
     "lint:modes": "isolint lint modes/",
@@ -101,6 +106,7 @@
   },
   "dependencies": {
     "@razroo/iso-capabilities": "^0.1.0",
+    "@razroo/iso-context": "^0.1.0",
     "@razroo/iso-contract": "^0.1.0",
     "@razroo/iso-guard": "^0.1.0",
     "@razroo/iso-ledger": "^0.1.0",

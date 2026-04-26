@@ -83,6 +83,10 @@ Artifact contracts (terminal, outside opencode):
 Role capabilities (terminal, outside opencode):
   npx job-forge capabilities:explain general-free
   npx job-forge capabilities:check general-free --tool browser --mcp geometra --filesystem write
+
+Context bundles (terminal, outside opencode):
+  npx job-forge context:plan apply
+  npx job-forge context:check apply --budget 23000
 ```
 
 ---

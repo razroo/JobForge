@@ -63,11 +63,14 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D10] Treat `templates/capabilities.json` as the source of truth for role capability boundaries. Use `npx job-forge capabilities:explain <role>` or `npx job-forge capabilities:check <role> ...` when changing or validating subagent tool/MCP/filesystem/command permissions; do not paste the full capability matrix into task prompts.
   why: executable local policy prevents role-permission drift without adding MCP/tool-schema tokens or loading a capability matrix into the shared prefix
 
+- [D11] Treat `templates/context.json` as the source of truth for mode/reference context bundles. Use `npx job-forge context:plan <mode>` or `npx job-forge context:check <mode>` when changing or validating what a mode loads; do not paste the full context matrix into prompts.
+  why: deterministic context bundles prevent reference-file drift and accidental token bloat without adding MCP/tool-schema tokens
+
 ## Procedure
 
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
-3. Read the active mode file [D3]; decide inline vs delegated work [D1].
+3. Read the active mode file [D3]; use context bundle checks when changing context loads [D11]; decide inline vs delegated work [D1].
 4. Prepare Geometra dispatches: cleanup [H3], ledger prefilter when present [D8], dedupe [H2], location filter [D5], routing [D2, D10], proxy prompt hygiene [H8].
 5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b].
 6. Keep multi-job form-filling out of the orchestrator [H4].
