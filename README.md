@@ -29,7 +29,7 @@ The scaffolded `opencode.json` already has three MCPs wired up — they launch a
 
 - **Geometra** — browser automation + PDF generation
 - **Gmail** — reads replies from recruiters
-- **state-trace** — typed working memory for cross-session context (resumed batches, recent decisions, repeated portal quirks). Spawned via `uvx`; install once with `brew install uv` (or `pipx install uv`) — no other setup.
+- **state-trace** — typed working memory for cross-session context (resumed batches, recent decisions, repeated portal quirks). Install once with `python3 -m pip install "state-trace[mcp]"`; the MCP command is `state-trace-mcp`.
 
 `npm install` also materializes symlinks for every supported agent harness — OpenCode, Cursor, Claude Code, and Codex — so you can run `opencode`, `cursor`, `claude`, or `codex` in the same project and each picks up the shared MCP config and instructions.
 

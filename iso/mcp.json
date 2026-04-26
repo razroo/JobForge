@@ -12,8 +12,7 @@
       }
     },
     "state-trace": {
-      "command": "uvx",
-      "args": ["--from", "state-trace[mcp]", "state-trace-mcp"],
+      "command": "state-trace-mcp",
       "env": {
         "STATE_TRACE_STORAGE_PATH": ".state-trace/memory.db",
         "STATE_TRACE_NAMESPACE": "job-forge",
