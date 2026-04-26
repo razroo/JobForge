@@ -10,10 +10,19 @@
       "tokenBudget": 4000,
       "files": [
         {
+          "path": "AGENTS.harness.md",
+          "maxTokens": 3500,
+          "required": false,
+          "notes": [
+            "Consumer-project symlink to the shared harness contract."
+          ]
+        },
+        {
           "path": "iso/instructions.md",
           "maxTokens": 3500,
+          "required": false,
           "notes": [
-            "Shared contract; mode/reference files should be selected through narrower bundles."
+            "Harness-source fallback; mode/reference files should be selected through narrower bundles."
           ]
         }
       ]
