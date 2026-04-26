@@ -138,6 +138,10 @@ npx job-forge ledger:verify
 
 `tracker-line --write` records tracker-addition events, `merge` records add/update/skip outcomes, and `ledger:rebuild` backfills events from `data/applications/`, `batch/tracker-additions/`, `batch/tracker-additions/merged/`, and `data/pipeline.md`.
 
+## JobForge artifact contracts
+
+Machine-readable artifact shapes live in `templates/contracts.json` and are enforced by `@razroo/iso-contract`. `job-forge tracker-line` renders tracker additions through the `jobforge.tracker-row` contract, `merge` validates pending TSV/table rows before writing tracker files, and `verify` validates existing tracker rows against the same contract. Custom forks can extend `templates/contracts.json`, but keep the tracker status enum aligned with `templates/states.yml`.
+
 ## JobForge guard audits
 
 Guard audits run deterministic `@razroo/iso-guard` policies over the same local OpenCode traces. The default policy lives at `templates/guards/jobforge-baseline.yaml` and checks rules that are reliable from transcript data, including max two task dispatches per assistant message, no task-status polling via `task`, no raw proxy configuration in task prompts, and no child session task recursion.

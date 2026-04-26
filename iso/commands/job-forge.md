@@ -75,6 +75,10 @@ Token usage check (terminal, outside opencode):
 Local workflow ledger (terminal, outside opencode):
   npx job-forge ledger:status          # .jobforge-ledger/events.jsonl summary
   npx job-forge ledger:has --company "Acme" --role "Staff Engineer" --status Applied
+
+Artifact contracts (terminal, outside opencode):
+  npx iso-contract explain jobforge.tracker-row --contracts templates/contracts.json
+  npx job-forge tracker-line ... --write   # renders + validates tracker TSV locally
 ```
 
 ---

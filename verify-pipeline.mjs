@@ -12,10 +12,11 @@
  * 3. All report links point to existing files
  * 4. Scores match format X.XX/5 or N/A or DUP
  * 5. All rows have proper pipe-delimited format
- * 6. No pending TSVs in tracker-additions/ (runs even when tracker file is missing)
- * 7. No markdown bold in score column
- * 8. Drift warning if states.yml ids differ from the built-in fallback list
- * 9. Ledger file verifies if .jobforge-ledger/events.jsonl exists
+ * 6. Tracker rows match templates/contracts.json
+ * 7. No pending TSVs in tracker-additions/ (runs even when tracker file is missing)
+ * 8. No markdown bold in score column
+ * 9. Drift warning if states.yml ids differ from the built-in fallback list
+ * 10. Ledger file verifies if .jobforge-ledger/events.jsonl exists
  *
  * Run: node verify-pipeline.mjs   (from repo root; same as npm run verify)
  */
@@ -28,6 +29,11 @@ import {
   usesDayFiles, readAllEntries, listDayFiles, dayFilePath,
 } from './tracker-lib.mjs';
 import { jobForgeLedgerPath, ledgerExists, verifyJobForgeLedger } from './lib/jobforge-ledger.mjs';
+import {
+  canonicalStatusValues,
+  formatContractIssues,
+  validateTrackerRow,
+} from './lib/jobforge-contracts.mjs';
 
 const ADDITIONS_DIR = join(PROJECT_DIR, 'batch/tracker-additions');
 const STATES_FILE = existsSync(join(PROJECT_DIR, 'templates/states.yml'))
@@ -42,7 +48,7 @@ const appsDisplay = usesDayFiles()
 
 const CANONICAL_STATUSES = [
   'evaluated', 'applied', 'contacted', 'responded', 'interview',
-  'offer', 'rejected', 'discarded', 'skip',
+  'offer', 'rejected', 'discarded', 'failed', 'skip',
 ];
 
 const ALIASES = {
@@ -78,6 +84,7 @@ function loadStatesFromYaml(filePath) {
 }
 
 const statesMeta = loadStatesFromYaml(STATES_FILE);
+const CONTRACT_STATUSES = canonicalStatusValues(PROJECT_DIR);
 
 function statusIsAllowed(statusOnlyLower) {
   if (statesMeta) {
@@ -167,6 +174,7 @@ console.log(`\n📊 Checking ${entries.length} entries from ${source === 'day' ?
 
 // --- Check 1: Canonical statuses ---
 let badStatuses = 0;
+// --- Check 6: Contract ---
 for (const e of entries) {
   const clean = e.status.replace(/\*\*/g, '').trim().toLowerCase();
   const statusOnly = clean.replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
@@ -231,6 +239,7 @@ if (badScores === 0) ok('All scores valid');
 
 // --- Check 5: Row format ---
 let badRows = 0;
+let contractFailures = 0;
 // Re-read raw lines for format check
 if (source === 'day') {
   for (const file of listDayFiles()) {
@@ -260,10 +269,22 @@ if (source === 'day') {
 }
 if (badRows === 0) ok('All rows properly formatted');
 
-// --- Check 6: Pending TSVs ---
+for (const e of entries) {
+  const result = validateTrackerRow(e, {
+    projectDir: PROJECT_DIR,
+    normalizeStatus: normalizeStatusForContract,
+  });
+  if (!result.ok) {
+    error(`#${e.num}: Tracker row contract failed: ${formatContractIssues(result)}`);
+    contractFailures++;
+  }
+}
+if (contractFailures === 0) ok('All tracker rows match iso-contract');
+
+// --- Check 7: Pending TSVs ---
 checkPendingTrackerAdditions();
 
-// --- Check 7: Bold in scores ---
+// --- Check 8: Bold in scores ---
 let boldScores = 0;
 for (const e of entries) {
   if (e.score.includes('**')) {
@@ -286,3 +307,12 @@ if (errors === 0 && warnings === 0) {
   console.log('🔴 Pipeline has errors — fix before proceeding');
 }
 process.exit(errors > 0 ? 1 : 0);
+
+function normalizeStatusForContract(status) {
+  const clean = status.replace(/\*\*/g, '').replace(/\s+\d{4}-\d{2}-\d{2}.*$/, '').trim();
+  const lower = clean.toLowerCase();
+  const direct = CONTRACT_STATUSES.find((value) => value.toLowerCase() === lower);
+  if (direct) return direct;
+  if (ALIASES[lower] === 'applied') return 'Applied';
+  return clean;
+}

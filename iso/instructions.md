@@ -57,6 +57,9 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D8] Use `job-forge ledger:*` for cheap local workflow-state checks when available. `iso-ledger` is not an MCP and adds no prompt/tool schema tokens; it records tracker TSV writes, merge outcomes, rebuilt tracker snapshots, and pipeline items in `.jobforge-ledger/events.jsonl`.
   why: state-trace remains working memory, while iso-ledger is deterministic append-only workflow truth that can answer duplicate/status questions without loading growing markdown/TSV files into the model context
 
+- [D9] Treat `templates/contracts.json` as the source of truth for machine-readable artifacts. Prefer `npx job-forge tracker-line ... --write` for tracker additions; if emitting TSV manually, inspect `npx iso-contract explain jobforge.tracker-row --contracts templates/contracts.json` first. `merge` and `verify` enforce the tracker-row contract locally.
+  why: deterministic code owns the exact tracker TSV/table shape; repeated prose gets re-tokenized and agents occasionally misremember it
+
 ## Procedure
 
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
@@ -67,7 +70,7 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 6. Keep multi-job form-filling out of the orchestrator [H4].
 7. Cross-check subagent facts against authoritative files [H7].
 8. Apply score gate [D4].
-9. Merge TSV outcomes [H6].
+9. Merge contract-validated TSV outcomes [H6, D9].
 10. Verify tracker before ending [H6].
 
 ## Routing

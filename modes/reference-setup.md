@@ -112,6 +112,18 @@ Mode routing is specified in the top-level **## Routing** section. Each mode is 
 
 ## TSV Format for Tracker Additions
 
+Prefer the deterministic helper:
+
+```bash
+npx job-forge tracker-line --num 521 --date 2026-04-15 --company "Anthropic" --role "Manager, FDE" --status Evaluated --score 4.2 --pdf no --slug anthropic-manager-fde --notes "Strong fit" --write
+```
+
+The helper renders and validates the row against `templates/contracts.json` via `@razroo/iso-contract`. To inspect the contract directly:
+
+```bash
+npx iso-contract explain jobforge.tracker-row --contracts templates/contracts.json
+```
+
 Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slug}.tsv`. Single line, 9 tab-separated columns:
 
 ```
@@ -129,7 +141,7 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 8. `report` -- markdown link `[num](reports/...)`
 9. `notes` -- one-line summary
 
-**Note:** In applications.md, score comes BEFORE status. The merge script handles this column swap automatically.
+**Note:** In applications.md, score comes BEFORE status. The merge script handles this column swap automatically and validates both shapes with the tracker-row contract.
 
 - Scripts in `.mjs`, configuration in YAML
 - Output in `output/` (gitignored), Reports in `reports/`
@@ -146,9 +158,10 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 2. **YES you can edit day files in `data/applications/` to UPDATE status/notes of existing entries.**
 3. All reports MUST include `**URL:**` in the header (between Score and PDF).
 4. All statuses MUST be canonical (see `templates/states.yml`).
-5. Health check: `npx job-forge verify`
-6. Normalize statuses: `npx job-forge normalize`
-7. Dedup: `npx job-forge dedup`
+5. Tracker rows MUST satisfy `templates/contracts.json`.
+6. Health check: `npx job-forge verify`
+7. Normalize statuses: `npx job-forge normalize`
+8. Dedup: `npx job-forge dedup`
 
 ### Canonical States (applications day files)
 

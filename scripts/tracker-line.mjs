@@ -25,6 +25,7 @@
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
 import { recordTrackerAdditionWritten } from '../lib/jobforge-ledger.mjs';
+import { formatContractIssues, renderTrackerRow } from '../lib/jobforge-contracts.mjs';
 
 const PROJECT_DIR = process.env.JOB_FORGE_PROJECT || process.cwd();
 
@@ -54,8 +55,15 @@ const write = process.argv.includes('--write');
 const paddedNum = String(num).padStart(3, '0');
 const reportLink = `[${num}](reports/${paddedNum}-${slug}-${date}.md)`;
 const scoreField = score.includes('/') ? score : `${score}/5`;
+const record = { num, date, company, role, status, score: scoreField, pdf, report: reportLink, notes };
+const rendered = renderTrackerRow(record, 'tsv', { projectDir: PROJECT_DIR });
 
-const line = [num, date, company, role, status, scoreField, pdf, reportLink, notes].join('\t');
+if (!rendered.validation.ok) {
+  console.error(`tracker-line contract failed: ${formatContractIssues(rendered.validation)}`);
+  process.exit(1);
+}
+
+const line = rendered.text;
 
 if (write) {
   const dir = join(PROJECT_DIR, 'batch/tracker-additions');
@@ -63,9 +71,7 @@ if (write) {
   const path = join(dir, `${num}.tsv`);
   writeFileSync(path, line + '\n', 'utf-8');
   try {
-    recordTrackerAdditionWritten({
-      num, date, company, role, status, score: scoreField, pdf, report: reportLink, notes,
-    }, { projectDir: PROJECT_DIR, sourceFile: path });
+    recordTrackerAdditionWritten(rendered.validation.record, { projectDir: PROJECT_DIR, sourceFile: path });
   } catch (error) {
     console.warn(`warning: could not append tracker-line ledger event: ${error instanceof Error ? error.message : String(error)}`);
   }

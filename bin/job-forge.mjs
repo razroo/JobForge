@@ -120,7 +120,7 @@ Deterministic helpers (prefer these over LLM-derived values):
   next-num       Print next sequential report number (e.g. 521)
   slugify NAME   Convert a company/role name to a filename-safe slug
   today          Print today's date in YYYY-MM-DD
-  tracker-line   Emit a 9-col TSV row for batch/tracker-additions/
+  tracker-line   Render and validate a tracker TSV row for batch/tracker-additions/
 
 Cost visibility:
   session-report        Summarize recent session costs, warn on >budget sessions

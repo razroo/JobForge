@@ -30,6 +30,7 @@ import {
   DEFAULT_STATES, loadCanonicalStates, buildStatusDetectionRegex,
 } from './lib/canonical-states.mjs';
 import { recordTrackerMergeResult } from './lib/jobforge-ledger.mjs';
+import { formatContractIssues, parseTrackerRow } from './lib/jobforge-contracts.mjs';
 
 const ADDITIONS_DIR = join(PROJECT_DIR, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
@@ -156,63 +157,21 @@ function parseTsvContent(content, filename) {
   content = content.trim();
   if (!content) return null;
 
-  let parts;
-  let addition;
+  const format = detectTrackerRowFormat(content);
+  const parsed = parseTrackerRow(content, format, {
+    projectDir: PROJECT_DIR,
+    normalizeStatus: validateStatus,
+  });
 
-  if (content.startsWith('|')) {
-    parts = content.split('|').map(s => s.trim()).filter(Boolean);
-    if (parts.length < 8) {
-      console.warn(`⚠️  Skipping malformed pipe-delimited ${filename}: ${parts.length} fields`);
-      return null;
-    }
-    addition = {
-      num: parseInt(parts[0]),
-      date: parts[1],
-      company: parts[2],
-      role: parts[3],
-      score: parts[4],
-      status: validateStatus(parts[5]),
-      pdf: parts[6],
-      report: parts[7],
-      notes: parts[8] || '',
-    };
-  } else {
-    parts = content.split('\t');
-    if (parts.length < 8) {
-      console.warn(`⚠️  Skipping malformed TSV ${filename}: ${parts.length} fields`);
-      return null;
-    }
-
-    const col4 = parts[4].trim();
-    const col5 = parts[5].trim();
-    const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
-    const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
-    const col4LooksLikeStatus = STATUS_DETECT_RE.test(col4);
-    const col5LooksLikeStatus = STATUS_DETECT_RE.test(col5);
-
-    let statusCol, scoreCol;
-    if (col4LooksLikeStatus && !col4LooksLikeScore) {
-      statusCol = col4; scoreCol = col5;
-    } else if (col4LooksLikeScore && col5LooksLikeStatus) {
-      statusCol = col5; scoreCol = col4;
-    } else if (col5LooksLikeScore && !col4LooksLikeScore) {
-      statusCol = col4; scoreCol = col5;
-    } else {
-      statusCol = col4; scoreCol = col5;
-    }
-
-    addition = {
-      num: parseInt(parts[0]),
-      date: parts[1],
-      company: parts[2],
-      role: parts[3],
-      status: validateStatus(statusCol),
-      score: scoreCol,
-      pdf: parts[6],
-      report: parts[7],
-      notes: parts[8] || '',
-    };
+  if (!parsed.validation.ok) {
+    console.warn(`⚠️  Skipping ${filename}: tracker contract failed (${format}) — ${formatContractIssues(parsed.validation)}`);
+    return null;
   }
+
+  const addition = {
+    ...parsed.validation.record,
+    num: Number(parsed.validation.record.num),
+  };
 
   if (isNaN(addition.num) || addition.num === 0) {
     console.warn(`⚠️  Skipping ${filename}: invalid entry number`);
@@ -220,6 +179,18 @@ function parseTsvContent(content, filename) {
   }
 
   return addition;
+}
+
+function detectTrackerRowFormat(content) {
+  if (content.startsWith('|')) return 'markdown';
+
+  const parts = content.split('\t');
+  const col4 = (parts[4] || '').trim();
+  const col5 = (parts[5] || '').trim();
+  const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
+  const col5LooksLikeStatus = STATUS_DETECT_RE.test(col5);
+
+  return col4LooksLikeScore && col5LooksLikeStatus ? 'day-tsv' : 'tsv';
 }
 
 // ---- Main ----
