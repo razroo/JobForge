@@ -1,6 +1,6 @@
 {
   "name": "job-forge",
-  "version": "2.14.34",
+  "version": "2.14.35",
   "description": "AI-powered job search pipeline built on opencode",
   "type": "module",
   "bin": {
@@ -110,11 +110,12 @@
     "plan": "iso plan .",
     "lint:agentmd": "agentmd lint iso/instructions.md",
     "lint:modes": "isolint lint modes/",
+    "lint:helpers": "node scripts/check-helper-integration.mjs .",
     "test:agentmd": "agentmd test iso/instructions.md --fixtures fixtures/instructions.yml --via claude-code --model claude-haiku-4-5 --concurrency 2",
     "test:agentmd:baseline": "agentmd test iso/instructions.md --fixtures fixtures/instructions.yml --via claude-code --model claude-haiku-4-5 --concurrency 2 --trials 3 --format json --out fixtures/baseline.json",
     "test:agentmd:apply": "agentmd test modes/apply.md --fixtures fixtures/modes/apply.yml --via claude-code --model claude-haiku-4-5 --concurrency 2 --trials 3",
     "lint:agentmd:modes": "agentmd lint modes/apply.md",
-    "smoke:iso": "iso plan . && iso build . --dry-run && iso-route verify models.yaml && node scripts/check-iso-smoke.mjs . && JOBFORGE_ROOT=$PWD iso-eval run fixtures/iso-smoke/eval.yml",
+    "smoke:iso": "iso plan . && iso build . --dry-run && iso-route verify models.yaml && node scripts/check-iso-smoke.mjs . && node scripts/check-helper-integration.mjs . && JOBFORGE_ROOT=$PWD iso-eval run fixtures/iso-smoke/eval.yml",
     "build:config": "iso build .",
     "prepack": "iso build .",
     "release:check-source": "node ./scripts/release/check-source.mjs",

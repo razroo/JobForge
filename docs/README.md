@@ -31,10 +31,10 @@ The harness exposes a single CLI (`job-forge`) installed as a `bin` entry. In a 
 
 | What you need | Where to read |
 |---------------|---------------|
-| Full command list (`verify`, `merge`, `dedup`, `normalize`, `pdf`, `sync-check`, `tokens`, `trace`, `telemetry`, `guard`, `ledger`, `canon`, `context`, `index`, `facts`, `timeline`, `preflight`, `postflight`, `redact`, `sync`). | [SETUP.md — Tracker and scripts (terminal)](SETUP.md#tracker-and-scripts-terminal). |
+| Full command list (`verify`, `merge`, `dedup`, `normalize`, `pdf`, `sync-check`, `tokens`, `trace`, `telemetry`, `guard`, `ledger`, `capabilities`, `context`, `cache`, `index`, `facts`, `score`, `canon`, `timeline`, `prioritize`, `lineage`, `preflight`, `postflight`, `redact`, `migrate`, `sync`). | [SETUP.md — Tracker and scripts (terminal)](SETUP.md#tracker-and-scripts-terminal). |
 | What each harness `.mjs` script does. | [ARCHITECTURE.md — Pipeline integrity](ARCHITECTURE.md#pipeline-integrity) and the scripts table underneath. |
 | Batch runner, TSV layout, and `batch/tracker-additions/` merge flow. | [batch/README.md](../batch/README.md). |
-| PR gate for harness contributions (`npm run verify` + `npm run build:dashboard`). | [CONTRIBUTING.md — Development](../CONTRIBUTING.md#development). |
+| PR gate for harness contributions (`npm run verify` + `npm run smoke:iso` + `npm run build:dashboard`). | [CONTRIBUTING.md — Development](../CONTRIBUTING.md#development). |
 | Optional scripted iterations (harness repo only). | [scripts/cursor-agent-loop.sh](../scripts/cursor-agent-loop.sh). Usage and env vars live in the script header and in [CONTRIBUTING.md — Optional: scripted agent iterations](../CONTRIBUTING.md#optional-scripted-agent-iterations). Verbose JSON output is formatted by [cursor-agent-stream-format.py](../scripts/cursor-agent-stream-format.py). |
 | Work-marker search (`T`ODO, `F`IXME, `H`ACK strings in the source) before picking work. | [CONTRIBUTING.md — Optional: scripted agent iterations](../CONTRIBUTING.md#optional-scripted-agent-iterations) — `rg` one-liner from the harness repo root. |
 

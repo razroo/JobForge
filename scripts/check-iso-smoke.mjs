@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 const root = resolve(process.argv[2] ?? ".");
 const files = {
   instructions: readFileSync(resolve(root, "iso/instructions.md"), "utf8"),
+  helpers: readFileSync(resolve(root, "modes/reference-local-helpers.md"), "utf8"),
   apply: readFileSync(resolve(root, "modes/apply.md"), "utf8"),
   models: readFileSync(resolve(root, "models.yaml"), "utf8"),
   config: readFileSync(resolve(root, "iso/config.json"), "utf8"),
@@ -19,10 +20,9 @@ const checks = [
   ["H5 blocks same-company concurrent retry", () => every(files.instructions, ["Re-dispatch the same company only AFTER", "previous subagent returns"])],
   ["H6 requires merge and verify", () => every(files.instructions, ["batch/tracker-additions/*.tsv", "npx job-forge merge", "npx job-forge verify"])],
   ["H7 distrusts subagent prose", () => every(files.instructions, ["must originate from a file", "not from prior subagent prose"])],
-  ["score policy points to local helper", () => every(files.instructions, ["[D19]", "templates/score.json", "npx job-forge score:check", "npx job-forge score:gate"])],
-  ["timeline policy points to local helper", () => every(files.instructions, ["[D20]", "templates/timeline.json", "npx job-forge timeline:due", "npx job-forge timeline:check --fail-on overdue"])],
-  ["prioritize policy points to local helper", () => every(files.instructions, ["[D21]", "templates/prioritize.json", "npx job-forge prioritize:build", "npx job-forge prioritize:select --limit N"])],
-  ["lineage policy points to local helper", () => every(files.instructions, ["[D22]", ".jobforge-lineage.json", "npx job-forge lineage:record", "npx job-forge lineage:check"])],
+  ["root points to consolidated helper reference", () => every(files.instructions, ["[D8]", "modes/reference-local-helpers.md", "deterministic local helpers"])],
+  ["helper reference covers score/timeline/prioritize/lineage", () => every(files.helpers, ["templates/score.json", "npx job-forge score:*", "templates/timeline.json", "npx job-forge timeline:*", "templates/prioritize.json", "npx job-forge prioritize:*", ".jobforge-lineage.json", "npx job-forge lineage:*"])],
+  ["root helper defaults are consolidated", () => !/\[D(?:9|1\d|2[0-9])\]/.test(files.instructions)],
   ["shared prompt points to on-demand references", () => every(files.instructions, ["modes/{mode}.md", "modes/reference-setup.md", "modes/reference-portals.md", "modes/reference-geometra.md"])],
   ["apply mode owns high-stakes upgrade", () => every(files.apply, ["[D8]", "@general-paid", "4.0/5", "high-stakes"])],
   ["apply mode blocks provider auto-downgrade", () => every(files.apply, ["[D9]", "do not auto-downgrade", "inspect telemetry before retrying"])],

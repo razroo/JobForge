@@ -3,11 +3,13 @@
 Markdown prompts used together with the root [`AGENTS.md`](../AGENTS.md). Each file aligns with a `/job-forge …` entry point or shared behavior described there.
 
 - **`_shared.md`** — Archetypes, scoring dimensions, negotiation scaffolding. Edit this first when you change how offers are classified or weighted.
+- **`reference-local-helpers.md`** — On-demand map of deterministic local helpers and when they replace prose, broad file reads, or manual policy checks.
 - **Per-command files** — Each `*.md` here pairs with a `/job-forge …` entry in [`AGENTS.md`](../AGENTS.md). How modes connect to batch, tracker, and scripts is spelled out in [**Architecture — Modes**](../docs/ARCHITECTURE.md#modes-modes).
 
 | File | Role |
 |------|------|
 | [`_shared.md`](_shared.md) | Shared archetypes, scoring, negotiation scaffolding |
+| [`reference-local-helpers.md`](reference-local-helpers.md) | Deterministic helper selection, mandatory uses, and integration enforcement |
 | [`auto-pipeline.md`](auto-pipeline.md) | Default path when the user pastes a JD or URL — full evaluate → report → PDF → tracker flow |
 | [`offer.md`](offer.md) | Explicit full evaluation (blocks A–F) for a single offer |
 | [`compare.md`](compare.md) | Side-by-side comparison of multiple offers |

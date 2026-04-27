@@ -10,7 +10,7 @@ Contributor workflows operate against a direct clone of the harness repo (Path B
 2. Clone your fork and run `npm install` inside it (the `postinstall` symlink step is a no-op inside the harness repo)
 3. Create a branch (`git checkout -b feature/my-feature`)
 4. Make your changes
-5. Verify with `npm run verify` and `npm run build:dashboard` (see [Development](#development) below)
+5. Verify with `npm run verify`, `npm run smoke:iso`, and `npm run build:dashboard` (see [Development](#development) below)
 6. Commit and push
 7. Open a Pull Request against `razroo/JobForge`
 
@@ -40,6 +40,7 @@ Before opening a PR, from the harness repo root:
 
 ```bash
 npm run verify
+npm run smoke:iso
 npm run build:dashboard
 ```
 
@@ -53,6 +54,8 @@ Other npm scripts:
 
 | Script | Runs | Notes |
 |--------|------|--------|
+| `npm run smoke:iso` | ISO source, route, harness, helper integration, and eval smoke checks | Required before PRs that touch `iso/`, `modes/`, helper scripts, templates, or package wiring |
+| `npm run lint:helpers` | `scripts/check-helper-integration.mjs` | Verifies local helper deps, CLI aliases, scaffolder scripts, migrations, generated ignores, templates, docs, and helper reference stay aligned |
 | `npm run build:dashboard` | `go build` in `dashboard/` | Optional TUI; same check as manual `cd dashboard && go build .` |
 | `npm run sync-check` | `cv-sync-check.mjs` | Optional setup lint: `cv.md`, `config/profile.yml`, hardcoded-metric scan; fails if those files are missing |
 | `npm run normalize` | `normalize-statuses.mjs` | Maps non-canonical statuses in tracker files; no-op if no tracker exists |

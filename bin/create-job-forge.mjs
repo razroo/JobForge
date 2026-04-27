@@ -154,6 +154,12 @@ const consumerPkg = {
     'facts:has': 'job-forge facts:has',
     'facts:query': 'job-forge facts:query',
     'facts:explain': 'job-forge facts:explain',
+    'score:compute': 'job-forge score:compute',
+    'score:verify': 'job-forge score:verify',
+    'score:check': 'job-forge score:check',
+    'score:gate': 'job-forge score:gate',
+    'score:compare': 'job-forge score:compare',
+    'score:explain': 'job-forge score:explain',
     'canon:normalize': 'job-forge canon:normalize',
     'canon:key': 'job-forge canon:key',
     'canon:compare': 'job-forge canon:compare',
@@ -164,6 +170,13 @@ const consumerPkg = {
     'postflight:status': 'job-forge postflight:status',
     'postflight:check': 'job-forge postflight:check',
     'postflight:explain': 'job-forge postflight:explain',
+    'timeline:status': 'job-forge timeline:status',
+    'timeline:build': 'job-forge timeline:build',
+    'timeline:plan': 'job-forge timeline:plan',
+    'timeline:due': 'job-forge timeline:due',
+    'timeline:check': 'job-forge timeline:check',
+    'timeline:verify': 'job-forge timeline:verify',
+    'timeline:explain': 'job-forge timeline:explain',
     'prioritize:status': 'job-forge prioritize:status',
     'prioritize:items': 'job-forge prioritize:items',
     'prioritize:build': 'job-forge prioritize:build',
@@ -178,6 +191,10 @@ const consumerPkg = {
     'lineage:stale': 'job-forge lineage:stale',
     'lineage:verify': 'job-forge lineage:verify',
     'lineage:explain': 'job-forge lineage:explain',
+    'redact:scan': 'job-forge redact:scan',
+    'redact:verify': 'job-forge redact:verify',
+    'redact:apply': 'job-forge redact:apply',
+    'redact:explain': 'job-forge redact:explain',
     'migrate:plan': 'job-forge migrate:plan',
     'migrate:apply': 'job-forge migrate:apply',
     'migrate:check': 'job-forge migrate:check',
@@ -377,14 +394,18 @@ data/applications.md
 data/pipeline.md
 data/scan-history.tsv
 data/token-usage.tsv
+data/timeline-events.jsonl
 .jobforge-ledger/
 .jobforge-cache/
 .jobforge-index.json
 .jobforge-facts.json
+.jobforge-timeline.json
+.jobforge-timeline-events.jsonl
 .jobforge-prioritize.json
 .jobforge-prioritize-items.json
 .jobforge-lineage.json
 .jobforge-runs/
+.jobforge-redacted/
 reports/
 !reports/.gitkeep
 batch/batch-state.tsv

@@ -54,66 +54,21 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D7] For standalone `batch` runs, prefer `batch/batch-runner.sh` instead of hand-rolling the loop. It delegates to `@razroo/iso-orchestrator`, persists workflow records in `.jobforge-runs/`, caps bundle fan-out, and mutexes state/report-number writes. Use `JOBFORGE_LEGACY_BATCH_RUNNER=1` only as a fallback.
   why: the old Bash loop encoded resumability and parallelism manually; the iso-orchestrator path makes the durable control state inspectable and prevents report-number collisions under parallel bundles
 
-- [D8] Use `job-forge ledger:*` for cheap local workflow-state checks when available. `iso-ledger` is not an MCP and adds no prompt/tool schema tokens; it records tracker TSV writes, merge outcomes, rebuilt tracker snapshots, and pipeline items in `.jobforge-ledger/events.jsonl`.
-  why: state-trace remains working memory, while iso-ledger is deterministic append-only workflow truth that can answer duplicate/status questions without loading growing markdown/TSV files into the model context
-
-- [D9] Treat `templates/contracts.json` as the source of truth for machine-readable artifacts. Prefer `npx job-forge tracker-line ... --write` for tracker additions; if emitting TSV manually, inspect `npx iso-contract explain jobforge.tracker-row --contracts templates/contracts.json` first. `merge` and `verify` enforce the tracker-row contract locally.
-  why: deterministic code owns the exact tracker TSV/table shape; repeated prose gets re-tokenized and agents occasionally misremember it
-
-- [D10] Treat `templates/capabilities.json` as the source of truth for role capability boundaries. Use `npx job-forge capabilities:explain <role>` or `npx job-forge capabilities:check <role> ...` when changing or validating subagent tool/MCP/filesystem/command permissions; do not paste the full capability matrix into task prompts.
-  why: executable local policy prevents role-permission drift without adding MCP/tool-schema tokens or loading a capability matrix into the shared prefix
-
-- [D11] Treat `templates/context.json` as the source of truth for mode/reference context bundles. Use `npx job-forge context:plan <mode>` or `npx job-forge context:check <mode>` when changing or validating what a mode loads; do not paste the full context matrix into prompts.
-  why: deterministic context bundles prevent reference-file drift and accidental token bloat without adding MCP/tool-schema tokens
-
-- [D12] Use `job-forge cache:*` for deterministic local artifact reuse when available. For URL inputs, check `npx job-forge cache:has --url "..."` / `cache:get` before browser or network JD fetches; after a successful fetch, store the exact JD text with `npx job-forge cache:put --url "..." --ttl 14d --input @file` when it is already on disk.
-  why: `iso-cache` is not an MCP and adds no prompt/tool-schema tokens; it avoids repeated JD fetch/render passes and lets future sessions reuse stable content from `.jobforge-cache/`
-
-- [D13] Use `job-forge index:*` for deterministic artifact lookup when available. `index:has` and `index:query` rebuild `.jobforge-index.json` from `templates/index.json` on demand, covering reports, tracker day files, tracker TSVs, pipeline URLs, scan history, and ledger events without loading those growing files into prompt context.
-  why: `iso-index` is not an MCP and adds no prompt/tool-schema tokens; it gives agents compact file/line pointers and duplicate prefilters before expensive reads or browser dispatches
-
-- [D13b] Use `job-forge facts:*` for deterministic source-backed fact materialization when available. `facts:has` and `facts:query` rebuild `.jobforge-facts.json` from `templates/facts.json` on demand, covering job URLs, scores, application statuses, tracker TSVs, preflight candidates, scan history, and ledger events with path/line provenance.
-  why: `iso-facts` is not an MCP and adds no prompt/tool-schema tokens; it turns authoritative files into compact queryable fact records so agents do not repeatedly reread broad artifact trees
-
-- [D14] Treat `templates/migrations.json` as the source of truth for consumer-project upgrades. Use `npx job-forge migrate:plan` or `npx job-forge migrate:check` when diagnosing harness drift; `job-forge sync` applies safe migrations automatically unless `JOB_FORGE_SKIP_MIGRATIONS=1` is set.
-  why: `iso-migrate` is not an MCP and adds no prompt/tool-schema tokens; it prevents stale consumer scripts and generated-artifact ignores without asking agents to hand-edit package.json
-
-- [D15] Treat `templates/canon.json` as the source of truth for URL/company/role identity keys. Use `npx job-forge canon:key ...` or `npx job-forge canon:compare ...` before broad duplicate checks when a stable key or same/possible/different decision is useful.
-  why: `iso-canon` is not an MCP and adds no prompt/tool-schema tokens; it centralizes duplicate-key rules so agents do not repeatedly derive inconsistent slugs for aliases, suffixes, remote/location noise, or tracking URLs
-
-- [D16] Treat `templates/preflight.json` as the source of truth for multi-apply dispatch safety. After candidate facts and gates are materialized from authoritative files, run `npx job-forge preflight:plan --candidates <file>` or `npx job-forge preflight:check --candidates <file>` before task dispatch; follow the emitted rounds and pre/post steps. This does not replace H2 four-source grep until those facts are materialized into the candidate JSON.
-  why: `iso-preflight` is not an MCP and adds no prompt/tool-schema tokens; it turns file-backed facts, duplicate/location gates, max-two rounds, and cleanup/merge/verify steps into an executable local plan instead of repeated prose
-
-- [D17] Treat `templates/postflight.json` as the source of truth for multi-apply dispatch settlement. Save the JSON preflight plan and per-round observed dispatch/outcome/artifact records, then run `npx job-forge postflight:status --plan <plan.json> --outcomes <outcomes.json>` after each round and `npx job-forge postflight:check ...` after merge/verify. Follow its next action instead of inferring completion from subagent prose.
-  why: `iso-postflight` is not an MCP and adds no prompt/tool-schema tokens; it makes "round complete", missing TSVs, failed candidates, replacements, merge, and verify an executable local gate instead of repeated orchestration prose
-
-- [D18] Treat `templates/redact.json` as the source of truth before exporting local traces, prompts, reports, or fixtures outside the project. Use `npx job-forge redact:scan --input <file>`, `redact:apply --input <file> --output .jobforge-redacted/<file>`, or `redact:verify --input <file>` instead of hand-redacting with prose. This complements H8; it does not make it acceptable to paste secrets into prompts.
-  why: `iso-redact` is not an MCP and adds no prompt/tool-schema tokens; it gives deterministic safe-export checks whose findings do not print matched secret values
-
-- [D19] Treat `templates/score.json` as the source of truth for offer scoring weights, bands, and gates. After emitting a report score JSON that will drive PDF/application/batch decisions, run `npx job-forge score:check --input <file>`; for apply decisions run `npx job-forge score:gate --input <file> --gate apply`. Do not recalculate weighted totals or thresholds manually when the local helper can check them.
-  why: `iso-score` is not an MCP and adds no prompt/tool-schema tokens; it makes scoring math, recommendation bands, and threshold booleans executable local policy instead of repeated model prose
-
-- [D20] Treat `templates/timeline.json` as the source of truth for follow-up and next-action timing. For follow-up triage, run `npx job-forge timeline:due` before reading tracker files; use `npx job-forge timeline:check --fail-on overdue` when a workflow must fail only on stale actions. Use `timeline:build` when a durable `.jobforge-timeline.json` artifact is useful.
-  why: `iso-timeline` is not an MCP and adds no prompt/tool-schema tokens; it turns timing windows over tracker/pipeline sources into executable local policy instead of repeated date math in model context
-
-- [D21] Treat `templates/prioritize.json` as the source of truth for choosing between evaluated applications, candidate facts, and due follow-ups. When the user asks what to do next or when a batch needs replacement candidates, run `npx job-forge prioritize:build` or `npx job-forge prioritize:select --limit N` instead of ranking items in prose.
-  why: `iso-prioritize` is not an MCP and adds no prompt/tool-schema tokens; it converts facts and timeline records into a deterministic ranked queue so agents do not reread broad tracker/report trees or invent priorities
-
-- [D22] Treat `.jobforge-lineage.json` as the source of truth for whether generated reports/PDFs are current. After creating or refreshing a derived report/PDF, record its inputs with `npx job-forge lineage:record --artifact <file> --input <source>...`; before reusing an old artifact after source changes, run `npx job-forge lineage:check --artifact <file>` or `npx job-forge lineage:check`.
-  why: `iso-lineage` is not an MCP and adds no prompt/tool-schema tokens; it detects stale outputs by hashing local files instead of asking agents to remember which CV/profile/report version produced an artifact
+- [D8] Use deterministic local helpers instead of prose when they can answer or validate state, identity, policy, scoring, timing, dispatch, priority, lineage, migration, or safe-export questions. Read `modes/reference-local-helpers.md` when choosing a helper or changing helper wiring.
+  why: the helper ecosystem is now broad enough that repeating every command in the shared prefix wastes cache budget; the reference keeps operational details on demand while `npm run lint:helpers` enforces integration drift in code
 
 ## Procedure
 
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
-3. Read the active mode file [D3]. Use context bundle checks when changing context loads [D11]. Check cached artifacts before URL/JD refetches [D12]. Use artifact index lookups before broad file reads when they can answer the question [D13]. Use materialized facts when a fact query can answer the question [D13b]. Use canonical identity keys for duplicate checks [D15]. Use score checks/gates for scoring decisions [D19]. Use timeline due/check commands for follow-up timing [D20]. Use priority queues when choosing next actions or replacements [D21]. Use lineage checks before reusing generated artifacts [D22]. Use migration checks for harness drift [D14]. Use redaction checks before exporting local artifacts [D18]. Decide inline vs delegated work [D1].
-4. Prepare Geometra dispatches: cleanup [H3], canon/index/facts/ledger prefilter when useful [D8, D13, D13b, D15], dedupe [H2], location filter [D5], materialize candidate facts/gates and run preflight plan/check [D16], routing [D2, D10], proxy prompt hygiene [H8].
-5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b], then settle the round with postflight status [D17].
+3. Read the active mode file [D3]. Use local helpers when they can replace broad file reads, prose math, manual policy checks, or artifact reuse decisions [D8]. Decide inline vs delegated work [D1].
+4. Prepare Geometra dispatches: cleanup [H3], local-helper prefilters when useful [D8], dedupe [H2], location filter [D5], file-backed preflight plan/check [D8], routing [D2], proxy prompt hygiene [H8].
+5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b], then settle the round with postflight status [D8].
 6. Keep multi-job form-filling out of the orchestrator [H4].
 7. Cross-check subagent facts against authoritative files [H7].
-8. Apply score gate [D4, D19].
-9. Merge contract-validated TSV outcomes [H6, D9].
-10. Verify tracker and run postflight check before ending [H6, D17].
+8. Apply score gate [D4, D8].
+9. Merge contract-validated TSV outcomes [H6, D8].
+10. Verify tracker and run postflight check before ending [H6, D8].
 
 ## Routing
 
@@ -148,6 +103,7 @@ Output shape is mode-dependent — see `modes/{mode}.md` for each mode's expecte
 The sections above are the shared contract. Load detailed context on demand:
 
 - `modes/{mode}.md` for the active mode procedure, output shape, and mode-specific routing.
+- `modes/reference-local-helpers.md` for deterministic local helper selection, mandatory uses, and enforcement.
 - `modes/reference-setup.md` for onboarding, tracker layout, states, and profile/CV setup.
 - `modes/reference-portals.md` for OTP, residential proxy, and MCP configuration.
 - `modes/reference-geometra.md` for form-fill patterns, portal failures, cleanup runbooks, and session recovery.
