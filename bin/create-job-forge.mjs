@@ -154,6 +154,9 @@ const consumerPkg = {
     'preflight:plan': 'job-forge preflight:plan',
     'preflight:check': 'job-forge preflight:check',
     'preflight:explain': 'job-forge preflight:explain',
+    'postflight:status': 'job-forge postflight:status',
+    'postflight:check': 'job-forge postflight:check',
+    'postflight:explain': 'job-forge postflight:explain',
     'migrate:plan': 'job-forge migrate:plan',
     'migrate:apply': 'job-forge migrate:apply',
     'migrate:check': 'job-forge migrate:check',
@@ -261,6 +264,7 @@ Before doing any work, remember where things live in *this* project:
 | Local artifact index | \`.jobforge-index.json\` | Deterministic file/line lookup; use \`job-forge index:*\` |
 | Identity canonicalization | \`templates/canon.json\` | Stable URL/company/role keys; use \`job-forge canon:*\` |
 | Dispatch preflight policy | \`templates/preflight.json\` | Safe apply rounds/gates; use \`job-forge preflight:*\` |
+| Dispatch postflight policy | \`templates/postflight.json\` | Safe apply settlement; use \`job-forge postflight:*\` |
 | Consumer migrations | \`templates/migrations.json\` | Safe script/gitignore upgrades; use \`job-forge migrate:*\` |
 | Scanner config | \`portals.yml\` (project root) | Company configs |
 | Profile / identity | \`config/profile.yml\` | Candidate name, email, target roles |
@@ -273,7 +277,7 @@ Before doing any work, remember where things live in *this* project:
 | Batch input / state | \`batch/batch-input.tsv\`, \`batch/batch-state.tsv\` | Personal data |
 | Generated reports | \`reports/{###}-{company-slug}-{YYYY-MM-DD}.md\` | Gitignored |
 | Generated PDFs | \`output/\` | Gitignored |
-| Templates | \`templates/\` (symlink) | \`cv-template.html\`, \`portals.example.yml\`, \`states.yml\` |
+| Templates | \`templates/\` (symlink) | \`cv-template.html\`, \`portals.example.yml\`, \`states.yml\`, runtime policies |
 | Harness rules | \`AGENTS.harness.md\` (symlink) | Shared operational guide, loaded via \`opencode.json:instructions\` |
 | Harness source | \`node_modules/job-forge/\` | Read this for harness internals |
 
@@ -358,6 +362,9 @@ reports/
 batch/batch-state.tsv
 batch/batch-state.tsv.bak
 batch/batch-input.tsv
+batch/preflight-candidates.json
+batch/preflight-plan.json
+batch/postflight-outcomes.json
 batch/tracker-additions/
 !batch/tracker-additions/.gitkeep
 batch/logs/
@@ -413,6 +420,7 @@ job-forge ledger:status    # local deterministic workflow ledger status
 job-forge index:status     # local artifact index status
 job-forge canon:key company-role --company "Acme, Inc." --role "Senior SWE"
 job-forge preflight:plan --candidates batch/preflight-candidates.json
+job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
 job-forge migrate:check    # verify consumer package scripts/gitignore are current
 job-forge pdf cv.md out.pdf
 job-forge tokens --days 1  # per-session opencode token usage

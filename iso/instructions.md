@@ -81,18 +81,21 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D16] Treat `templates/preflight.json` as the source of truth for multi-apply dispatch safety. After candidate facts and gates are materialized from authoritative files, run `npx job-forge preflight:plan --candidates <file>` or `npx job-forge preflight:check --candidates <file>` before task dispatch; follow the emitted rounds and pre/post steps. This does not replace H2 four-source grep until those facts are materialized into the candidate JSON.
   why: `iso-preflight` is not an MCP and adds no prompt/tool-schema tokens; it turns file-backed facts, duplicate/location gates, max-two rounds, and cleanup/merge/verify steps into an executable local plan instead of repeated prose
 
+- [D17] Treat `templates/postflight.json` as the source of truth for multi-apply dispatch settlement. Save the JSON preflight plan and per-round observed dispatch/outcome/artifact records, then run `npx job-forge postflight:status --plan <plan.json> --outcomes <outcomes.json>` after each round and `npx job-forge postflight:check ...` after merge/verify. Follow its next action instead of inferring completion from subagent prose.
+  why: `iso-postflight` is not an MCP and adds no prompt/tool-schema tokens; it makes "round complete", missing TSVs, failed candidates, replacements, merge, and verify an executable local gate instead of repeated orchestration prose
+
 ## Procedure
 
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
 3. Read the active mode file [D3]. Use context bundle checks when changing context loads [D11]. Check cached artifacts before URL/JD refetches [D12]. Use artifact index lookups before broad file reads when they can answer the question [D13]. Use canonical identity keys for duplicate checks [D15]. Use migration checks for harness drift [D14]. Decide inline vs delegated work [D1].
 4. Prepare Geometra dispatches: cleanup [H3], canon/index/ledger prefilter when useful [D8, D13, D15], dedupe [H2], location filter [D5], materialize candidate facts/gates and run preflight plan/check [D16], routing [D2, D10], proxy prompt hygiene [H8].
-5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b].
+5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b], then settle the round with postflight status [D17].
 6. Keep multi-job form-filling out of the orchestrator [H4].
 7. Cross-check subagent facts against authoritative files [H7].
 8. Apply score gate [D4].
 9. Merge contract-validated TSV outcomes [H6, D9].
-10. Verify tracker before ending [H6].
+10. Verify tracker and run postflight check before ending [H6, D17].
 
 ## Routing
 

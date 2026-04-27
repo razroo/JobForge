@@ -188,11 +188,18 @@ Step 4  — For round in ceil(N/2):
             task(apply to pair[1])  # only if pair has 2
             # WAIT for both final outcomes. A session id is not completion.
             # Do not dispatch round N+1 while round N is still in flight.
-Step 5  — Between rounds: geometra_list_sessions() + geometra_disconnect({closeBrowser: true})
-Step 6  — Reconcile outcomes (Hard Limit #6):
+Step 5  — After each round:
+            write/update batch/postflight-outcomes.json with candidateId, status,
+            and tracker-tsv artifact path for every terminal outcome.
+            bash: npx job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
+            follow the emitted next action before the next dispatch.
+Step 6  — Between rounds: geometra_list_sessions() + geometra_disconnect({closeBrowser: true})
+Step 7  — Reconcile outcomes (Hard Limit #6):
             bash: npx job-forge merge       # TSVs → day file
             bash: npx job-forge verify      # validate
-Step 7  — Summarize outcomes; do NOT auto-retry failures.
+            add merge/verify step observations to batch/postflight-outcomes.json
+            bash: npx job-forge postflight:check --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
+Step 8  — Summarize outcomes; do NOT auto-retry failures.
 ```
 
 If a subagent fails, report it in the summary and let the user decide whether to retry. Never auto-retry — re-running a submit step risks duplicate applications. If a subagent returns SKIP because it discovered a duplicate, treat that as a missed preflight check: finish the current round, then choose a replacement candidate only after re-running dedupe against all four sources.

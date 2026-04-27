@@ -1,6 +1,6 @@
 {
   "name": "job-forge",
-  "version": "2.14.28",
+  "version": "2.14.29",
   "description": "AI-powered job search pipeline built on opencode",
   "type": "module",
   "bin": {
@@ -62,6 +62,9 @@
     "preflight:plan": "node bin/job-forge.mjs preflight:plan",
     "preflight:check": "node bin/job-forge.mjs preflight:check",
     "preflight:explain": "node bin/job-forge.mjs preflight:explain",
+    "postflight:status": "node bin/job-forge.mjs postflight:status",
+    "postflight:check": "node bin/job-forge.mjs postflight:check",
+    "postflight:explain": "node bin/job-forge.mjs postflight:explain",
     "migrate:plan": "node bin/job-forge.mjs migrate:plan",
     "migrate:apply": "node bin/job-forge.mjs migrate:apply",
     "migrate:check": "node bin/job-forge.mjs migrate:check",
@@ -132,9 +135,9 @@
     "node": ">=20.6.0"
   },
   "dependencies": {
-    "@razroo/iso-capabilities": "^0.1.0",
     "@razroo/iso-cache": "^0.1.0",
     "@razroo/iso-canon": "^0.1.0",
+    "@razroo/iso-capabilities": "^0.1.0",
     "@razroo/iso-context": "^0.1.0",
     "@razroo/iso-contract": "^0.1.0",
     "@razroo/iso-guard": "^0.1.0",
@@ -142,6 +145,7 @@
     "@razroo/iso-ledger": "^0.1.0",
     "@razroo/iso-migrate": "^0.1.0",
     "@razroo/iso-orchestrator": "^0.1.0",
+    "@razroo/iso-postflight": "^0.1.0",
     "@razroo/iso-preflight": "^0.1.0",
     "@razroo/iso-trace": "^0.4.0",
     "playwright": "^1.58.1"

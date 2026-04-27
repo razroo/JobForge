@@ -162,6 +162,10 @@ URL, company, role, and company+role identity rules live in `templates/canon.jso
 
 Application dispatch policy lives in `templates/preflight.json` and is planned locally by `@razroo/iso-preflight`. After candidate facts and gate results have been materialized into JSON, use `job-forge preflight:plan --candidates <file>` to get bounded rounds and required pre/post steps, or `job-forge preflight:check --candidates <file>` to fail on missing source facts or blocked gates. This is not an MCP and does not add prompt or tool-schema tokens; it consumes only the candidate JSON you deliberately pass to it.
 
+## JobForge postflight settlement
+
+Application settlement policy lives in `templates/postflight.json` and is checked locally by `@razroo/iso-postflight`. After each dispatch round, record observed candidate outcomes and tracker TSV artifact paths in `batch/postflight-outcomes.json`, then run `job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json` to get the next safe action. After `merge` and `verify`, add post-step observations and run `job-forge postflight:check ...` to fail unless the workflow is complete. This is not an MCP and does not add prompt or tool-schema tokens.
+
 ## JobForge consumer migrations
 
 Consumer-project migrations live in `templates/migrations.json` and are applied locally by `@razroo/iso-migrate`. `job-forge sync` applies safe migrations automatically after refreshing symlinks; use `JOB_FORGE_SKIP_MIGRATIONS=1` to opt out. Use `job-forge migrate:plan`, `job-forge migrate:apply`, and `job-forge migrate:check` to inspect or enforce script/gitignore drift explicitly. This is not an MCP and does not add prompt or tool-schema tokens.

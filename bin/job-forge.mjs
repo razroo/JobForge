@@ -27,6 +27,7 @@
  *   index:*        Query local artifacts via iso-index
  *   canon:*        Compute deterministic identity keys via iso-canon
  *   preflight:*    Plan safe dispatch rounds via iso-preflight
+ *   postflight:*   Settle dispatch outcomes via iso-postflight
  *   migrate:*      Apply deterministic consumer-project migrations via iso-migrate
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
@@ -145,6 +146,13 @@ const preflightAliases = {
   'preflight:path': 'path',
 };
 
+const postflightAliases = {
+  'postflight:status': 'status',
+  'postflight:check': 'check',
+  'postflight:explain': 'explain',
+  'postflight:path': 'path',
+};
+
 const migrateAliases = {
   'migrate:plan': 'plan',
   'migrate:apply': 'apply',
@@ -209,6 +217,9 @@ Commands:
   preflight:plan          Build bounded dispatch plan from candidate JSON
   preflight:check         Fail if preflight candidates are blocked
   preflight:explain       Show the active preflight workflow policy
+  postflight:status       Reconcile dispatch plan, outcomes, artifacts, and post-steps
+  postflight:check        Fail unless a dispatched workflow is fully settled
+  postflight:explain      Show the active postflight workflow policy
   migrate:plan            Preview deterministic consumer-project migrations
   migrate:apply           Apply deterministic consumer-project migrations
   migrate:check           Fail if migrations are pending
@@ -255,6 +266,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge canon:compare company "OpenAI, Inc." "Open AI"
   job-forge preflight:plan --candidates batch/preflight-candidates.json
   job-forge preflight:check --candidates batch/preflight-candidates.json
+  job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
+  job-forge postflight:check --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
   job-forge migrate:check
   job-forge migrate:apply
 
@@ -408,6 +421,21 @@ if (cmd === 'preflight' || preflightAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/preflight.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...preflightArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'postflight' || postflightAliases[cmd]) {
+  const postflightArgs = cmd === 'postflight'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [postflightAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/postflight.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...postflightArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

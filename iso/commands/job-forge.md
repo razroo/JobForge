@@ -89,6 +89,10 @@ Preflight dispatch plans (terminal, outside opencode):
   npx job-forge preflight:plan --candidates batch/preflight-candidates.json
   npx job-forge preflight:check --candidates batch/preflight-candidates.json
 
+Postflight dispatch settlement (terminal, outside opencode):
+  npx job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
+  npx job-forge postflight:check --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
+
 Consumer migrations (terminal, outside opencode):
   npx job-forge migrate:plan           # preview package.json/.gitignore drift
   npx job-forge migrate:apply          # apply safe harness upgrade migrations
@@ -208,7 +212,7 @@ Step 4  — Materialize and check the dispatch plan
     decision.
   - Run npx job-forge preflight:check --candidates <file> to fail on missing
     sources or blocked gates, then npx job-forge preflight:plan --candidates
-    <file> to get the bounded round list.
+    <file> --json > batch/preflight-plan.json to get the bounded round list.
   - Follow the emitted rounds. Do not dispatch blocked candidates, and do not
     replace H2's four-source grep with preflight unless those grep results are
     present in the candidate JSON.
@@ -227,18 +231,24 @@ Step 5  — Loop in rounds of 2 (Hard Limit #1)
     # A returned task/session id is only a launch receipt, not completion.
     # Do not create a "check task status" task; inspect tracker files or
     # iso-trace if the user asks for status later.
-    # Read their return values, log outcomes
+    # Read their return values, log outcomes in batch/postflight-outcomes.json
+    # with candidateId, status, and a tracker-tsv artifact path for every
+    # terminal outcome.
+    npx job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
+    # Follow the emitted next action before dispatching the next round.
 
-Step 5  — Between rounds: clean sessions again
+Step 6  — Between rounds: clean sessions again
   - geometra_list_sessions()
   - geometra_disconnect({ closeBrowser: true })
 
-Step 6  — After all rounds: reconcile outcomes (Hard Limit #6)
+Step 7  — After all rounds: reconcile outcomes (Hard Limit #6)
   - bash: npx job-forge merge      # consumes batch/tracker-additions/*.tsv into the day file
   - bash: npx job-forge verify     # validates URL/status consistency
+  - Add merge/verify step observations to batch/postflight-outcomes.json
+  - bash: npx job-forge postflight:check --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
   - Review output; if verify-pipeline reports issues, fix them before ending.
 
-Step 7  — Aggregate and report
+Step 8  — Aggregate and report
   - Summarize: applied, skipped, failed
   - Do NOT re-dispatch failed jobs automatically. Report them to the user.
 ```

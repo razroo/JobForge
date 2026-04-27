@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "workflows": [
+    {
+      "name": "jobforge.apply",
+      "description": "Settle JobForge application dispatch rounds after subagents return outcomes.",
+      "terminalStatuses": [
+        "APPLIED",
+        "Applied",
+        "APPLY FAILED",
+        "Apply Failed",
+        "FAILED",
+        "Failed",
+        "SKIP",
+        "Skip",
+        "Skipped",
+        "Discarded"
+      ],
+      "successStatuses": [
+        "APPLIED",
+        "Applied"
+      ],
+      "failureStatuses": [
+        "APPLY FAILED",
+        "Apply Failed",
+        "FAILED",
+        "Failed"
+      ],
+      "skipStatuses": [
+        "SKIP",
+        "Skip",
+        "Skipped",
+        "Discarded"
+      ],
+      "inFlightStatuses": [
+        "running",
+        "in-flight",
+        "started",
+        "pending"
+      ],
+      "replacementStatuses": [
+        "APPLY FAILED",
+        "Apply Failed",
+        "FAILED",
+        "Failed"
+      ],
+      "requiredArtifacts": [
+        {
+          "id": "tracker-tsv",
+          "label": "Tracker TSV outcome",
+          "statuses": [
+            "APPLIED",
+            "Applied",
+            "APPLY FAILED",
+            "Apply Failed",
+            "FAILED",
+            "Failed",
+            "SKIP",
+            "Skip",
+            "Skipped",
+            "Discarded"
+          ]
+        }
+      ],
+      "postSteps": [
+        {
+          "id": "merge",
+          "label": "Merge tracker TSV outcomes",
+          "command": "npx job-forge merge"
+        },
+        {
+          "id": "verify",
+          "label": "Verify tracker integrity",
+          "command": "npx job-forge verify"
+        }
+      ]
+    }
+  ]
+}

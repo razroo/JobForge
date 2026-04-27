@@ -40,6 +40,9 @@
             "preflight:plan": "job-forge preflight:plan",
             "preflight:check": "job-forge preflight:check",
             "preflight:explain": "job-forge preflight:explain",
+            "postflight:status": "job-forge postflight:status",
+            "postflight:check": "job-forge postflight:check",
+            "postflight:explain": "job-forge postflight:explain",
             "migrate:plan": "job-forge migrate:plan",
             "migrate:apply": "job-forge migrate:apply",
             "migrate:check": "job-forge migrate:check",
@@ -61,7 +64,10 @@
             ".jobforge-runs/",
             ".jobforge-ledger/",
             ".jobforge-cache/",
-            ".jobforge-index.json"
+            ".jobforge-index.json",
+            "batch/preflight-candidates.json",
+            "batch/preflight-plan.json",
+            "batch/postflight-outcomes.json"
           ]
         }
       ]
