@@ -132,6 +132,7 @@ From your project root, these commands maintain the tracker and pipeline checks.
 | Inspect context bundle budget | `npx job-forge context:plan apply` | `npm run context:plan -- apply` |
 | Inspect local JD/artifact cache | `npx job-forge cache:status` | `npm run cache:status` |
 | Inspect local artifact index | `npx job-forge index:status` | `npm run index:status` |
+| Inspect local materialized facts | `npx job-forge facts:status` | `npm run facts:status` |
 | Plan safe application dispatch rounds | `npx job-forge preflight:plan --candidates batch/preflight-candidates.json` | `npm run preflight:plan -- --candidates ...` |
 | Fail on blocked preflight candidates | `npx job-forge preflight:check --candidates batch/preflight-candidates.json` | `npm run preflight:check -- --candidates ...` |
 | Settle dispatch outcomes after a round | `npx job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json` | `npm run postflight:status -- --plan ... --outcomes ...` |
@@ -157,6 +158,7 @@ From your project root, these commands maintain the tracker and pipeline checks.
 | Check duplicate/status event without loading tracker files | `npx job-forge ledger:has --company "Acme" --role "Staff Engineer" --status Applied` | `npm run ledger:has -- --company ...` |
 | Check/reuse cached JD content | `npx job-forge cache:has --url <url>` / `npx job-forge cache:get --url <url>` | `npm run cache:has -- --url ...` |
 | Query local artifact pointers | `npx job-forge index:query "Acme"` / `npx job-forge index:has --key company-role:acme:staff-engineer` | `npm run index:query -- Acme` |
+| Query local source-backed facts | `npx job-forge facts:query --fact job.url` / `npx job-forge facts:has --fact application.status --key company-role:acme:staff-engineer` | `npm run facts:query -- --fact job.url` |
 | Apply safe consumer migrations | `npx job-forge migrate:apply` | `npm run migrate:apply` |
 | Re-create harness symlinks | `npx job-forge sync` | `npm run sync` |
 | Build optional dashboard TUI (Go on `PATH`) | `(cd node_modules/job-forge/dashboard && go build .)` | `npm run build:dashboard` (harness repo only) |

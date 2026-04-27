@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "name": "reports",
+      "include": ["reports/*.md"],
+      "format": "text",
+      "rules": [
+        {
+          "fact": "job.url",
+          "pattern": "^\\*\\*URL:\\*\\*\\s*(?<url>https?://\\S+)",
+          "flags": "i",
+          "key": "url:{url}",
+          "value": "{url}",
+          "fields": {
+            "url": "{url}",
+            "report": "{source}"
+          },
+          "tags": ["report", "url"]
+        },
+        {
+          "fact": "job.score",
+          "pattern": "^\\*\\*Score:\\*\\*\\s*(?<score>[0-9.]+/5)",
+          "flags": "i",
+          "key": "report:{source}:score",
+          "value": "{score}",
+          "fields": {
+            "score": "{score}",
+            "report": "{source}"
+          },
+          "tags": ["report", "score"]
+        }
+      ]
+    },
+    {
+      "name": "application-day-files",
+      "include": ["data/applications/*.md"],
+      "format": "markdown-table",
+      "records": [
+        {
+          "fact": "application.status",
+          "key": "company-role:{Company|slug}:{Role|slug}",
+          "value": "{Status}",
+          "fields": {
+            "num": "{#}",
+            "date": "{Date}",
+            "company": "{Company}",
+            "role": "{Role}",
+            "score": "{Score}",
+            "status": "{Status}",
+            "pdf": "{PDF}",
+            "report": "{Report}",
+            "notes": "{Notes}"
+          },
+          "tags": ["tracker", "application"]
+        }
+      ]
+    },
+    {
+      "name": "application-single-file",
+      "include": ["data/applications.md", "applications.md"],
+      "format": "markdown-table",
+      "records": [
+        {
+          "fact": "application.status",
+          "key": "company-role:{Company|slug}:{Role|slug}",
+          "value": "{Status}",
+          "fields": {
+            "num": "{#}",
+            "date": "{Date}",
+            "company": "{Company}",
+            "role": "{Role}",
+            "score": "{Score}",
+            "status": "{Status}",
+            "pdf": "{PDF}",
+            "report": "{Report}",
+            "notes": "{Notes}"
+          },
+          "tags": ["tracker", "application"]
+        }
+      ]
+    },
+    {
+      "name": "tracker-additions",
+      "include": ["batch/tracker-additions/*.tsv", "batch/tracker-additions/merged/*.tsv"],
+      "format": "tsv",
+      "header": false,
+      "columns": ["num", "date", "company", "role", "statusOrScore", "scoreOrStatus", "pdf", "report", "notes"],
+      "records": [
+        {
+          "fact": "tracker.addition",
+          "key": "company-role:{company|slug}:{role|slug}",
+          "value": "{source}",
+          "fields": ["num", "date", "company", "role", "statusOrScore", "scoreOrStatus", "pdf", "report", "notes"],
+          "tags": ["tracker", "tsv"]
+        }
+      ]
+    },
+    {
+      "name": "pipeline",
+      "include": ["data/pipeline.md"],
+      "format": "text",
+      "rules": [
+        {
+          "fact": "job.url",
+          "pattern": "^\\s*-\\s*\\[(?<state>[ xX])\\]\\s+(?<url>https?://\\S+)",
+          "key": "url:{url}",
+          "value": "{state}",
+          "fields": {
+            "url": "{url}",
+            "state": "{state}",
+            "pipeline": "{source}"
+          },
+          "tags": ["pipeline", "url"]
+        }
+      ]
+    },
+    {
+      "name": "scan-history",
+      "include": ["data/scan-history.tsv"],
+      "format": "tsv",
+      "records": [
+        {
+          "fact": "job.url",
+          "key": "url:{url}",
+          "value": "{url}",
+          "fields": ["date", "company", "role", "url", "ats"],
+          "tags": ["scan", "url"]
+        }
+      ]
+    },
+    {
+      "name": "preflight-candidates-object",
+      "include": ["batch/preflight-candidates.json"],
+      "format": "json",
+      "records": [
+        {
+          "fact": "candidate.ready",
+          "path": "$.candidates[]",
+          "key": "{companyRoleKey}",
+          "value": "{url}",
+          "fields": {
+            "id": "{id}",
+            "company": "{company}",
+            "role": "{role}",
+            "companyRoleKey": "{companyRoleKey}",
+            "url": "{url}",
+            "score": "{score}",
+            "gateStatus": "{gate.status}",
+            "locationStatus": "{location.status}"
+          },
+          "tags": ["candidate", "preflight"]
+        }
+      ]
+    },
+    {
+      "name": "preflight-candidates-array",
+      "include": ["batch/preflight-candidates.json"],
+      "format": "json",
+      "records": [
+        {
+          "fact": "candidate.ready",
+          "path": "$[]",
+          "key": "{companyRoleKey}",
+          "value": "{url}",
+          "fields": {
+            "id": "{id}",
+            "company": "{company}",
+            "role": "{role}",
+            "companyRoleKey": "{companyRoleKey}",
+            "url": "{url}",
+            "score": "{score}",
+            "gateStatus": "{gate.status}",
+            "locationStatus": "{location.status}"
+          },
+          "tags": ["candidate", "preflight"]
+        }
+      ]
+    },
+    {
+      "name": "ledger",
+      "include": [".jobforge-ledger/*.jsonl"],
+      "format": "jsonl",
+      "records": [
+        {
+          "fact": "ledger.event",
+          "key": "{key}",
+          "value": "{type}",
+          "fields": {
+            "type": "{type}",
+            "key": "{key}",
+            "status": "{data.status}",
+            "source": "{source}"
+          },
+          "tags": ["ledger"]
+        }
+      ]
+    }
+  ]
+}

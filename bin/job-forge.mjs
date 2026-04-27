@@ -25,6 +25,7 @@
  *   context:*      Query/render deterministic context bundles via iso-context
  *   cache:*        Reuse local deterministic artifacts via iso-cache
  *   index:*        Query local artifacts via iso-index
+ *   facts:*        Materialize source-backed local facts via iso-facts
  *   canon:*        Compute deterministic identity keys via iso-canon
  *   preflight:*    Plan safe dispatch rounds via iso-preflight
  *   postflight:*   Settle dispatch outcomes via iso-postflight
@@ -132,6 +133,17 @@ const indexAliases = {
   'index:path': 'path',
 };
 
+const factsAliases = {
+  'facts:build': 'build',
+  'facts:status': 'status',
+  'facts:query': 'query',
+  'facts:has': 'has',
+  'facts:verify': 'verify',
+  'facts:check': 'check',
+  'facts:explain': 'explain',
+  'facts:path': 'path',
+};
+
 const canonAliases = {
   'canon:normalize': 'normalize',
   'canon:key': 'key',
@@ -220,6 +232,12 @@ Commands:
   index:has               Check indexed URL/company-role/report facts without loading source files
   index:query             Query indexed reports, tracker rows, TSVs, scan history, pipeline, and ledger
   index:verify            Validate local artifact index integrity
+  facts:status            Show local materialized fact set status
+  facts:build             Rebuild .jobforge-facts.json from templates/facts.json
+  facts:has               Check source-backed job/application/candidate facts
+  facts:query             Query materialized facts with source path/line provenance
+  facts:verify            Validate local fact set integrity
+  facts:check             Check configured fact requirements
   canon:key               Print stable URL/company/role/company-role keys
   canon:compare           Compare two identifiers as same/possible/different
   canon:explain           Show the active identity canonicalization policy
@@ -275,6 +293,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge cache:put --url https://example.test/jobs/123 --input @jds/example.md
   job-forge index:has --key "company-role:acme:staff-engineer"
   job-forge index:query "acme"
+  job-forge facts:has --fact application.status --key "company-role:acme:staff-engineer"
+  job-forge facts:query --fact job.url --tag report
   job-forge canon:key company-role --company "Acme, Inc." --role "Senior SWE - Remote US"
   job-forge canon:compare company "OpenAI, Inc." "Open AI"
   job-forge preflight:plan --candidates batch/preflight-candidates.json
@@ -406,6 +426,21 @@ if (cmd === 'index' || indexAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/index.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...indexArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'facts' || factsAliases[cmd]) {
+  const factsArgs = cmd === 'facts'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [factsAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/facts.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...factsArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

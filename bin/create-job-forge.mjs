@@ -147,6 +147,13 @@ const consumerPkg = {
     'index:has': 'job-forge index:has',
     'index:query': 'job-forge index:query',
     'index:explain': 'job-forge index:explain',
+    'facts:build': 'job-forge facts:build',
+    'facts:status': 'job-forge facts:status',
+    'facts:verify': 'job-forge facts:verify',
+    'facts:check': 'job-forge facts:check',
+    'facts:has': 'job-forge facts:has',
+    'facts:query': 'job-forge facts:query',
+    'facts:explain': 'job-forge facts:explain',
     'canon:normalize': 'job-forge canon:normalize',
     'canon:key': 'job-forge canon:key',
     'canon:compare': 'job-forge canon:compare',
@@ -262,6 +269,7 @@ Before doing any work, remember where things live in *this* project:
 | Scanner dedup history | \`data/scan-history.tsv\` | Only touch in \`/job-forge scan\` |
 | Local workflow ledger | \`.jobforge-ledger/events.jsonl\` | Deterministic append-only state; use \`job-forge ledger:*\` |
 | Local artifact index | \`.jobforge-index.json\` | Deterministic file/line lookup; use \`job-forge index:*\` |
+| Local fact set | \`.jobforge-facts.json\` | Deterministic source-backed facts; use \`job-forge facts:*\` |
 | Identity canonicalization | \`templates/canon.json\` | Stable URL/company/role keys; use \`job-forge canon:*\` |
 | Dispatch preflight policy | \`templates/preflight.json\` | Safe apply rounds/gates; use \`job-forge preflight:*\` |
 | Dispatch postflight policy | \`templates/postflight.json\` | Safe apply settlement; use \`job-forge postflight:*\` |
@@ -356,6 +364,7 @@ data/token-usage.tsv
 .jobforge-ledger/
 .jobforge-cache/
 .jobforge-index.json
+.jobforge-facts.json
 .jobforge-runs/
 reports/
 !reports/.gitkeep
@@ -418,6 +427,7 @@ job-forge merge            # merge batch/tracker-additions/*.tsv into the tracke
 job-forge verify           # verify pipeline integrity
 job-forge ledger:status    # local deterministic workflow ledger status
 job-forge index:status     # local artifact index status
+job-forge facts:status     # local source-backed fact status
 job-forge canon:key company-role --company "Acme, Inc." --role "Senior SWE"
 job-forge preflight:plan --candidates batch/preflight-candidates.json
 job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json

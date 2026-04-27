@@ -18,6 +18,7 @@
  * 9. Drift warning if states.yml ids differ from the built-in fallback list
  * 10. Ledger file verifies if .jobforge-ledger/events.jsonl exists
  * 11. Artifact index verifies if .jobforge-index.json exists
+ * 12. Fact set verifies if .jobforge-facts.json exists
  *
  * Run: node verify-pipeline.mjs   (from repo root; same as npm run verify)
  */
@@ -31,6 +32,7 @@ import {
 } from './tracker-lib.mjs';
 import { jobForgeLedgerPath, ledgerExists, verifyJobForgeLedger } from './lib/jobforge-ledger.mjs';
 import { indexExists, jobForgeIndexPath, verifyJobForgeIndex } from './lib/jobforge-index.mjs';
+import { factsExist, jobForgeFactsPath, verifyJobForgeFacts } from './lib/jobforge-facts.mjs';
 import {
   canonicalStatusValues,
   formatContractIssues,
@@ -171,6 +173,22 @@ function verifyIndexIfPresent() {
   }
 }
 
+function verifyFactsIfPresent() {
+  if (!factsExist(PROJECT_DIR)) {
+    ok('Fact set not initialized');
+    return;
+  }
+  const result = verifyJobForgeFacts({ rebuild: false }, PROJECT_DIR);
+  for (const issue of result.issues) {
+    const msg = `facts: ${issue.kind}: ${issue.message}`;
+    if (issue.severity === 'error') error(msg);
+    else warn(msg);
+  }
+  if (result.ok) {
+    ok(`Fact set valid (${result.facts} facts at ${relative(PROJECT_DIR, jobForgeFactsPath(PROJECT_DIR))})`);
+  }
+}
+
 // --- Read entries ---
 const { entries, source } = readAllEntries();
 
@@ -181,6 +199,7 @@ if (entries.length === 0) {
   verifyStatesYamlDrift();
   verifyLedgerIfPresent();
   verifyIndexIfPresent();
+  verifyFactsIfPresent();
   console.log('\n' + '='.repeat(50));
   console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);
   if (errors === 0 && warnings === 0) console.log('🟢 Pipeline is clean!');
@@ -317,6 +336,7 @@ if (boldScores === 0) ok('No bold in scores');
 verifyStatesYamlDrift();
 verifyLedgerIfPresent();
 verifyIndexIfPresent();
+verifyFactsIfPresent();
 
 console.log('\n' + '='.repeat(50));
 console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);
