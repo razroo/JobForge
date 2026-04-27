@@ -132,6 +132,8 @@ From your project root, these commands maintain the tracker and pipeline checks.
 | Inspect context bundle budget | `npx job-forge context:plan apply` | `npm run context:plan -- apply` |
 | Inspect local JD/artifact cache | `npx job-forge cache:status` | `npm run cache:status` |
 | Inspect local artifact index | `npx job-forge index:status` | `npm run index:status` |
+| Plan safe application dispatch rounds | `npx job-forge preflight:plan --candidates batch/preflight-candidates.json` | `npm run preflight:plan -- --candidates ...` |
+| Fail on blocked preflight candidates | `npx job-forge preflight:check --candidates batch/preflight-candidates.json` | `npm run preflight:check -- --candidates ...` |
 | Inspect pending consumer migrations | `npx job-forge migrate:plan` | `npm run migrate:plan` |
 | Map status column to canonical labels | `npx job-forge normalize` | `npm run normalize` |
 | Merge duplicate company/role rows | `npx job-forge dedup` | `npm run dedup` |

@@ -26,6 +26,7 @@
  *   cache:*        Reuse local deterministic artifacts via iso-cache
  *   index:*        Query local artifacts via iso-index
  *   canon:*        Compute deterministic identity keys via iso-canon
+ *   preflight:*    Plan safe dispatch rounds via iso-preflight
  *   migrate:*      Apply deterministic consumer-project migrations via iso-migrate
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
@@ -137,6 +138,13 @@ const canonAliases = {
   'canon:path': 'path',
 };
 
+const preflightAliases = {
+  'preflight:plan': 'plan',
+  'preflight:check': 'check',
+  'preflight:explain': 'explain',
+  'preflight:path': 'path',
+};
+
 const migrateAliases = {
   'migrate:plan': 'plan',
   'migrate:apply': 'apply',
@@ -198,6 +206,9 @@ Commands:
   canon:key               Print stable URL/company/role/company-role keys
   canon:compare           Compare two identifiers as same/possible/different
   canon:explain           Show the active identity canonicalization policy
+  preflight:plan          Build bounded dispatch plan from candidate JSON
+  preflight:check         Fail if preflight candidates are blocked
+  preflight:explain       Show the active preflight workflow policy
   migrate:plan            Preview deterministic consumer-project migrations
   migrate:apply           Apply deterministic consumer-project migrations
   migrate:check           Fail if migrations are pending
@@ -242,6 +253,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge index:query "acme"
   job-forge canon:key company-role --company "Acme, Inc." --role "Senior SWE - Remote US"
   job-forge canon:compare company "OpenAI, Inc." "Open AI"
+  job-forge preflight:plan --candidates batch/preflight-candidates.json
+  job-forge preflight:check --candidates batch/preflight-candidates.json
   job-forge migrate:check
   job-forge migrate:apply
 
@@ -380,6 +393,21 @@ if (cmd === 'canon' || canonAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/canon.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...canonArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'preflight' || preflightAliases[cmd]) {
+  const preflightArgs = cmd === 'preflight'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [preflightAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/preflight.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...preflightArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

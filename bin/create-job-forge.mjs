@@ -151,6 +151,9 @@ const consumerPkg = {
     'canon:key': 'job-forge canon:key',
     'canon:compare': 'job-forge canon:compare',
     'canon:explain': 'job-forge canon:explain',
+    'preflight:plan': 'job-forge preflight:plan',
+    'preflight:check': 'job-forge preflight:check',
+    'preflight:explain': 'job-forge preflight:explain',
     'migrate:plan': 'job-forge migrate:plan',
     'migrate:apply': 'job-forge migrate:apply',
     'migrate:check': 'job-forge migrate:check',
@@ -257,6 +260,7 @@ Before doing any work, remember where things live in *this* project:
 | Local workflow ledger | \`.jobforge-ledger/events.jsonl\` | Deterministic append-only state; use \`job-forge ledger:*\` |
 | Local artifact index | \`.jobforge-index.json\` | Deterministic file/line lookup; use \`job-forge index:*\` |
 | Identity canonicalization | \`templates/canon.json\` | Stable URL/company/role keys; use \`job-forge canon:*\` |
+| Dispatch preflight policy | \`templates/preflight.json\` | Safe apply rounds/gates; use \`job-forge preflight:*\` |
 | Consumer migrations | \`templates/migrations.json\` | Safe script/gitignore upgrades; use \`job-forge migrate:*\` |
 | Scanner config | \`portals.yml\` (project root) | Company configs |
 | Profile / identity | \`config/profile.yml\` | Candidate name, email, target roles |
@@ -408,6 +412,7 @@ job-forge verify           # verify pipeline integrity
 job-forge ledger:status    # local deterministic workflow ledger status
 job-forge index:status     # local artifact index status
 job-forge canon:key company-role --company "Acme, Inc." --role "Senior SWE"
+job-forge preflight:plan --candidates batch/preflight-candidates.json
 job-forge migrate:check    # verify consumer package scripts/gitignore are current
 job-forge pdf cv.md out.pdf
 job-forge tokens --days 1  # per-session opencode token usage

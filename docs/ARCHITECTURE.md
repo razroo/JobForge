@@ -32,7 +32,7 @@ my-search/
 ├── .opencode/skills/job-forge.md     # → skill router
 ├── .opencode/agents/                 # → @general-free, @general-paid, @glm-minimal
 ├── modes/                            # → mode files
-├── templates/                        # → states.yml, portals.example.yml, cv-template.html
+├── templates/                        # → states.yml, portals.example.yml, cv-template.html, preflight.json
 ├── batch/batch-prompt.md             # → batch worker prompt
 ├── batch/batch-runner.sh             # → parallel orchestrator
 └── node_modules/job-forge/           # harness, installed from npm
@@ -166,6 +166,7 @@ jds/*.md                 →  Saved job descriptions referenced from the pipelin
 templates/states.yml     →  Canonical status values
 templates/canon.json      →  Canonical URL/company/role identity keys
 templates/context.json    →  Deterministic mode/reference context bundle policy
+templates/preflight.json  →  Safe apply dispatch rounds/gates policy
 templates/migrations.json → Safe consumer-project upgrade policy
 templates/cv-template.html → PDF generation template
 examples/*.md            →  Fictional layouts only (not read by scripts; see examples/README.md)
@@ -181,6 +182,7 @@ Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeli
 - Ledger: `.jobforge-ledger/events.jsonl` (created by `job-forge ledger:rebuild`, `tracker-line --write`, or `merge`; gitignored personal state)
 - Index: `.jobforge-index.json` (created on demand by `job-forge index:*`; gitignored local lookup state)
 - Canon: `templates/canon.json` (identity rules inspected with `job-forge canon:*`)
+- Preflight: `templates/preflight.json` (dispatch rounds/gates inspected with `job-forge preflight:*`)
 - Migrations: `templates/migrations.json` (applied by `job-forge sync` and inspectable with `job-forge migrate:*`)
 - Capabilities: `templates/capabilities.json` (role boundary policy inspected with `job-forge capabilities:*`)
 - Context: `templates/context.json` (mode/reference file bundles inspected with `job-forge context:*`)
@@ -229,6 +231,7 @@ Scripts maintain data consistency. In a consumer project they're invoked via the
 | `scripts/index.mjs` | `npx job-forge index:status` / `index:has` / `index:query` | Deterministic `@razroo/iso-index` lookup over reports, tracker rows, TSVs, pipeline, scan history, and ledger events |
 | `scripts/canon.mjs` | `npx job-forge canon:normalize` / `canon:key` / `canon:compare` | Deterministic `@razroo/iso-canon` identity normalization for URLs, companies, roles, and company+role pairs |
 | `scripts/context.mjs` | `npx job-forge context:list` / `context:plan` / `context:check` / `context:render` | Deterministic `@razroo/iso-context` mode/reference context bundle planning and rendering |
+| `scripts/preflight.mjs` | `npx job-forge preflight:plan` / `preflight:check` / `preflight:explain` | Deterministic `@razroo/iso-preflight` dispatch planning for file-backed candidate facts and gates |
 | `scripts/migrate.mjs` | `npx job-forge migrate:plan` / `migrate:apply` / `migrate:check` | Deterministic `@razroo/iso-migrate` consumer-project upgrades for scripts and generated-artifact ignores |
 | `tracker-lib.mjs` | _(library)_ | Shared helpers for reading/writing day-based tracker files — imported by merge/dedup/verify/normalize |
 | `bin/sync.mjs` | `npx job-forge sync` | Creates the harness symlinks in a consumer project and applies safe migrations (also runs as `postinstall`) |

@@ -14,6 +14,7 @@
           "npx job-forge cache:*",
           "npx job-forge index:*",
           "npx job-forge canon:*",
+          "npx job-forge preflight:*",
           "rg *"
         ],
         "deny": [
@@ -37,7 +38,8 @@
           "npx job-forge merge",
           "npx job-forge guard:*",
           "npx job-forge telemetry:*",
-          "npx job-forge trace:*"
+          "npx job-forge trace:*",
+          "npx job-forge preflight:*"
         ]
       },
       "filesystem": "read-only",
@@ -62,7 +64,8 @@
           "npx job-forge capabilities:*",
           "npx job-forge cache:*",
           "npx job-forge index:*",
-          "npx job-forge canon:*"
+          "npx job-forge canon:*",
+          "npx job-forge preflight:*"
         ],
         "deny": [
           "task *"

@@ -78,12 +78,15 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D15] Treat `templates/canon.json` as the source of truth for URL/company/role identity keys. Use `npx job-forge canon:key ...` or `npx job-forge canon:compare ...` before broad duplicate checks when a stable key or same/possible/different decision is useful.
   why: `iso-canon` is not an MCP and adds no prompt/tool-schema tokens; it centralizes duplicate-key rules so agents do not repeatedly derive inconsistent slugs for aliases, suffixes, remote/location noise, or tracking URLs
 
+- [D16] Treat `templates/preflight.json` as the source of truth for multi-apply dispatch safety. After candidate facts and gates are materialized from authoritative files, run `npx job-forge preflight:plan --candidates <file>` or `npx job-forge preflight:check --candidates <file>` before task dispatch; follow the emitted rounds and pre/post steps. This does not replace H2 four-source grep until those facts are materialized into the candidate JSON.
+  why: `iso-preflight` is not an MCP and adds no prompt/tool-schema tokens; it turns file-backed facts, duplicate/location gates, max-two rounds, and cleanup/merge/verify steps into an executable local plan instead of repeated prose
+
 ## Procedure
 
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
 3. Read the active mode file [D3]. Use context bundle checks when changing context loads [D11]. Check cached artifacts before URL/JD refetches [D12]. Use artifact index lookups before broad file reads when they can answer the question [D13]. Use canonical identity keys for duplicate checks [D15]. Use migration checks for harness drift [D14]. Decide inline vs delegated work [D1].
-4. Prepare Geometra dispatches: cleanup [H3], canon/index/ledger prefilter when useful [D8, D13, D15], dedupe [H2], location filter [D5], routing [D2, D10], proxy prompt hygiene [H8].
+4. Prepare Geometra dispatches: cleanup [H3], canon/index/ledger prefilter when useful [D8, D13, D15], dedupe [H2], location filter [D5], materialize candidate facts/gates and run preflight plan/check [D16], routing [D2, D10], proxy prompt hygiene [H8].
 5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b].
 6. Keep multi-job form-filling out of the orchestrator [H4].
 7. Cross-check subagent facts against authoritative files [H7].

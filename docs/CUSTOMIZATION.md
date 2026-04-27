@@ -158,6 +158,10 @@ Artifact lookup policy lives in `templates/index.json` and is built locally by `
 
 URL, company, role, and company+role identity rules live in `templates/canon.json` and are enforced locally by `@razroo/iso-canon`. Use `job-forge canon:key company-role --company "OpenAI, Inc." --role "Senior SWE, AI Platform"` to derive the same duplicate key used by ledger/index helpers, and `job-forge canon:compare company "OpenAI, Inc." "Open AI"` to explain whether two values resolve to the same entity. Custom forks can extend aliases, suffixes, stop words, and match thresholds in `templates/canon.json`. This is not an MCP and does not add prompt or tool-schema tokens.
 
+## JobForge preflight plans
+
+Application dispatch policy lives in `templates/preflight.json` and is planned locally by `@razroo/iso-preflight`. After candidate facts and gate results have been materialized into JSON, use `job-forge preflight:plan --candidates <file>` to get bounded rounds and required pre/post steps, or `job-forge preflight:check --candidates <file>` to fail on missing source facts or blocked gates. This is not an MCP and does not add prompt or tool-schema tokens; it consumes only the candidate JSON you deliberately pass to it.
+
 ## JobForge consumer migrations
 
 Consumer-project migrations live in `templates/migrations.json` and are applied locally by `@razroo/iso-migrate`. `job-forge sync` applies safe migrations automatically after refreshing symlinks; use `JOB_FORGE_SKIP_MIGRATIONS=1` to opt out. Use `job-forge migrate:plan`, `job-forge migrate:apply`, and `job-forge migrate:check` to inspect or enforce script/gitignore drift explicitly. This is not an MCP and does not add prompt or tool-schema tokens.

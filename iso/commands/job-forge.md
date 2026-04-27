@@ -85,6 +85,10 @@ Identity keys (terminal, outside opencode):
   npx job-forge canon:key company-role --company "Acme" --role "Staff Engineer"
   npx job-forge canon:compare company "OpenAI, Inc." "Open AI"
 
+Preflight dispatch plans (terminal, outside opencode):
+  npx job-forge preflight:plan --candidates batch/preflight-candidates.json
+  npx job-forge preflight:check --candidates batch/preflight-candidates.json
+
 Consumer migrations (terminal, outside opencode):
   npx job-forge migrate:plan           # preview package.json/.gitignore drift
   npx job-forge migrate:apply          # apply safe harness upgrade migrations
@@ -197,7 +201,19 @@ Step 3  — Pre-flight cleanup (once, before the loop)
   - geometra_list_sessions()
   - geometra_disconnect({ closeBrowser: true })
 
-Step 4  — Loop in rounds of 2 (Hard Limit #1)
+Step 4  — Materialize and check the dispatch plan
+  - Write file-backed candidate facts/gates to batch/preflight-candidates.json
+    (or another explicit JSON file). Include source paths for company, role,
+    companyRoleKey, URL, score, duplicate/location gates, and any skip/block
+    decision.
+  - Run npx job-forge preflight:check --candidates <file> to fail on missing
+    sources or blocked gates, then npx job-forge preflight:plan --candidates
+    <file> to get the bounded round list.
+  - Follow the emitted rounds. Do not dispatch blocked candidates, and do not
+    replace H2's four-source grep with preflight unless those grep results are
+    present in the candidate JSON.
+
+Step 5  — Loop in rounds of 2 (Hard Limit #1)
   for round in ceil(len(candidates) / 2):
     pair = candidates[round*2 : round*2 + 2]
     # If proxy is configured, do not paste proxy values into prompts.
