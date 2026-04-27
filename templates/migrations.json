@@ -43,6 +43,10 @@
             "postflight:status": "job-forge postflight:status",
             "postflight:check": "job-forge postflight:check",
             "postflight:explain": "job-forge postflight:explain",
+            "redact:scan": "job-forge redact:scan",
+            "redact:verify": "job-forge redact:verify",
+            "redact:apply": "job-forge redact:apply",
+            "redact:explain": "job-forge redact:explain",
             "migrate:plan": "job-forge migrate:plan",
             "migrate:apply": "job-forge migrate:apply",
             "migrate:check": "job-forge migrate:check",
@@ -65,6 +69,7 @@
             ".jobforge-ledger/",
             ".jobforge-cache/",
             ".jobforge-index.json",
+            ".jobforge-redacted/",
             "batch/preflight-candidates.json",
             "batch/preflight-plan.json",
             "batch/postflight-outcomes.json"

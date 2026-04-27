@@ -166,6 +166,10 @@ Application dispatch policy lives in `templates/preflight.json` and is planned l
 
 Application settlement policy lives in `templates/postflight.json` and is checked locally by `@razroo/iso-postflight`. After each dispatch round, record observed candidate outcomes and tracker TSV artifact paths in `batch/postflight-outcomes.json`, then run `job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json` to get the next safe action. After `merge` and `verify`, add post-step observations and run `job-forge postflight:check ...` to fail unless the workflow is complete. This is not an MCP and does not add prompt or tool-schema tokens.
 
+## JobForge redaction policy
+
+Safe-export redaction rules live in `templates/redact.json` and are enforced locally by `@razroo/iso-redact`. Use `job-forge redact:scan --input <file>` before sharing traces, prompts, reports, or fixtures outside the project, `job-forge redact:apply --input <file> --output .jobforge-redacted/<file>` to write a sanitized copy, and `job-forge redact:verify --input <file>` to fail if secrets or configured PII remain. Findings never print matched values. This is not an MCP and does not add prompt or tool-schema tokens.
+
 ## JobForge consumer migrations
 
 Consumer-project migrations live in `templates/migrations.json` and are applied locally by `@razroo/iso-migrate`. `job-forge sync` applies safe migrations automatically after refreshing symlinks; use `JOB_FORGE_SKIP_MIGRATIONS=1` to opt out. Use `job-forge migrate:plan`, `job-forge migrate:apply`, and `job-forge migrate:check` to inspect or enforce script/gitignore drift explicitly. This is not an MCP and does not add prompt or tool-schema tokens.

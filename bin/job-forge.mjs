@@ -28,6 +28,7 @@
  *   canon:*        Compute deterministic identity keys via iso-canon
  *   preflight:*    Plan safe dispatch rounds via iso-preflight
  *   postflight:*   Settle dispatch outcomes via iso-postflight
+ *   redact:*       Sanitize local exports via iso-redact
  *   migrate:*      Apply deterministic consumer-project migrations via iso-migrate
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
@@ -153,6 +154,14 @@ const postflightAliases = {
   'postflight:path': 'path',
 };
 
+const redactAliases = {
+  'redact:scan': 'scan',
+  'redact:verify': 'verify',
+  'redact:apply': 'apply',
+  'redact:explain': 'explain',
+  'redact:path': 'path',
+};
+
 const migrateAliases = {
   'migrate:plan': 'plan',
   'migrate:apply': 'apply',
@@ -220,6 +229,10 @@ Commands:
   postflight:status       Reconcile dispatch plan, outcomes, artifacts, and post-steps
   postflight:check        Fail unless a dispatched workflow is fully settled
   postflight:explain      Show the active postflight workflow policy
+  redact:scan             Scan local text for sensitive values before export
+  redact:verify           Fail if local text still contains sensitive values
+  redact:apply            Write a sanitized copy of local text
+  redact:explain          Show the active redaction policy
   migrate:plan            Preview deterministic consumer-project migrations
   migrate:apply           Apply deterministic consumer-project migrations
   migrate:check           Fail if migrations are pending
@@ -268,6 +281,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge preflight:check --candidates batch/preflight-candidates.json
   job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
   job-forge postflight:check --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
+  job-forge redact:scan --input raw-session.jsonl
+  job-forge redact:apply --input raw-session.jsonl --output .jobforge-redacted/session.jsonl
   job-forge migrate:check
   job-forge migrate:apply
 
@@ -436,6 +451,21 @@ if (cmd === 'postflight' || postflightAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/postflight.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...postflightArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'redact' || redactAliases[cmd]) {
+  const redactArgs = cmd === 'redact'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [redactAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/redact.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...redactArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

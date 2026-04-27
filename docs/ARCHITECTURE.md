@@ -235,6 +235,7 @@ Scripts maintain data consistency. In a consumer project they're invoked via the
 | `scripts/context.mjs` | `npx job-forge context:list` / `context:plan` / `context:check` / `context:render` | Deterministic `@razroo/iso-context` mode/reference context bundle planning and rendering |
 | `scripts/preflight.mjs` | `npx job-forge preflight:plan` / `preflight:check` / `preflight:explain` | Deterministic `@razroo/iso-preflight` dispatch planning for file-backed candidate facts and gates |
 | `scripts/postflight.mjs` | `npx job-forge postflight:status` / `postflight:check` / `postflight:explain` | Deterministic `@razroo/iso-postflight` settlement for dispatch outcomes, required tracker TSV artifacts, and merge/verify post-steps |
+| `scripts/redact.mjs` | `npx job-forge redact:scan` / `redact:apply` / `redact:verify` | Deterministic `@razroo/iso-redact` safe-export scanning and sanitization for traces, prompts, reports, and fixtures |
 | `scripts/migrate.mjs` | `npx job-forge migrate:plan` / `migrate:apply` / `migrate:check` | Deterministic `@razroo/iso-migrate` consumer-project upgrades for scripts and generated-artifact ignores |
 | `tracker-lib.mjs` | _(library)_ | Shared helpers for reading/writing day-based tracker files — imported by merge/dedup/verify/normalize |
 | `bin/sync.mjs` | `npx job-forge sync` | Creates the harness symlinks in a consumer project and applies safe migrations (also runs as `postinstall`) |

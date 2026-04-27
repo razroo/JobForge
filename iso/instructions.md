@@ -84,11 +84,14 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D17] Treat `templates/postflight.json` as the source of truth for multi-apply dispatch settlement. Save the JSON preflight plan and per-round observed dispatch/outcome/artifact records, then run `npx job-forge postflight:status --plan <plan.json> --outcomes <outcomes.json>` after each round and `npx job-forge postflight:check ...` after merge/verify. Follow its next action instead of inferring completion from subagent prose.
   why: `iso-postflight` is not an MCP and adds no prompt/tool-schema tokens; it makes "round complete", missing TSVs, failed candidates, replacements, merge, and verify an executable local gate instead of repeated orchestration prose
 
+- [D18] Treat `templates/redact.json` as the source of truth before exporting local traces, prompts, reports, or fixtures outside the project. Use `npx job-forge redact:scan --input <file>`, `redact:apply --input <file> --output .jobforge-redacted/<file>`, or `redact:verify --input <file>` instead of hand-redacting with prose. This complements H8; it does not make it acceptable to paste secrets into prompts.
+  why: `iso-redact` is not an MCP and adds no prompt/tool-schema tokens; it gives deterministic safe-export checks whose findings do not print matched secret values
+
 ## Procedure
 
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
-3. Read the active mode file [D3]. Use context bundle checks when changing context loads [D11]. Check cached artifacts before URL/JD refetches [D12]. Use artifact index lookups before broad file reads when they can answer the question [D13]. Use canonical identity keys for duplicate checks [D15]. Use migration checks for harness drift [D14]. Decide inline vs delegated work [D1].
+3. Read the active mode file [D3]. Use context bundle checks when changing context loads [D11]. Check cached artifacts before URL/JD refetches [D12]. Use artifact index lookups before broad file reads when they can answer the question [D13]. Use canonical identity keys for duplicate checks [D15]. Use migration checks for harness drift [D14]. Use redaction checks before exporting local artifacts [D18]. Decide inline vs delegated work [D1].
 4. Prepare Geometra dispatches: cleanup [H3], canon/index/ledger prefilter when useful [D8, D13, D15], dedupe [H2], location filter [D5], materialize candidate facts/gates and run preflight plan/check [D16], routing [D2, D10], proxy prompt hygiene [H8].
 5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b], then settle the round with postflight status [D17].
 6. Keep multi-job form-filling out of the orchestrator [H4].

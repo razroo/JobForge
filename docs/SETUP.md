@@ -136,6 +136,8 @@ From your project root, these commands maintain the tracker and pipeline checks.
 | Fail on blocked preflight candidates | `npx job-forge preflight:check --candidates batch/preflight-candidates.json` | `npm run preflight:check -- --candidates ...` |
 | Settle dispatch outcomes after a round | `npx job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json` | `npm run postflight:status -- --plan ... --outcomes ...` |
 | Fail unless dispatch outcomes and post-steps are complete | `npx job-forge postflight:check --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json` | `npm run postflight:check -- --plan ... --outcomes ...` |
+| Sanitize local text before exporting it | `npx job-forge redact:apply --input raw-session.jsonl --output .jobforge-redacted/session.jsonl` | `npm run redact:apply -- --input ... --output ...` |
+| Verify local text is safe to export | `npx job-forge redact:verify --input .jobforge-redacted/session.jsonl` | `npm run redact:verify -- --input ...` |
 | Inspect pending consumer migrations | `npx job-forge migrate:plan` | `npm run migrate:plan` |
 | Map status column to canonical labels | `npx job-forge normalize` | `npm run normalize` |
 | Merge duplicate company/role rows | `npx job-forge dedup` | `npm run dedup` |
