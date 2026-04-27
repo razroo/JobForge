@@ -20,6 +20,8 @@
  * 11. Artifact index verifies if .jobforge-index.json exists
  * 12. Fact set verifies if .jobforge-facts.json exists
  * 13. Timeline verifies if .jobforge-timeline.json exists
+ * 14. Priority queue verifies if .jobforge-prioritize.json exists
+ * 15. Artifact lineage verifies/checks if .jobforge-lineage.json exists
  *
  * Run: node verify-pipeline.mjs   (from repo root; same as npm run verify)
  */
@@ -35,6 +37,8 @@ import { jobForgeLedgerPath, ledgerExists, verifyJobForgeLedger } from './lib/jo
 import { indexExists, jobForgeIndexPath, verifyJobForgeIndex } from './lib/jobforge-index.mjs';
 import { factsExist, jobForgeFactsPath, verifyJobForgeFacts } from './lib/jobforge-facts.mjs';
 import { jobForgeTimelinePath, timelineExists, verifyJobForgeTimeline } from './lib/jobforge-timeline.mjs';
+import { jobForgePrioritizePath, prioritizeExists, verifyJobForgePrioritize } from './lib/jobforge-prioritize.mjs';
+import { checkJobForgeLineage, jobForgeLineagePath, lineageExists, verifyJobForgeLineage } from './lib/jobforge-lineage.mjs';
 import {
   canonicalStatusValues,
   formatContractIssues,
@@ -207,6 +211,46 @@ function verifyTimelineIfPresent() {
   }
 }
 
+function verifyPrioritizeIfPresent() {
+  if (!prioritizeExists(PROJECT_DIR)) {
+    ok('Priority queue not initialized');
+    return;
+  }
+  const result = verifyJobForgePrioritize({}, PROJECT_DIR);
+  for (const issue of result.issues) {
+    const msg = `prioritize: ${issue.code}: ${issue.message}`;
+    if (issue.severity === 'error') error(msg);
+    else warn(msg);
+  }
+  if (result.ok) {
+    ok(`Priority queue valid (${relative(PROJECT_DIR, jobForgePrioritizePath(PROJECT_DIR))})`);
+  }
+}
+
+function verifyLineageIfPresent() {
+  if (!lineageExists(PROJECT_DIR)) {
+    ok('Artifact lineage not initialized');
+    return;
+  }
+  const verifyResult = verifyJobForgeLineage({}, PROJECT_DIR);
+  for (const issue of verifyResult.issues) {
+    const msg = `lineage: ${issue.code}: ${issue.message}`;
+    if (issue.severity === 'error') error(msg);
+    else warn(msg);
+  }
+
+  const checkResult = checkJobForgeLineage({}, PROJECT_DIR);
+  for (const issue of checkResult.issues) {
+    const msg = `lineage: ${issue.code}: ${issue.message}`;
+    if (issue.severity === 'error') error(msg);
+    else warn(msg);
+  }
+
+  if (verifyResult.ok && checkResult.ok) {
+    ok(`Artifact lineage current (${checkResult.current}/${checkResult.total} records at ${relative(PROJECT_DIR, jobForgeLineagePath(PROJECT_DIR))})`);
+  }
+}
+
 // --- Read entries ---
 const { entries, source } = readAllEntries();
 
@@ -219,6 +263,8 @@ if (entries.length === 0) {
   verifyIndexIfPresent();
   verifyFactsIfPresent();
   verifyTimelineIfPresent();
+  verifyPrioritizeIfPresent();
+  verifyLineageIfPresent();
   console.log('\n' + '='.repeat(50));
   console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);
   if (errors === 0 && warnings === 0) console.log('🟢 Pipeline is clean!');
@@ -357,6 +403,8 @@ verifyLedgerIfPresent();
 verifyIndexIfPresent();
 verifyFactsIfPresent();
 verifyTimelineIfPresent();
+verifyPrioritizeIfPresent();
+verifyLineageIfPresent();
 
 console.log('\n' + '='.repeat(50));
 console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);

@@ -18,6 +18,8 @@ my-search/
 ├── portals.yml                       # personal
 ├── data/                             # personal (gitignored)
 ├── .jobforge-ledger/                  # local workflow events (personal, gitignored)
+├── .jobforge-prioritize.json          # next-action ranking (generated, gitignored)
+├── .jobforge-lineage.json             # report/PDF lineage checks (generated, gitignored)
 ├── reports/                          # personal (gitignored)
 ├── AGENTS.md                         # personal overrides (opencode + codex)
 ├── CLAUDE.md                         # personal overrides (Claude Code); @-imports CLAUDE.harness.md
@@ -32,7 +34,7 @@ my-search/
 ├── .opencode/skills/job-forge.md     # → skill router
 ├── .opencode/agents/                 # → @general-free, @general-paid, @glm-minimal
 ├── modes/                            # → mode files
-├── templates/                        # → states.yml, portals.example.yml, cv-template.html, score.json, timeline.json, preflight.json, postflight.json
+├── templates/                        # → states.yml, portals.example.yml, cv-template.html, score.json, timeline.json, prioritize.json, preflight.json, postflight.json
 ├── batch/batch-prompt.md             # → batch worker prompt
 ├── batch/batch-runner.sh             # → parallel orchestrator
 └── node_modules/job-forge/           # harness, installed from npm
@@ -164,6 +166,8 @@ data/pipeline.md        →  Pending URLs and `local:jds/...` inbox (see modes/p
 .jobforge-index.json     →  Deterministic artifact lookup index built from templates/index.json
 .jobforge-facts.json     →  Deterministic fact set built from templates/facts.json
 .jobforge-timeline.json  →  Deterministic follow-up action plan built from templates/timeline.json
+.jobforge-prioritize.json → Deterministic next-action priority queue built from templates/prioritize.json
+.jobforge-lineage.json   →  Artifact lineage graph for stale report/PDF checks
 jds/*.md                 →  Saved job descriptions referenced from the pipeline (`local:jds/{file}`)
 templates/states.yml     →  Canonical status values
 templates/canon.json      →  Canonical URL/company/role identity keys
@@ -171,6 +175,7 @@ templates/score.json      →  Canonical weighted scoring rubric and gates
 templates/context.json    →  Deterministic mode/reference context bundle policy
 templates/facts.json      →  Source-backed fact extraction policy
 templates/timeline.json   →  Follow-up and next-action timing policy
+templates/prioritize.json →  Next-action ranking policy
 templates/preflight.json  →  Safe apply dispatch rounds/gates policy
 templates/postflight.json →  Safe apply dispatch settlement policy
 templates/migrations.json → Safe consumer-project upgrade policy
@@ -189,9 +194,12 @@ Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeli
 - Index: `.jobforge-index.json` (created on demand by `job-forge index:*`; gitignored local lookup state)
 - Facts: `.jobforge-facts.json` (created on demand by `job-forge facts:*`; gitignored local fact state)
 - Timeline: `.jobforge-timeline.json` (created on demand by `job-forge timeline:*`; gitignored local next-action state)
+- Prioritize: `.jobforge-prioritize.json` and `.jobforge-prioritize-items.json` (created on demand by `job-forge prioritize:*`; gitignored local ranking state)
+- Lineage: `.jobforge-lineage.json` (created by `job-forge lineage:record`; gitignored local stale-output state)
 - Canon: `templates/canon.json` (identity rules inspected with `job-forge canon:*`)
 - Score: `templates/score.json` (weighted rubric and gates inspected with `job-forge score:*`)
 - Timeline policy: `templates/timeline.json` (follow-up windows inspected with `job-forge timeline:*`)
+- Prioritize policy: `templates/prioritize.json` (next-action ranking inspected with `job-forge prioritize:*`)
 - Preflight: `templates/preflight.json` (dispatch rounds/gates inspected with `job-forge preflight:*`)
 - Postflight: `templates/postflight.json` (dispatch outcomes/artifacts/post-steps inspected with `job-forge postflight:*`)
 - Migrations: `templates/migrations.json` (applied by `job-forge sync` and inspectable with `job-forge migrate:*`)
@@ -200,7 +208,7 @@ Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeli
 
 ## Pipeline Integrity
 
-From the project root, `npx job-forge verify` (or `npm run verify`) runs `verify-pipeline.mjs`. When a tracker file exists, it validates canonical statuses (using `templates/states.yml` when that file is present and parseable), validates every tracker row against `templates/contracts.json`, warns on probable duplicate company/role rows, checks that report column markdown links resolve to files in the repo, validates score column format (`X.X/5`, `N/A`, or `DUP`), rejects table rows with too few columns, flags markdown bold inside the score column, and warns if any `batch/tracker-additions/*.tsv` files are still waiting to be merged. If `.jobforge-ledger/events.jsonl` exists, verify also validates the append-only ledger. If `.jobforge-index.json` exists, verify validates the artifact index. If `.jobforge-facts.json` exists, verify validates the materialized fact set. If `.jobforge-timeline.json` exists, verify validates the follow-up timeline. It also compares state ids from `templates/states.yml` to an internal fallback list and warns when the two sets drift. **Fresh clone:** the command exits successfully when neither `data/applications.md` nor root `applications.md` exists yet; pending-TSV and states-drift checks still run so contributors see unmerged batch output early. Optional setup validation after you add `cv.md` and `config/profile.yml`: `npm run sync-check` (`cv-sync-check.mjs`).
+From the project root, `npx job-forge verify` (or `npm run verify`) runs `verify-pipeline.mjs`. When a tracker file exists, it validates canonical statuses (using `templates/states.yml` when that file is present and parseable), validates every tracker row against `templates/contracts.json`, warns on probable duplicate company/role rows, checks that report column markdown links resolve to files in the repo, validates score column format (`X.X/5`, `N/A`, or `DUP`), rejects table rows with too few columns, flags markdown bold inside the score column, and warns if any `batch/tracker-additions/*.tsv` files are still waiting to be merged. If `.jobforge-ledger/events.jsonl` exists, verify also validates the append-only ledger. If `.jobforge-index.json` exists, verify validates the artifact index. If `.jobforge-facts.json` exists, verify validates the materialized fact set. If `.jobforge-timeline.json` exists, verify validates the follow-up timeline. If `.jobforge-prioritize.json` exists, verify validates the priority queue. If `.jobforge-lineage.json` exists, verify validates the graph and checks recorded artifacts for stale/missing inputs. It also compares state ids from `templates/states.yml` to an internal fallback list and warns when the two sets drift. **Fresh clone:** the command exits successfully when neither `data/applications.md` nor root `applications.md` exists yet; pending-TSV and states-drift checks still run so contributors see unmerged batch output early. Optional setup validation after you add `cv.md` and `config/profile.yml`: `npm run sync-check` (`cv-sync-check.mjs`).
 
 **`verify-pipeline.mjs` checks (same order as the script header):**
 
@@ -217,6 +225,8 @@ From the project root, `npx job-forge verify` (or `npm run verify`) runs `verify
 11. Validate `.jobforge-index.json` when present.
 12. Validate `.jobforge-facts.json` when present.
 13. Validate `.jobforge-timeline.json` when present.
+14. Validate `.jobforge-prioritize.json` when present.
+15. Validate/check `.jobforge-lineage.json` when present.
 
 When the tracker file is missing, checks 1-6 and 8 are skipped; checks 7, 9, 10, 11, 12, and 13 still run when applicable.
 

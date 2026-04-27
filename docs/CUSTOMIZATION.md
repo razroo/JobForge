@@ -162,6 +162,14 @@ Fact extraction policy lives in `templates/facts.json` and is built locally by `
 
 Follow-up and next-action policy lives in `templates/timeline.json` and is planned locally by `@razroo/iso-timeline`. Use `job-forge timeline:due` to list due/overdue nudges, `job-forge timeline:check --fail-on overdue` to fail only when action is stale, and `job-forge timeline:build` to materialize `.jobforge-timeline-events.jsonl` plus `.jobforge-timeline.json` for inspection. It reads tracker rows and dated pipeline items from local files, so scaffolded projects need no setup. This is not an MCP and does not add prompt or tool-schema tokens.
 
+## JobForge priority queue
+
+Next-action ranking policy lives in `templates/prioritize.json` and is planned locally by `@razroo/iso-prioritize`. Use `job-forge prioritize:build` to materialize `.jobforge-prioritize-items.json` plus `.jobforge-prioritize.json`, `job-forge prioritize:select --limit 3` to inspect the selected queue, and `job-forge prioritize:check` when a workflow must fail if no actionable candidate is selected. It reads source-backed facts and due timeline items, so scaffolded projects need no setup. This is not an MCP and does not add prompt or tool-schema tokens.
+
+## JobForge artifact lineage
+
+Artifact lineage lives in `.jobforge-lineage.json` and is checked locally by `@razroo/iso-lineage`. Use `job-forge lineage:record --artifact <report-or-pdf> --input cv.md --input config/profile.yml` after generating an artifact, then `job-forge lineage:check` or `job-forge lineage:check --artifact <file>` to detect stale outputs after source inputs change. This is not an MCP and does not add prompt or tool-schema tokens.
+
 ## JobForge scoring policy
 
 Weighted scoring policy lives in `templates/score.json` and is enforced locally by `@razroo/iso-score`. Use `job-forge score:check --input <score.json>` to validate emitted report score JSON, `job-forge score:gate --input <score.json> --gate apply` to check an application threshold, and `job-forge score:explain` to inspect the active dimensions, weights, bands, and gates. Custom forks can change weights or thresholds in `templates/score.json`, but keep the dimension ids aligned with `modes/_shared.md` and report rendering.

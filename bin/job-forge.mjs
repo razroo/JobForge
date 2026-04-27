@@ -31,6 +31,8 @@
  *   preflight:*    Plan safe dispatch rounds via iso-preflight
  *   postflight:*   Settle dispatch outcomes via iso-postflight
  *   timeline:*     Plan follow-up/next-action windows via iso-timeline
+ *   prioritize:*   Rank local next-action queues via iso-prioritize
+ *   lineage:*      Record artifact lineage and stale outputs via iso-lineage
  *   redact:*       Sanitize local exports via iso-redact
  *   migrate:*      Apply deterministic consumer-project migrations via iso-migrate
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
@@ -189,6 +191,28 @@ const timelineAliases = {
   'timeline:path': 'path',
 };
 
+const prioritizeAliases = {
+  'prioritize:status': 'status',
+  'prioritize:items': 'items',
+  'prioritize:build': 'build',
+  'prioritize:rank': 'rank',
+  'prioritize:select': 'select',
+  'prioritize:check': 'check',
+  'prioritize:verify': 'verify',
+  'prioritize:explain': 'explain',
+  'prioritize:path': 'path',
+};
+
+const lineageAliases = {
+  'lineage:status': 'status',
+  'lineage:record': 'record',
+  'lineage:check': 'check',
+  'lineage:stale': 'stale',
+  'lineage:verify': 'verify',
+  'lineage:explain': 'explain',
+  'lineage:path': 'path',
+};
+
 const redactAliases = {
   'redact:scan': 'scan',
   'redact:verify': 'verify',
@@ -280,6 +304,17 @@ Commands:
   timeline:due            Show currently due/overdue follow-up actions
   timeline:check          Fail on due/overdue timeline actions per policy
   timeline:explain        Show the active timeline policy
+  prioritize:status       Show local next-action priority queue status
+  prioritize:build        Build .jobforge-prioritize.json from facts/timeline sources
+  prioritize:rank         Rank apply/follow-up candidates deterministically
+  prioritize:select       Print selected next actions only
+  prioritize:check        Fail when selected queue requirements are not met
+  prioritize:explain      Show the active priority policy
+  lineage:status          Show local artifact lineage status
+  lineage:record          Record a report/PDF/derived artifact and its inputs
+  lineage:check           Fail if recorded artifacts are stale or missing
+  lineage:stale           List stale or missing recorded artifacts
+  lineage:explain         Show recorded artifact inputs
   redact:scan             Scan local text for sensitive values before export
   redact:verify           Fail if local text still contains sensitive values
   redact:apply            Write a sanitized copy of local text
@@ -338,6 +373,10 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge postflight:check --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
   job-forge timeline:due
   job-forge timeline:check --fail-on overdue
+  job-forge prioritize:build
+  job-forge prioritize:select --limit 3
+  job-forge lineage:record --artifact reports/123-acme-2026-04-27.md --input cv.md --input config/profile.yml --kind report
+  job-forge lineage:check --artifact reports/123-acme-2026-04-27.md
   job-forge redact:scan --input raw-session.jsonl
   job-forge redact:apply --input raw-session.jsonl --output .jobforge-redacted/session.jsonl
   job-forge migrate:check
@@ -553,6 +592,36 @@ if (cmd === 'timeline' || timelineAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/timeline.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...timelineArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'prioritize' || prioritizeAliases[cmd]) {
+  const prioritizeArgs = cmd === 'prioritize'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [prioritizeAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/prioritize.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...prioritizeArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'lineage' || lineageAliases[cmd]) {
+  const lineageArgs = cmd === 'lineage'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [lineageAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/lineage.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...lineageArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

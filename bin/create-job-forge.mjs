@@ -164,6 +164,20 @@ const consumerPkg = {
     'postflight:status': 'job-forge postflight:status',
     'postflight:check': 'job-forge postflight:check',
     'postflight:explain': 'job-forge postflight:explain',
+    'prioritize:status': 'job-forge prioritize:status',
+    'prioritize:items': 'job-forge prioritize:items',
+    'prioritize:build': 'job-forge prioritize:build',
+    'prioritize:rank': 'job-forge prioritize:rank',
+    'prioritize:select': 'job-forge prioritize:select',
+    'prioritize:check': 'job-forge prioritize:check',
+    'prioritize:verify': 'job-forge prioritize:verify',
+    'prioritize:explain': 'job-forge prioritize:explain',
+    'lineage:status': 'job-forge lineage:status',
+    'lineage:record': 'job-forge lineage:record',
+    'lineage:check': 'job-forge lineage:check',
+    'lineage:stale': 'job-forge lineage:stale',
+    'lineage:verify': 'job-forge lineage:verify',
+    'lineage:explain': 'job-forge lineage:explain',
     'migrate:plan': 'job-forge migrate:plan',
     'migrate:apply': 'job-forge migrate:apply',
     'migrate:check': 'job-forge migrate:check',
@@ -270,6 +284,8 @@ Before doing any work, remember where things live in *this* project:
 | Local workflow ledger | \`.jobforge-ledger/events.jsonl\` | Deterministic append-only state; use \`job-forge ledger:*\` |
 | Local artifact index | \`.jobforge-index.json\` | Deterministic file/line lookup; use \`job-forge index:*\` |
 | Local fact set | \`.jobforge-facts.json\` | Deterministic source-backed facts; use \`job-forge facts:*\` |
+| Local priority queue | \`.jobforge-prioritize.json\` | Deterministic next-action ranking; use \`job-forge prioritize:*\` |
+| Artifact lineage | \`.jobforge-lineage.json\` | Stale report/PDF detection; use \`job-forge lineage:*\` |
 | Identity canonicalization | \`templates/canon.json\` | Stable URL/company/role keys; use \`job-forge canon:*\` |
 | Dispatch preflight policy | \`templates/preflight.json\` | Safe apply rounds/gates; use \`job-forge preflight:*\` |
 | Dispatch postflight policy | \`templates/postflight.json\` | Safe apply settlement; use \`job-forge postflight:*\` |
@@ -365,6 +381,9 @@ data/token-usage.tsv
 .jobforge-cache/
 .jobforge-index.json
 .jobforge-facts.json
+.jobforge-prioritize.json
+.jobforge-prioritize-items.json
+.jobforge-lineage.json
 .jobforge-runs/
 reports/
 !reports/.gitkeep
@@ -428,6 +447,8 @@ job-forge verify           # verify pipeline integrity
 job-forge ledger:status    # local deterministic workflow ledger status
 job-forge index:status     # local artifact index status
 job-forge facts:status     # local source-backed fact status
+job-forge prioritize:status # local next-action priority queue status
+job-forge lineage:status   # local artifact lineage status
 job-forge canon:key company-role --company "Acme, Inc." --role "Senior SWE"
 job-forge preflight:plan --candidates batch/preflight-candidates.json
 job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
