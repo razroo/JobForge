@@ -26,6 +26,7 @@
  *   cache:*        Reuse local deterministic artifacts via iso-cache
  *   index:*        Query local artifacts via iso-index
  *   facts:*        Materialize source-backed local facts via iso-facts
+ *   score:*        Compute/check deterministic offer scores via iso-score
  *   canon:*        Compute deterministic identity keys via iso-canon
  *   preflight:*    Plan safe dispatch rounds via iso-preflight
  *   postflight:*   Settle dispatch outcomes via iso-postflight
@@ -144,6 +145,16 @@ const factsAliases = {
   'facts:path': 'path',
 };
 
+const scoreAliases = {
+  'score:compute': 'compute',
+  'score:verify': 'verify',
+  'score:check': 'check',
+  'score:gate': 'gate',
+  'score:compare': 'compare',
+  'score:explain': 'explain',
+  'score:path': 'path',
+};
+
 const canonAliases = {
   'canon:normalize': 'normalize',
   'canon:key': 'key',
@@ -238,6 +249,11 @@ Commands:
   facts:query             Query materialized facts with source path/line provenance
   facts:verify            Validate local fact set integrity
   facts:check             Check configured fact requirements
+  score:compute           Compute canonical weighted score from report score JSON
+  score:check             Validate score math, thresholds, rationales, and dimensions
+  score:gate              Evaluate one score gate (apply, pdf, draft_answers, strong)
+  score:compare           Compare two score JSON files deterministically
+  score:explain           Show the active scoring rubric from templates/score.json
   canon:key               Print stable URL/company/role/company-role keys
   canon:compare           Compare two identifiers as same/possible/different
   canon:explain           Show the active identity canonicalization policy
@@ -295,6 +311,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge index:query "acme"
   job-forge facts:has --fact application.status --key "company-role:acme:staff-engineer"
   job-forge facts:query --fact job.url --tag report
+  job-forge score:check --input /tmp/score.json
+  job-forge score:gate --input /tmp/score.json --gate apply
   job-forge canon:key company-role --company "Acme, Inc." --role "Senior SWE - Remote US"
   job-forge canon:compare company "OpenAI, Inc." "Open AI"
   job-forge preflight:plan --candidates batch/preflight-candidates.json
@@ -441,6 +459,21 @@ if (cmd === 'facts' || factsAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/facts.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...factsArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'score' || scoreAliases[cmd]) {
+  const scoreArgs = cmd === 'score'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [scoreAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/score.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...scoreArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

@@ -25,7 +25,7 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [H6] Application outcomes flow through `batch/tracker-additions/*.tsv`, not `data/pipeline.md`. After any multi-apply run, the orchestrator MUST run `npx job-forge merge` then `npx job-forge verify` before ending the session.
   why: `pipeline.md` is the URL inbox (`[ ]` pending → `[x]` processed); `data/applications/YYYY-MM-DD.md` is the outcome log; the TSV pathway is the only safe bridge because `merge` handles column order and duplicate detection
 
-- [H7] Load-bearing facts passed to downstream subagents must originate from a file, not from prior subagent prose. Authoritative sources: `data/pipeline.md`, `data/scan-history.tsv`, `batch/scan-output-*.md`, `reports/{num}-*.md` with `**URL:**` / `**Score:**` headers, `batch/tracker-additions/*.tsv`, cached JD content returned by `npx job-forge cache:get --url ...`, source path/line pointers returned by `npx job-forge index:query ...`, and materialized fact records returned by `npx job-forge facts:query ...`.
+- [H7] Load-bearing facts passed to downstream subagents must originate from a file, not from prior subagent prose. Authoritative sources: `data/pipeline.md`, `data/scan-history.tsv`, `batch/scan-output-*.md`, `reports/{num}-*.md` with `**URL:**` / `**Score:**` headers, emitted score JSON validated by `npx job-forge score:check --input ...`, `batch/tracker-additions/*.tsv`, cached JD content returned by `npx job-forge cache:get --url ...`, source path/line pointers returned by `npx job-forge index:query ...`, and materialized fact records returned by `npx job-forge facts:query ...`.
   why: 2026-04-18 scan subagent returned 30 fabricated Greenhouse IDs in prose (plausible-looking, non-existent); orchestrator dispatched 30 downstream subagents that all 404'd. Subagents can hallucinate IDs, scores, and confirmation text — round-trip through a file or don't trust the value
 
 - [H8] Never paste proxy values from `config/profile.yml` into `task` prompts, status text, or summaries. If a proxy is configured, tell the subagent exactly: "Proxy is configured; read `config/profile.yml` and pass its top-level `proxy:` object to every `geometra_connect` call." Do not transcribe `server`, `username`, `password`, or `bypass`, even if you just read them from disk.
@@ -90,16 +90,19 @@ AI-powered job search pipeline: scans portals, evaluates offers, generates CVs v
 - [D18] Treat `templates/redact.json` as the source of truth before exporting local traces, prompts, reports, or fixtures outside the project. Use `npx job-forge redact:scan --input <file>`, `redact:apply --input <file> --output .jobforge-redacted/<file>`, or `redact:verify --input <file>` instead of hand-redacting with prose. This complements H8; it does not make it acceptable to paste secrets into prompts.
   why: `iso-redact` is not an MCP and adds no prompt/tool-schema tokens; it gives deterministic safe-export checks whose findings do not print matched secret values
 
+- [D19] Treat `templates/score.json` as the source of truth for offer scoring weights, bands, and gates. After emitting a report score JSON that will drive PDF/application/batch decisions, run `npx job-forge score:check --input <file>`; for apply decisions run `npx job-forge score:gate --input <file> --gate apply`. Do not recalculate weighted totals or thresholds manually when the local helper can check them.
+  why: `iso-score` is not an MCP and adds no prompt/tool-schema tokens; it makes scoring math, recommendation bands, and threshold booleans executable local policy instead of repeated model prose
+
 ## Procedure
 
 1. Check `cv.md`, `profile.yml`, and `portals.yml`; onboard if any file is missing.
 2. Pick and name the mode from **Routing** [D6]. No match → ask; do not guess.
-3. Read the active mode file [D3]. Use context bundle checks when changing context loads [D11]. Check cached artifacts before URL/JD refetches [D12]. Use artifact index lookups before broad file reads when they can answer the question [D13]. Use materialized facts when a fact query can answer the question [D13b]. Use canonical identity keys for duplicate checks [D15]. Use migration checks for harness drift [D14]. Use redaction checks before exporting local artifacts [D18]. Decide inline vs delegated work [D1].
+3. Read the active mode file [D3]. Use context bundle checks when changing context loads [D11]. Check cached artifacts before URL/JD refetches [D12]. Use artifact index lookups before broad file reads when they can answer the question [D13]. Use materialized facts when a fact query can answer the question [D13b]. Use canonical identity keys for duplicate checks [D15]. Use score checks/gates for scoring decisions [D19]. Use migration checks for harness drift [D14]. Use redaction checks before exporting local artifacts [D18]. Decide inline vs delegated work [D1].
 4. Prepare Geometra dispatches: cleanup [H3], canon/index/facts/ledger prefilter when useful [D8, D13, D13b, D15], dedupe [H2], location filter [D5], materialize candidate facts/gates and run preflight plan/check [D16], routing [D2, D10], proxy prompt hygiene [H8].
 5. Dispatch at most 2 tasks per round [H1]; wait for final outcomes, not just task ids [H5b], then settle the round with postflight status [D17].
 6. Keep multi-job form-filling out of the orchestrator [H4].
 7. Cross-check subagent facts against authoritative files [H7].
-8. Apply score gate [D4].
+8. Apply score gate [D4, D19].
 9. Merge contract-validated TSV outcomes [H6, D9].
 10. Verify tracker and run postflight check before ending [H6, D17].
 

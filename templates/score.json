@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "name": "jobforge",
+      "description": "Canonical JobForge job-fit rubric. Agents choose dimension scores; iso-score owns weighted math, bands, and gates.",
+      "scale": {
+        "min": 1,
+        "max": 5,
+        "precision": 1
+      },
+      "dimensions": [
+        {
+          "id": "north_star",
+          "label": "North Star alignment",
+          "weight": 0.25,
+          "required": true
+        },
+        {
+          "id": "cv_match",
+          "label": "CV match",
+          "weight": 0.15,
+          "required": true
+        },
+        {
+          "id": "seniority_fit",
+          "label": "Seniority fit",
+          "weight": 0.15,
+          "required": true
+        },
+        {
+          "id": "comp",
+          "label": "Comp estimate",
+          "weight": 0.1,
+          "required": true
+        },
+        {
+          "id": "growth",
+          "label": "Growth trajectory",
+          "weight": 0.1,
+          "required": true
+        },
+        {
+          "id": "remote",
+          "label": "Remote quality",
+          "weight": 0.05,
+          "required": true
+        },
+        {
+          "id": "company",
+          "label": "Company reputation",
+          "weight": 0.05,
+          "required": true
+        },
+        {
+          "id": "stack",
+          "label": "Tech stack modernity",
+          "weight": 0.05,
+          "required": true
+        },
+        {
+          "id": "speed",
+          "label": "Speed to offer",
+          "weight": 0.05,
+          "required": true
+        },
+        {
+          "id": "culture",
+          "label": "Cultural signals",
+          "weight": 0.05,
+          "required": true
+        }
+      ],
+      "bands": [
+        {
+          "id": "strong",
+          "label": "Strong match",
+          "min": 4.5
+        },
+        {
+          "id": "apply",
+          "label": "Apply",
+          "min": 3.5
+        },
+        {
+          "id": "apply_with_caveats",
+          "label": "Apply with caveats",
+          "min": 3
+        },
+        {
+          "id": "skip",
+          "label": "Skip",
+          "min": 1
+        }
+      ],
+      "gates": [
+        {
+          "id": "pdf",
+          "label": "Generate PDF",
+          "min": 3,
+          "blockOnMissingRequired": true,
+          "blockOnIssues": true
+        },
+        {
+          "id": "draft_answers",
+          "label": "Draft application answers",
+          "min": 3.5,
+          "blockOnMissingRequired": true,
+          "blockOnIssues": true
+        },
+        {
+          "id": "apply",
+          "label": "Apply or queue application",
+          "min": 3,
+          "blockOnMissingRequired": true,
+          "blockOnIssues": true
+        },
+        {
+          "id": "strong",
+          "label": "Strong match",
+          "min": 4.5,
+          "requireBand": "strong",
+          "blockOnIssues": true
+        }
+      ]
+    }
+  ]
+}

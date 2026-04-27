@@ -32,7 +32,7 @@ my-search/
 ├── .opencode/skills/job-forge.md     # → skill router
 ├── .opencode/agents/                 # → @general-free, @general-paid, @glm-minimal
 ├── modes/                            # → mode files
-├── templates/                        # → states.yml, portals.example.yml, cv-template.html, preflight.json, postflight.json
+├── templates/                        # → states.yml, portals.example.yml, cv-template.html, score.json, preflight.json, postflight.json
 ├── batch/batch-prompt.md             # → batch worker prompt
 ├── batch/batch-runner.sh             # → parallel orchestrator
 └── node_modules/job-forge/           # harness, installed from npm
@@ -40,7 +40,7 @@ my-search/
 
 Symlinks are created by the harness's `postinstall` hook (`bin/sync.mjs`) on every `npm install`. Real files at those paths are preserved — if a user locally customizes a mode file, the sync skips that symlink and warns.
 
-The consumer's `opencode.json` loads a small set of stable files as always-present instructions: `AGENTS.harness.md` (harness operational rules), `templates/states.yml` (canonical application states), `modes/_shared.md` (scoring model), and `cv.md` (the candidate's CV). Caching these in the prefix means agents never Read them as tool calls. Churning content (score calibration anchors, specific mode files) stays out of `instructions` and is Read on demand.
+The consumer's `opencode.json` loads a small set of stable files as always-present instructions: `AGENTS.harness.md` (harness operational rules), `templates/states.yml` (canonical application states), `modes/_shared.md` (scoring model), and `cv.md` (the candidate's CV). The executable scoring rubric lives in `templates/score.json` and is checked on demand with `job-forge score:*`, so agents do not need to repeat scoring math in the prompt. Caching stable prose in the prefix means agents never Read it as tool calls. Churning content (score calibration anchors, specific mode files) stays out of `instructions` and is Read on demand.
 
 The skill router (`.opencode/skills/job-forge.md`) loads mode and data files on demand, keeping per-session input tokens low (~20-40K for most modes instead of ~130-170K when everything was force-loaded).
 
@@ -122,7 +122,7 @@ For customization (archetypes, weights, tone), start with `_shared.md` and [CUST
    - D: Comp research (WebSearch).
    - E: CV personalization plan.
    - F: Interview prep (STAR stories).
-5. **Score**: Weighted average across 10 dimensions (1-5)
+5. **Score**: Weighted average across 10 dimensions (1-5), computed and gated from `templates/score.json`
 6. **Report**: Save as `reports/{num}-{company}-{date}.md`
 7. **PDF**: Generate ATS-optimized CV (`generate-pdf.mjs`)
 8. **Track**: Write one TSV per evaluation under `batch/tracker-additions/` (see [AGENTS.md](../AGENTS.md) TSV layout); fold rows into `data/applications.md` with `npm run merge` / `merge-tracker.mjs` when you are ready (not automatic in every workflow)
@@ -166,6 +166,7 @@ data/pipeline.md        →  Pending URLs and `local:jds/...` inbox (see modes/p
 jds/*.md                 →  Saved job descriptions referenced from the pipeline (`local:jds/{file}`)
 templates/states.yml     →  Canonical status values
 templates/canon.json      →  Canonical URL/company/role identity keys
+templates/score.json      →  Canonical weighted scoring rubric and gates
 templates/context.json    →  Deterministic mode/reference context bundle policy
 templates/facts.json      →  Source-backed fact extraction policy
 templates/preflight.json  →  Safe apply dispatch rounds/gates policy
@@ -186,6 +187,7 @@ Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeli
 - Index: `.jobforge-index.json` (created on demand by `job-forge index:*`; gitignored local lookup state)
 - Facts: `.jobforge-facts.json` (created on demand by `job-forge facts:*`; gitignored local fact state)
 - Canon: `templates/canon.json` (identity rules inspected with `job-forge canon:*`)
+- Score: `templates/score.json` (weighted rubric and gates inspected with `job-forge score:*`)
 - Preflight: `templates/preflight.json` (dispatch rounds/gates inspected with `job-forge preflight:*`)
 - Postflight: `templates/postflight.json` (dispatch outcomes/artifacts/post-steps inspected with `job-forge postflight:*`)
 - Migrations: `templates/migrations.json` (applied by `job-forge sync` and inspectable with `job-forge migrate:*`)
@@ -236,6 +238,7 @@ Scripts maintain data consistency. In a consumer project they're invoked via the
 | `scripts/ledger.mjs` | `npx job-forge ledger:status` / `ledger:has` / `ledger:rebuild` | Deterministic `@razroo/iso-ledger` state over tracker, TSV, and pipeline files |
 | `scripts/index.mjs` | `npx job-forge index:status` / `index:has` / `index:query` | Deterministic `@razroo/iso-index` lookup over reports, tracker rows, TSVs, pipeline, scan history, and ledger events |
 | `scripts/facts.mjs` | `npx job-forge facts:status` / `facts:has` / `facts:query` | Deterministic `@razroo/iso-facts` materialization over job URLs, scores, application statuses, preflight candidates, scan history, and ledger events |
+| `scripts/score.mjs` | `npx job-forge score:check` / `score:gate` / `score:explain` | Deterministic `@razroo/iso-score` checks for weighted offer scores, threshold booleans, recommendations, and score gates |
 | `scripts/canon.mjs` | `npx job-forge canon:normalize` / `canon:key` / `canon:compare` | Deterministic `@razroo/iso-canon` identity normalization for URLs, companies, roles, and company+role pairs |
 | `scripts/context.mjs` | `npx job-forge context:list` / `context:plan` / `context:check` / `context:render` | Deterministic `@razroo/iso-context` mode/reference context bundle planning and rendering |
 | `scripts/preflight.mjs` | `npx job-forge preflight:plan` / `preflight:check` / `preflight:explain` | Deterministic `@razroo/iso-preflight` dispatch planning for file-backed candidate facts and gates |

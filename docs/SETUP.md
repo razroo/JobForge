@@ -126,6 +126,8 @@ From your project root, these commands maintain the tracker and pipeline checks.
 | Pipeline health check | `npx job-forge verify` | `npm run verify` |
 | Merge `batch/tracker-additions/*.tsv` into the tracker | `npx job-forge merge` | `npm run merge` |
 | Inspect tracker row contract | `npx iso-contract explain jobforge.tracker-row --contracts templates/contracts.json` | _(none)_ |
+| Validate emitted score JSON | `npx job-forge score:check --input /tmp/score.json` | `npm run score:check -- --input /tmp/score.json` |
+| Check application score gate | `npx job-forge score:gate --input /tmp/score.json --gate apply` | `npm run score:gate -- --input /tmp/score.json --gate apply` |
 | Derive canonical company/role key | `npx job-forge canon:key company-role --company "Acme" --role "Staff Engineer"` | `npm run canon:key -- company-role --company ...` |
 | Compare identity values | `npx job-forge canon:compare company "OpenAI, Inc." "Open AI"` | `npm run canon:compare -- company ...` |
 | Inspect role capabilities | `npx job-forge capabilities:explain general-free` | `npm run capabilities:explain -- general-free` |

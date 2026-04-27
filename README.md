@@ -31,7 +31,7 @@ The scaffolded `opencode.json` already has three MCPs wired up — they launch a
 - **Gmail** — reads replies from recruiters
 - **state-trace** — typed working memory for cross-session context (resumed batches, recent decisions, repeated portal quirks). Install once with `python3 -m pip install "state-trace[mcp]"`; the MCP command is `state-trace-mcp`.
 
-JobForge also keeps MCP-free local workflow state: `templates/canon.json` defines URL/company/role identity keys via `@razroo/iso-canon`, `templates/contracts.json` defines tracker/apply artifact shapes via `@razroo/iso-contract`, `templates/capabilities.json` defines role capability boundaries via `@razroo/iso-capabilities`, `templates/context.json` defines deterministic mode/reference bundles via `@razroo/iso-context`, `templates/preflight.json` defines safe dispatch rounds/gates via `@razroo/iso-preflight`, `templates/postflight.json` defines safe dispatch settlement via `@razroo/iso-postflight`, `templates/redact.json` defines safe-export redaction rules via `@razroo/iso-redact`, `templates/migrations.json` defines safe consumer-project upgrades via `@razroo/iso-migrate`, `templates/facts.json` defines source-backed fact extraction via `@razroo/iso-facts`, `.jobforge-ledger/events.jsonl` records duplicate/status events via `@razroo/iso-ledger`, `.jobforge-cache/` stores reusable JD/artifact content via `@razroo/iso-cache`, `.jobforge-index.json` indexes artifact source pointers via `@razroo/iso-index`, and `.jobforge-facts.json` materializes queryable facts with provenance. None of these add always-on prompt or tool-schema tokens.
+JobForge also keeps MCP-free local workflow state and policy: `templates/canon.json` defines URL/company/role identity keys via `@razroo/iso-canon`, `templates/contracts.json` defines tracker/apply artifact shapes via `@razroo/iso-contract`, `templates/score.json` defines weighted scoring and gates via `@razroo/iso-score`, `templates/capabilities.json` defines role capability boundaries via `@razroo/iso-capabilities`, `templates/context.json` defines deterministic mode/reference bundles via `@razroo/iso-context`, `templates/preflight.json` defines safe dispatch rounds/gates via `@razroo/iso-preflight`, `templates/postflight.json` defines safe dispatch settlement via `@razroo/iso-postflight`, `templates/redact.json` defines safe-export redaction rules via `@razroo/iso-redact`, `templates/migrations.json` defines safe consumer-project upgrades via `@razroo/iso-migrate`, `templates/facts.json` defines source-backed fact extraction via `@razroo/iso-facts`, `.jobforge-ledger/events.jsonl` records duplicate/status events via `@razroo/iso-ledger`, `.jobforge-cache/` stores reusable JD/artifact content via `@razroo/iso-cache`, `.jobforge-index.json` indexes artifact source pointers via `@razroo/iso-index`, and `.jobforge-facts.json` materializes queryable facts with provenance. None of these add always-on prompt or tool-schema tokens.
 
 `npm install` also materializes symlinks for every supported agent harness — OpenCode, Cursor, Claude Code, and Codex — so you can run `opencode`, `cursor`, `claude`, or `codex` in the same project and each picks up the shared MCP config and instructions.
 
@@ -63,7 +63,7 @@ JobForge turns opencode into a full job search command center. Instead of manual
 | Feature | Description |
 |---------|-------------|
 | **Auto-Pipeline** | Paste a URL, get a full evaluation + PDF + tracker entry |
-| **Unified Scoring** | 10 weighted dimensions, consistent across all modes, with calibration anchors |
+| **Unified Scoring** | 10 weighted dimensions, consistent across all modes, with calibration anchors and deterministic `job-forge score:*` checks |
 | **Anti-AI-Detection CVs** | Writing rules that avoid ATS filters on Indeed, LinkedIn, Workday |
 | **6-Block Evaluation** | Role summary, CV match, level strategy, comp research, personalization, interview prep (STAR+R) |
 | **Interview Story Bank** | Curated bank of 10-12 stories with match counts, archetype tags, and automatic pruning |
@@ -78,7 +78,7 @@ JobForge turns opencode into a full job search command center. Instead of manual
 | **Durable Batch Orchestration** | `batch-runner.sh` uses `@razroo/iso-orchestrator` for resumable bundle execution, bounded fan-out, mutexed state writes, and workflow records in `.jobforge-runs/`. |
 | **Pipeline Integrity** | Automated merge, dedup, status normalization, health checks |
 | **Cost-Aware Agent Routing** | Three subagents (`@general-free`, `@general-paid`, `@glm-minimal`) with per-task tool surfaces. On OpenCode, JobForge pins all tiers to `opencode-go/deepseek-v4-flash` so application runs avoid overloaded free-model pools. See [Subagent Routing in AGENTS.md](AGENTS.md) for the task-to-agent mapping. |
-| **Trace + Telemetry + Guard + Contract + Canon + Ledger + Capabilities + Context + Cache + Index + Facts + Preflight + Postflight + Redact + Migrate** | `job-forge trace:*` exposes local OpenCode transcripts, `job-forge telemetry:*` summarizes runs, `job-forge guard:*` audits deterministic policy rules, `templates/contracts.json` enforces artifact shape with `iso-contract`, `job-forge canon:*` derives stable URL/company/role identity keys, `job-forge ledger:*` queries append-only workflow state, `job-forge capabilities:*` checks role boundaries, `job-forge context:*` plans mode/reference context bundles, `job-forge cache:*` reuses fetched JD/artifact content, `job-forge index:*` queries compact source pointers, `job-forge facts:*` materializes source-backed job/application/candidate facts, `job-forge preflight:*` plans bounded apply dispatch rounds from file-backed candidate facts, `job-forge postflight:*` settles dispatch outcomes/artifacts/post-steps, `job-forge redact:*` sanitizes local exports, and `job-forge migrate:*` applies safe consumer-project upgrades without MCP/tool-schema overhead. |
+| **Trace + Telemetry + Guard + Contract + Score + Canon + Ledger + Capabilities + Context + Cache + Index + Facts + Preflight + Postflight + Redact + Migrate** | `job-forge trace:*` exposes local OpenCode transcripts, `job-forge telemetry:*` summarizes runs, `job-forge guard:*` audits deterministic policy rules, `templates/contracts.json` enforces artifact shape with `iso-contract`, `job-forge score:*` computes/checks weighted offer scores, `job-forge canon:*` derives stable URL/company/role identity keys, `job-forge ledger:*` queries append-only workflow state, `job-forge capabilities:*` checks role boundaries, `job-forge context:*` plans mode/reference context bundles, `job-forge cache:*` reuses fetched JD/artifact content, `job-forge index:*` queries compact source pointers, `job-forge facts:*` materializes source-backed job/application/candidate facts, `job-forge preflight:*` plans bounded apply dispatch rounds from file-backed candidate facts, `job-forge postflight:*` settles dispatch outcomes/artifacts/post-steps, `job-forge redact:*` sanitizes local exports, and `job-forge migrate:*` applies safe consumer-project upgrades without MCP/tool-schema overhead. |
 | **Token Cost Visibility** | `job-forge tokens --days 1` for per-session breakdown; `job-forge session-report --since-minutes 60 --log` to flag sessions over budget and append history to `data/token-usage.tsv`. Auto-logged after every batch run. |
 
 ## Usage
@@ -118,7 +118,7 @@ You paste a job URL or description
          │
 ┌────────▼─────────┐
 │  A-F Evaluation   │  Match, gaps, comp research, STAR stories
-│  (reads cv.md)    │  Unified 10-dimension scoring model
+│  (reads cv.md)    │  Unified 10-dimension scoring model + iso-score checks
 └────────┬─────────┘
          │
     ┌────┼────┐
@@ -166,7 +166,7 @@ my-search/
 ├── .opencode/skills/job-forge.md # → skill router
 ├── .opencode/agents/             # → @general-free, @general-paid, @glm-minimal
 ├── modes/                        # → _shared.md + skill modes
-├── templates/                    # → states.yml, portals.example.yml, cv-template.html, canon.json, capabilities.json, context.json, index.json, facts.json, preflight.json, postflight.json, redact.json, migrations.json
+├── templates/                    # → states.yml, portals.example.yml, cv-template.html, canon.json, score.json, capabilities.json, context.json, index.json, facts.json, preflight.json, postflight.json, redact.json, migrations.json
 ├── batch/batch-prompt.md         # → batch worker prompt
 ├── batch/batch-runner.sh         # → parallel orchestrator
 │
@@ -192,7 +192,7 @@ JobForge/
 │   ├── sync.mjs                  # postinstall: creates symlinks in consumer project
 │   └── create-job-forge.mjs      # scaffolder
 ├── modes/                        # _shared.md + 16 skill modes
-├── templates/                    # cv-template.html, portals.example.yml, states.yml, canon.json, capabilities.json, context.json, facts.json, preflight.json, postflight.json, redact.json, migrations.json
+├── templates/                    # cv-template.html, portals.example.yml, states.yml, canon.json, score.json, capabilities.json, context.json, facts.json, preflight.json, postflight.json, redact.json, migrations.json
 ├── config/profile.example.yml    # template for consumer's profile.yml
 ├── batch/{batch-prompt.md,batch-runner.sh}   # batch orchestrator
 ├── scripts/
@@ -204,6 +204,7 @@ JobForge/
 │   ├── cache.mjs                 # iso-cache-backed local artifact cache CLI
 │   ├── index.mjs                 # iso-index-backed artifact lookup CLI
 │   ├── facts.mjs                 # iso-facts-backed local fact materialization
+│   ├── score.mjs                 # iso-score-backed offer scoring CLI
 │   ├── canon.mjs                 # iso-canon-backed identity normalization CLI
 │   ├── preflight.mjs             # iso-preflight-backed dispatch planning CLI
 │   ├── postflight.mjs            # iso-postflight-backed dispatch settlement CLI

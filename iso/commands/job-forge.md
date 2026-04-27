@@ -102,6 +102,11 @@ Artifact contracts (terminal, outside opencode):
   npx iso-contract explain jobforge.tracker-row --contracts templates/contracts.json
   npx job-forge tracker-line ... --write   # renders + validates tracker TSV locally
 
+Score policy (terminal, outside opencode):
+  npx job-forge score:check --input /tmp/score.json
+  npx job-forge score:gate --input /tmp/score.json --gate apply
+  npx job-forge score:explain
+
 Role capabilities (terminal, outside opencode):
   npx job-forge capabilities:explain general-free
   npx job-forge capabilities:check general-free --tool browser --mcp geometra --filesystem write
@@ -210,6 +215,9 @@ Step 4  — Materialize and check the dispatch plan
     (or another explicit JSON file). Include source paths for company, role,
     companyRoleKey, URL, score, duplicate/location gates, and any skip/block
     decision.
+  - If the candidate came from a fresh evaluation score JSON, run npx job-forge
+    score:check --input <score.json> and npx job-forge score:gate --input
+    <score.json> --gate apply before using that score as an apply gate.
   - Run npx job-forge preflight:check --candidates <file> to fail on missing
     sources or blocked gates, then npx job-forge preflight:plan --candidates
     <file> --json > batch/preflight-plan.json to get the bounded round list.

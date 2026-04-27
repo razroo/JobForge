@@ -158,6 +158,10 @@ Artifact lookup policy lives in `templates/index.json` and is built locally by `
 
 Fact extraction policy lives in `templates/facts.json` and is built locally by `@razroo/iso-facts`. Use `job-forge facts:query --fact job.url`, `job-forge facts:has --fact application.status --key "company-role:acme:staff-engineer"`, and `job-forge facts:verify` to work with compact source-backed facts instead of rereading reports, tracker day files, TSVs, candidate JSON, scan history, and ledger events. Query, has, verify, and check rebuild `.jobforge-facts.json` on demand, so scaffolded projects need no setup. JobForge canonicalizes company/role and URL fact keys through `templates/canon.json` before writing the fact set. This is not an MCP and does not add prompt or tool-schema tokens.
 
+## JobForge scoring policy
+
+Weighted scoring policy lives in `templates/score.json` and is enforced locally by `@razroo/iso-score`. Use `job-forge score:check --input <score.json>` to validate emitted report score JSON, `job-forge score:gate --input <score.json> --gate apply` to check an application threshold, and `job-forge score:explain` to inspect the active dimensions, weights, bands, and gates. Custom forks can change weights or thresholds in `templates/score.json`, but keep the dimension ids aligned with `modes/_shared.md` and report rendering.
+
 ## JobForge identity canonicalization
 
 URL, company, role, and company+role identity rules live in `templates/canon.json` and are enforced locally by `@razroo/iso-canon`. Use `job-forge canon:key company-role --company "OpenAI, Inc." --role "Senior SWE, AI Platform"` to derive the same duplicate key used by ledger/index helpers, and `job-forge canon:compare company "OpenAI, Inc." "Open AI"` to explain whether two values resolve to the same entity. Custom forks can extend aliases, suffixes, stop words, and match thresholds in `templates/canon.json`. This is not an MCP and does not add prompt or tool-schema tokens.

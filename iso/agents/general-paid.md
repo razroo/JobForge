@@ -39,7 +39,7 @@ same: produce the best final writing you can from the context you were given.
 - Write cover letters, Section G draft answers, "Why X?" responses.
 - Compose STAR+R interview stories and the story bank (`modes/offer.md` Block F).
 - Draft LinkedIn outreach messages (`modes/contact.md`).
-- Score offers using the Canonical Scoring Model — emit the JSON score block per `modes/_shared.md`, then the narrative report.
+- Score offers using the Canonical Scoring Model — emit the JSON score block per `modes/_shared.md`, validate it with `job-forge score:check` when it drives PDF/apply/batch decisions, then write the narrative report.
 - Drive a single high-stakes application form only when the orchestrator explicitly dispatches you in `apply` mode. In that case, follow `modes/apply.md` exactly and use the same Geometra/Gmail flow as `@general-free`.
 
 ## Skip These Tasks

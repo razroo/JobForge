@@ -147,7 +147,7 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 ## Use this canonical scoring model (SINGLE SOURCE OF TRUTH)
 
-**ALL evaluation modes MUST use this exact model.** Whether the offer is evaluated via `offer`, `auto-pipeline`, `batch`, or compared via `compare`, the score is computed the same way. This ensures scores are comparable across the entire pipeline.
+**ALL evaluation modes MUST use this exact model.** Whether the offer is evaluated via `offer`, `auto-pipeline`, `batch`, or compared via `compare`, the score is computed the same way. The executable source of truth is `templates/score.json`; use `npx job-forge score:check --input <score.json>` and `score:gate --gate apply` when validating emitted score JSON instead of recalculating gates in prose. This ensures scores are comparable across the entire pipeline.
 
 | # | Dimension | Weight | 1 | 3 | 5 |
 |---|-----------|--------|---|---|---|
@@ -209,8 +209,9 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 **After emitting the JSON:**
 
 1. Embed the same JSON block verbatim in the report `.md` under a `## Score` section (fenced as ` ```json `).
-2. Write Blocks A-F **referencing** the scores by key (e.g., "Seniority fit: 3/5 — Senior IC, no formal management"). Do NOT re-list all 10 dimensions in prose. Do NOT repeat the rationales verbatim.
-3. Do NOT narrate the scoring process in thinking before emitting the JSON. Decide, emit, move on.
+2. Save/check the emitted block when it will drive a PDF, application gate, comparison, or batch dispatch: `npx job-forge score:check --input <score.json>` and, for apply decisions, `npx job-forge score:gate --input <score.json> --gate apply`.
+3. Write Blocks A-F **referencing** the scores by key (e.g., "Seniority fit: 3/5 — Senior IC, no formal management"). Do NOT re-list all 10 dimensions in prose. Do NOT repeat the rationales verbatim.
+4. Do NOT narrate the scoring process in thinking before emitting the JSON. Decide, emit, move on.
 
 **Score interpretation (use consistently everywhere):**
 - **4.5-5.0** — Strong match. Generate PDF + draft answers. Apply promptly.

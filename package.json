@@ -1,6 +1,6 @@
 {
   "name": "job-forge",
-  "version": "2.14.31",
+  "version": "2.14.32",
   "description": "AI-powered job search pipeline built on opencode",
   "type": "module",
   "bin": {
@@ -62,6 +62,12 @@
     "facts:has": "node bin/job-forge.mjs facts:has",
     "facts:query": "node bin/job-forge.mjs facts:query",
     "facts:explain": "node bin/job-forge.mjs facts:explain",
+    "score:compute": "node bin/job-forge.mjs score:compute",
+    "score:verify": "node bin/job-forge.mjs score:verify",
+    "score:check": "node bin/job-forge.mjs score:check",
+    "score:gate": "node bin/job-forge.mjs score:gate",
+    "score:compare": "node bin/job-forge.mjs score:compare",
+    "score:explain": "node bin/job-forge.mjs score:explain",
     "canon:normalize": "node bin/job-forge.mjs canon:normalize",
     "canon:key": "node bin/job-forge.mjs canon:key",
     "canon:compare": "node bin/job-forge.mjs canon:compare",
@@ -160,6 +166,7 @@
     "@razroo/iso-postflight": "^0.1.0",
     "@razroo/iso-preflight": "^0.1.0",
     "@razroo/iso-redact": "^0.1.0",
+    "@razroo/iso-score": "^0.1.0",
     "@razroo/iso-trace": "^0.4.0",
     "playwright": "^1.58.1"
   },
