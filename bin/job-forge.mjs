@@ -25,6 +25,7 @@
  *   context:*      Query/render deterministic context bundles via iso-context
  *   cache:*        Reuse local deterministic artifacts via iso-cache
  *   index:*        Query local artifacts via iso-index
+ *   canon:*        Compute deterministic identity keys via iso-canon
  *   migrate:*      Apply deterministic consumer-project migrations via iso-migrate
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
  *   help, --help   Show this message
@@ -128,6 +129,14 @@ const indexAliases = {
   'index:path': 'path',
 };
 
+const canonAliases = {
+  'canon:normalize': 'normalize',
+  'canon:key': 'key',
+  'canon:compare': 'compare',
+  'canon:explain': 'explain',
+  'canon:path': 'path',
+};
+
 const migrateAliases = {
   'migrate:plan': 'plan',
   'migrate:apply': 'apply',
@@ -186,6 +195,9 @@ Commands:
   index:has               Check indexed URL/company-role/report facts without loading source files
   index:query             Query indexed reports, tracker rows, TSVs, scan history, pipeline, and ledger
   index:verify            Validate local artifact index integrity
+  canon:key               Print stable URL/company/role/company-role keys
+  canon:compare           Compare two identifiers as same/possible/different
+  canon:explain           Show the active identity canonicalization policy
   migrate:plan            Preview deterministic consumer-project migrations
   migrate:apply           Apply deterministic consumer-project migrations
   migrate:check           Fail if migrations are pending
@@ -228,6 +240,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge cache:put --url https://example.test/jobs/123 --input @jds/example.md
   job-forge index:has --key "company-role:acme:staff-engineer"
   job-forge index:query "acme"
+  job-forge canon:key company-role --company "Acme, Inc." --role "Senior SWE - Remote US"
+  job-forge canon:compare company "OpenAI, Inc." "Open AI"
   job-forge migrate:check
   job-forge migrate:apply
 
@@ -351,6 +365,21 @@ if (cmd === 'index' || indexAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/index.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...indexArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'canon' || canonAliases[cmd]) {
+  const canonArgs = cmd === 'canon'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [canonAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/canon.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...canonArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

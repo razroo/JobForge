@@ -152,7 +152,11 @@ Mode/reference context bundles live in `templates/context.json` and are planned 
 
 ## JobForge artifact index
 
-Artifact lookup policy lives in `templates/index.json` and is built locally by `@razroo/iso-index`. Use `job-forge index:has --key "company-role:acme:staff-engineer"` as a cheap duplicate/source prefilter, `job-forge index:query "acme"` to get compact source path/line pointers, and `job-forge index:verify` to validate `.jobforge-index.json`. Query, has, and verify rebuild the index on demand, so scaffolded projects need no setup. This is not an MCP and does not add tool-schema tokens.
+Artifact lookup policy lives in `templates/index.json` and is built locally by `@razroo/iso-index`. Use `job-forge index:has --key "company-role:acme:staff-engineer"` as a cheap duplicate/source prefilter, `job-forge index:query "acme"` to get compact source path/line pointers, and `job-forge index:verify` to validate `.jobforge-index.json`. Query, has, and verify rebuild the index on demand, so scaffolded projects need no setup. JobForge canonicalizes company/role and URL records through `templates/canon.json` before writing the index. This is not an MCP and does not add tool-schema tokens.
+
+## JobForge identity canonicalization
+
+URL, company, role, and company+role identity rules live in `templates/canon.json` and are enforced locally by `@razroo/iso-canon`. Use `job-forge canon:key company-role --company "OpenAI, Inc." --role "Senior SWE, AI Platform"` to derive the same duplicate key used by ledger/index helpers, and `job-forge canon:compare company "OpenAI, Inc." "Open AI"` to explain whether two values resolve to the same entity. Custom forks can extend aliases, suffixes, stop words, and match thresholds in `templates/canon.json`. This is not an MCP and does not add prompt or tool-schema tokens.
 
 ## JobForge consumer migrations
 

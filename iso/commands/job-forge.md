@@ -81,6 +81,10 @@ Local artifact index (terminal, outside opencode):
   npx job-forge index:has --key "company-role:acme:staff-engineer"
   npx job-forge index:query "acme"
 
+Identity keys (terminal, outside opencode):
+  npx job-forge canon:key company-role --company "Acme" --role "Staff Engineer"
+  npx job-forge canon:compare company "OpenAI, Inc." "Open AI"
+
 Consumer migrations (terminal, outside opencode):
   npx job-forge migrate:plan           # preview package.json/.gitignore drift
   npx job-forge migrate:apply          # apply safe harness upgrade migrations
@@ -171,11 +175,13 @@ Step 1  — Enumerate candidates
   - Build ordered list: candidates = [job_1, job_2, ..., job_N]
 
 Step 2  — Dedup against already-applied
-  - Run npx job-forge index:has --key "company-role:<company-slug>:<role-slug>"
-    as a fast local artifact prefilter when company+role is known. It rebuilds
-    .jobforge-index.json on demand from templates/index.json. A hit means the
-    role has already appeared in tracker files or tracker TSVs and can be
-    dropped before dispatch.
+  - Derive the stable key with npx job-forge canon:key company-role --company
+    "<company>" --role "<role>" when company+role is known.
+  - Run npx job-forge index:has --key "<canon-key>" as a fast local artifact
+    prefilter. It rebuilds .jobforge-index.json on demand from
+    templates/index.json and canonicalizes indexed company/role records through
+    templates/canon.json. A hit means the role has already appeared in tracker
+    files or tracker TSVs and can be dropped before dispatch.
   - If .jobforge-ledger/events.jsonl exists, use npx job-forge ledger:has as a
     fast prefilter for obvious company+role Applied duplicates. A ledger match
     can be dropped before dispatch without loading tracker files into context.

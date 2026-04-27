@@ -13,6 +13,7 @@
           "npx job-forge context:*",
           "npx job-forge cache:*",
           "npx job-forge index:*",
+          "npx job-forge canon:*",
           "rg *"
         ],
         "deny": [
@@ -60,7 +61,8 @@
           "npx job-forge ledger:*",
           "npx job-forge capabilities:*",
           "npx job-forge cache:*",
-          "npx job-forge index:*"
+          "npx job-forge index:*",
+          "npx job-forge canon:*"
         ],
         "deny": [
           "task *"
@@ -100,6 +102,7 @@
       "commands": {
         "allow": [
           "npx job-forge slugify *",
+          "npx job-forge canon:*",
           "npx job-forge today",
           "npx job-forge next-num"
         ]

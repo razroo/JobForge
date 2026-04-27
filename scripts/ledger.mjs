@@ -16,6 +16,8 @@ import {
   jobForgeLedgerPath,
   jobForgeLedgerSummary,
   ledgerExists,
+  legacyCompanyRoleKey,
+  legacyUrlKey,
   readJobForgeLedger,
   urlKey,
   verifyJobForgeLedger,
@@ -201,8 +203,9 @@ function verify(opts) {
 }
 
 function has(opts) {
-  const filters = queryFilters(opts);
-  const events = queryEvents(readJobForgeLedger(PROJECT_DIR), filters);
+  const filters = queryFilterCandidates(opts);
+  const ledger = readJobForgeLedger(PROJECT_DIR);
+  const events = uniqueEvents(filters.flatMap((filter) => queryEvents(ledger, filter)));
   if (opts.json) {
     console.log(JSON.stringify({ match: events.length > 0, count: events.length, filters }, null, 2));
   } else if (events.length > 0) {
@@ -235,6 +238,28 @@ function queryFilters(opts) {
   if (Object.keys(opts.where || {}).length > 0) filters.where = opts.where;
   if (Number.isFinite(opts.limit) && opts.limit > 0) filters.limit = opts.limit;
   return filters;
+}
+
+function queryFilterCandidates(opts) {
+  const primary = queryFilters(opts);
+  const candidates = [primary];
+  const legacy = { ...primary };
+  if (opts.url) legacy.key = legacyUrlKey(opts.url);
+  if (opts.company || opts.role) legacy.key = legacyCompanyRoleKey(opts.company, opts.role);
+  if (legacy.key && legacy.key !== primary.key) candidates.push(legacy);
+  return candidates;
+}
+
+function uniqueEvents(events) {
+  const seen = new Set();
+  const out = [];
+  for (const event of events) {
+    const id = event.id || event.idempotencyKey || JSON.stringify(event);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(event);
+  }
+  return out;
 }
 
 function collectProjectEvents() {

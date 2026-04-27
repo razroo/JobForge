@@ -164,6 +164,7 @@ data/pipeline.md        →  Pending URLs and `local:jds/...` inbox (see modes/p
 .jobforge-index.json     →  Deterministic artifact lookup index built from templates/index.json
 jds/*.md                 →  Saved job descriptions referenced from the pipeline (`local:jds/{file}`)
 templates/states.yml     →  Canonical status values
+templates/canon.json      →  Canonical URL/company/role identity keys
 templates/context.json    →  Deterministic mode/reference context bundle policy
 templates/migrations.json → Safe consumer-project upgrade policy
 templates/cv-template.html → PDF generation template
@@ -179,6 +180,7 @@ Create `data/pipeline.md` when you start using the URL inbox (`/job-forge pipeli
 - Tracker TSVs: `batch/tracker-additions/{num}-{company-slug}.tsv` (one file per evaluation; merged files move under `batch/tracker-additions/merged/`; shape enforced by `templates/contracts.json`)
 - Ledger: `.jobforge-ledger/events.jsonl` (created by `job-forge ledger:rebuild`, `tracker-line --write`, or `merge`; gitignored personal state)
 - Index: `.jobforge-index.json` (created on demand by `job-forge index:*`; gitignored local lookup state)
+- Canon: `templates/canon.json` (identity rules inspected with `job-forge canon:*`)
 - Migrations: `templates/migrations.json` (applied by `job-forge sync` and inspectable with `job-forge migrate:*`)
 - Capabilities: `templates/capabilities.json` (role boundary policy inspected with `job-forge capabilities:*`)
 - Context: `templates/context.json` (mode/reference file bundles inspected with `job-forge context:*`)
@@ -225,6 +227,7 @@ Scripts maintain data consistency. In a consumer project they're invoked via the
 | `scripts/guard.mjs` | `npx job-forge guard:audit` / `guard:explain` | Deterministic `@razroo/iso-guard` policy audits over local OpenCode traces |
 | `scripts/ledger.mjs` | `npx job-forge ledger:status` / `ledger:has` / `ledger:rebuild` | Deterministic `@razroo/iso-ledger` state over tracker, TSV, and pipeline files |
 | `scripts/index.mjs` | `npx job-forge index:status` / `index:has` / `index:query` | Deterministic `@razroo/iso-index` lookup over reports, tracker rows, TSVs, pipeline, scan history, and ledger events |
+| `scripts/canon.mjs` | `npx job-forge canon:normalize` / `canon:key` / `canon:compare` | Deterministic `@razroo/iso-canon` identity normalization for URLs, companies, roles, and company+role pairs |
 | `scripts/context.mjs` | `npx job-forge context:list` / `context:plan` / `context:check` / `context:render` | Deterministic `@razroo/iso-context` mode/reference context bundle planning and rendering |
 | `scripts/migrate.mjs` | `npx job-forge migrate:plan` / `migrate:apply` / `migrate:check` | Deterministic `@razroo/iso-migrate` consumer-project upgrades for scripts and generated-artifact ignores |
 | `tracker-lib.mjs` | _(library)_ | Shared helpers for reading/writing day-based tracker files — imported by merge/dedup/verify/normalize |
