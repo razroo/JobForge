@@ -4,6 +4,7 @@ data/applications/
 data/applications.md
 data/pipeline.md
 data/scan-history.tsv
+data/timeline-events.jsonl
 reports/*.md
 !reports/.gitkeep
 output/*
@@ -32,6 +33,8 @@ portals.yml
 .jobforge-cache/
 .jobforge-index.json
 .jobforge-facts.json
+.jobforge-timeline.json
+.jobforge-timeline-events.jsonl
 .jobforge-redacted/
 node_modules/
 

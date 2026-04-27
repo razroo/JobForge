@@ -1,6 +1,6 @@
 # Mode: followup — Follow-Up Timing & Nudge System
 
-Scans all day files in `data/applications/` for entries that need follow-up action based on their current state and how long they've been in that state.
+Uses `job-forge timeline:*` to scan local tracker and dated pipeline sources for entries that need follow-up action based on their current state and how long they've been in that state.
 
 **This mode is read-only on existing pipeline logic.** It reads the tracker and suggests actions — it never changes scores, reports, or pipeline behavior.
 
@@ -19,11 +19,11 @@ Scans all day files in `data/applications/` for entries that need follow-up acti
 
 ## Run This Workflow
 
-1. **Read** all day files in `data/applications/` — parse all entries with dates.
-2. **Compute** days since the date column for each entry (using today's date).
-3. **Filter** to entries matching the Timing Rules table above.
-4. **Sort** by urgency (most overdue first).
-5. **Present** action list.
+1. Run `npx job-forge timeline:due` first. It rebuilds the due queue from local tracker/pipeline sources without loading growing files into prompt context.
+2. If the user wants a persistent artifact, run `npx job-forge timeline:build`.
+3. Use `npx job-forge timeline:check --fail-on overdue` when the workflow should fail only on stale actions.
+4. Present the action list grouped by `OVERDUE`, `DUE`, and upcoming manual context if needed.
+5. Only read individual tracker/report files after the user selects an action that needs message drafting.
 
 ```
 ## Follow-Up Actions — {today's date}

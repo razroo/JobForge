@@ -20,6 +20,7 @@ const checks = [
   ["H6 requires merge and verify", () => every(files.instructions, ["batch/tracker-additions/*.tsv", "npx job-forge merge", "npx job-forge verify"])],
   ["H7 distrusts subagent prose", () => every(files.instructions, ["must originate from a file", "not from prior subagent prose"])],
   ["score policy points to local helper", () => every(files.instructions, ["[D19]", "templates/score.json", "npx job-forge score:check", "npx job-forge score:gate"])],
+  ["timeline policy points to local helper", () => every(files.instructions, ["[D20]", "templates/timeline.json", "npx job-forge timeline:due", "npx job-forge timeline:check --fail-on overdue"])],
   ["shared prompt points to on-demand references", () => every(files.instructions, ["modes/{mode}.md", "modes/reference-setup.md", "modes/reference-portals.md", "modes/reference-geometra.md"])],
   ["apply mode owns high-stakes upgrade", () => every(files.apply, ["[D8]", "@general-paid", "4.0/5", "high-stakes"])],
   ["apply mode blocks provider auto-downgrade", () => every(files.apply, ["[D9]", "do not auto-downgrade", "inspect telemetry before retrying"])],

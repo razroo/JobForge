@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "defaults": {
+    "overdueAfter": "7d",
+    "latestOnly": true
+  },
+  "rules": [
+    {
+      "id": "applied-follow-up",
+      "label": "Applied follow-up",
+      "description": "Applications in Applied state should receive a follow-up after one week.",
+      "action": "send_follow_up",
+      "match": {
+        "type": "application.status",
+        "where": {
+          "data.status": "Applied"
+        }
+      },
+      "after": "7d"
+    },
+    {
+      "id": "contacted-follow-up",
+      "label": "Contacted follow-up",
+      "description": "Outreach/contacted rows should receive a shorter follow-up after five days.",
+      "action": "send_contact_follow_up",
+      "match": {
+        "type": "application.status",
+        "where": {
+          "data.status": "Contacted"
+        }
+      },
+      "after": "5d",
+      "overdueAfter": "7d"
+    },
+    {
+      "id": "interview-thank-you",
+      "label": "Interview thank-you",
+      "description": "Interview rows should prompt a thank-you note the next day.",
+      "action": "send_thank_you",
+      "match": {
+        "type": "application.status",
+        "where": {
+          "data.status": "Interview"
+        }
+      },
+      "after": "1d",
+      "overdueAfter": "2d"
+    },
+    {
+      "id": "interview-follow-up",
+      "label": "Interview follow-up",
+      "description": "Interview rows without a later status should receive a recruiter nudge after one week.",
+      "action": "follow_up_after_interview",
+      "match": {
+        "type": "application.status",
+        "where": {
+          "data.status": "Interview"
+        }
+      },
+      "after": "7d",
+      "overdueAfter": "10d"
+    },
+    {
+      "id": "stale-pipeline-item",
+      "label": "Stale pending pipeline item",
+      "description": "Pending pipeline URLs with a known source date should be processed or discarded after three days.",
+      "action": "process_or_discard_pipeline_item",
+      "match": {
+        "type": "pipeline.item",
+        "where": {
+          "data.status": "pending"
+        }
+      },
+      "after": "3d",
+      "overdueAfter": "4d",
+      "suppressWhen": [
+        {
+          "type": [
+            "pipeline.processed",
+            "application.status"
+          ]
+        }
+      ]
+    }
+  ]
+}

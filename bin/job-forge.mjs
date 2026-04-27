@@ -30,6 +30,7 @@
  *   canon:*        Compute deterministic identity keys via iso-canon
  *   preflight:*    Plan safe dispatch rounds via iso-preflight
  *   postflight:*   Settle dispatch outcomes via iso-postflight
+ *   timeline:*     Plan follow-up/next-action windows via iso-timeline
  *   redact:*       Sanitize local exports via iso-redact
  *   migrate:*      Apply deterministic consumer-project migrations via iso-migrate
  *   sync           Re-run the harness symlink sync (bin/sync.mjs)
@@ -177,6 +178,17 @@ const postflightAliases = {
   'postflight:path': 'path',
 };
 
+const timelineAliases = {
+  'timeline:status': 'status',
+  'timeline:build': 'build',
+  'timeline:plan': 'plan',
+  'timeline:due': 'due',
+  'timeline:check': 'check',
+  'timeline:verify': 'verify',
+  'timeline:explain': 'explain',
+  'timeline:path': 'path',
+};
+
 const redactAliases = {
   'redact:scan': 'scan',
   'redact:verify': 'verify',
@@ -263,6 +275,11 @@ Commands:
   postflight:status       Reconcile dispatch plan, outcomes, artifacts, and post-steps
   postflight:check        Fail unless a dispatched workflow is fully settled
   postflight:explain      Show the active postflight workflow policy
+  timeline:status         Show local follow-up/next-action timeline status
+  timeline:build          Build .jobforge-timeline.json from tracker/pipeline sources
+  timeline:due            Show currently due/overdue follow-up actions
+  timeline:check          Fail on due/overdue timeline actions per policy
+  timeline:explain        Show the active timeline policy
   redact:scan             Scan local text for sensitive values before export
   redact:verify           Fail if local text still contains sensitive values
   redact:apply            Write a sanitized copy of local text
@@ -319,6 +336,8 @@ Pass --help after a command to see its own flags, e.g.:
   job-forge preflight:check --candidates batch/preflight-candidates.json
   job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
   job-forge postflight:check --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
+  job-forge timeline:due
+  job-forge timeline:check --fail-on overdue
   job-forge redact:scan --input raw-session.jsonl
   job-forge redact:apply --input raw-session.jsonl --output .jobforge-redacted/session.jsonl
   job-forge migrate:check
@@ -519,6 +538,21 @@ if (cmd === 'postflight' || postflightAliases[cmd]) {
 
   const scriptPath = join(PKG_ROOT, 'scripts/postflight.mjs');
   const result = spawnSync(process.execPath, [scriptPath, ...postflightArgs], {
+    stdio: 'inherit',
+    cwd: PROJECT_DIR,
+    env: process.env,
+  });
+
+  process.exit(result.status ?? 1);
+}
+
+if (cmd === 'timeline' || timelineAliases[cmd]) {
+  const timelineArgs = cmd === 'timeline'
+    ? (rest.length === 0 ? ['help'] : rest)
+    : [timelineAliases[cmd], ...rest];
+
+  const scriptPath = join(PKG_ROOT, 'scripts/timeline.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, ...timelineArgs], {
     stdio: 'inherit',
     cwd: PROJECT_DIR,
     env: process.env,

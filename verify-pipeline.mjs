@@ -19,6 +19,7 @@
  * 10. Ledger file verifies if .jobforge-ledger/events.jsonl exists
  * 11. Artifact index verifies if .jobforge-index.json exists
  * 12. Fact set verifies if .jobforge-facts.json exists
+ * 13. Timeline verifies if .jobforge-timeline.json exists
  *
  * Run: node verify-pipeline.mjs   (from repo root; same as npm run verify)
  */
@@ -33,6 +34,7 @@ import {
 import { jobForgeLedgerPath, ledgerExists, verifyJobForgeLedger } from './lib/jobforge-ledger.mjs';
 import { indexExists, jobForgeIndexPath, verifyJobForgeIndex } from './lib/jobforge-index.mjs';
 import { factsExist, jobForgeFactsPath, verifyJobForgeFacts } from './lib/jobforge-facts.mjs';
+import { jobForgeTimelinePath, timelineExists, verifyJobForgeTimeline } from './lib/jobforge-timeline.mjs';
 import {
   canonicalStatusValues,
   formatContractIssues,
@@ -189,6 +191,22 @@ function verifyFactsIfPresent() {
   }
 }
 
+function verifyTimelineIfPresent() {
+  if (!timelineExists(PROJECT_DIR)) {
+    ok('Timeline not initialized');
+    return;
+  }
+  const result = verifyJobForgeTimeline({}, PROJECT_DIR);
+  for (const issue of result.issues) {
+    const msg = `timeline: ${issue.code}: ${issue.message}`;
+    if (issue.severity === 'error') error(msg);
+    else warn(msg);
+  }
+  if (result.ok) {
+    ok(`Timeline valid (${relative(PROJECT_DIR, jobForgeTimelinePath(PROJECT_DIR))})`);
+  }
+}
+
 // --- Read entries ---
 const { entries, source } = readAllEntries();
 
@@ -200,6 +218,7 @@ if (entries.length === 0) {
   verifyLedgerIfPresent();
   verifyIndexIfPresent();
   verifyFactsIfPresent();
+  verifyTimelineIfPresent();
   console.log('\n' + '='.repeat(50));
   console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);
   if (errors === 0 && warnings === 0) console.log('🟢 Pipeline is clean!');
@@ -337,6 +356,7 @@ verifyStatesYamlDrift();
 verifyLedgerIfPresent();
 verifyIndexIfPresent();
 verifyFactsIfPresent();
+verifyTimelineIfPresent();
 
 console.log('\n' + '='.repeat(50));
 console.log(`📊 Pipeline Health: ${errors} errors, ${warnings} warnings`);

@@ -1,6 +1,6 @@
 {
   "name": "job-forge",
-  "version": "2.14.32",
+  "version": "2.14.33",
   "description": "AI-powered job search pipeline built on opencode",
   "type": "module",
   "bin": {
@@ -78,6 +78,13 @@
     "postflight:status": "node bin/job-forge.mjs postflight:status",
     "postflight:check": "node bin/job-forge.mjs postflight:check",
     "postflight:explain": "node bin/job-forge.mjs postflight:explain",
+    "timeline:status": "node bin/job-forge.mjs timeline:status",
+    "timeline:build": "node bin/job-forge.mjs timeline:build",
+    "timeline:plan": "node bin/job-forge.mjs timeline:plan",
+    "timeline:due": "node bin/job-forge.mjs timeline:due",
+    "timeline:check": "node bin/job-forge.mjs timeline:check",
+    "timeline:verify": "node bin/job-forge.mjs timeline:verify",
+    "timeline:explain": "node bin/job-forge.mjs timeline:explain",
     "redact:scan": "node bin/job-forge.mjs redact:scan",
     "redact:verify": "node bin/job-forge.mjs redact:verify",
     "redact:apply": "node bin/job-forge.mjs redact:apply",
@@ -167,6 +174,7 @@
     "@razroo/iso-preflight": "^0.1.0",
     "@razroo/iso-redact": "^0.1.0",
     "@razroo/iso-score": "^0.1.0",
+    "@razroo/iso-timeline": "^0.1.0",
     "@razroo/iso-trace": "^0.4.0",
     "playwright": "^1.58.1"
   },

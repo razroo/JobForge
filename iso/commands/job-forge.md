@@ -93,6 +93,10 @@ Postflight dispatch settlement (terminal, outside opencode):
   npx job-forge postflight:status --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
   npx job-forge postflight:check --plan batch/preflight-plan.json --outcomes batch/postflight-outcomes.json
 
+Follow-up timeline (terminal, outside opencode):
+  npx job-forge timeline:due
+  npx job-forge timeline:check --fail-on overdue
+
 Consumer migrations (terminal, outside opencode):
   npx job-forge migrate:plan           # preview package.json/.gitignore drift
   npx job-forge migrate:apply          # apply safe harness upgrade migrations

@@ -158,6 +158,10 @@ Artifact lookup policy lives in `templates/index.json` and is built locally by `
 
 Fact extraction policy lives in `templates/facts.json` and is built locally by `@razroo/iso-facts`. Use `job-forge facts:query --fact job.url`, `job-forge facts:has --fact application.status --key "company-role:acme:staff-engineer"`, and `job-forge facts:verify` to work with compact source-backed facts instead of rereading reports, tracker day files, TSVs, candidate JSON, scan history, and ledger events. Query, has, verify, and check rebuild `.jobforge-facts.json` on demand, so scaffolded projects need no setup. JobForge canonicalizes company/role and URL fact keys through `templates/canon.json` before writing the fact set. This is not an MCP and does not add prompt or tool-schema tokens.
 
+## JobForge timeline policy
+
+Follow-up and next-action policy lives in `templates/timeline.json` and is planned locally by `@razroo/iso-timeline`. Use `job-forge timeline:due` to list due/overdue nudges, `job-forge timeline:check --fail-on overdue` to fail only when action is stale, and `job-forge timeline:build` to materialize `.jobforge-timeline-events.jsonl` plus `.jobforge-timeline.json` for inspection. It reads tracker rows and dated pipeline items from local files, so scaffolded projects need no setup. This is not an MCP and does not add prompt or tool-schema tokens.
+
 ## JobForge scoring policy
 
 Weighted scoring policy lives in `templates/score.json` and is enforced locally by `@razroo/iso-score`. Use `job-forge score:check --input <score.json>` to validate emitted report score JSON, `job-forge score:gate --input <score.json> --gate apply` to check an application threshold, and `job-forge score:explain` to inspect the active dimensions, weights, bands, and gates. Custom forks can change weights or thresholds in `templates/score.json`, but keep the dimension ids aligned with `modes/_shared.md` and report rendering.
