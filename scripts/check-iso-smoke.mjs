@@ -20,6 +20,7 @@ const checks = [
   ["H5 blocks same-company concurrent retry", () => every(files.instructions, ["Re-dispatch the same company only AFTER", "previous subagent returns"])],
   ["H6 requires merge and verify", () => every(files.instructions, ["batch/tracker-additions/*.tsv", "npx job-forge merge", "npx job-forge verify"])],
   ["H7 distrusts subagent prose", () => every(files.instructions, ["must originate from a file", "not from prior subagent prose"])],
+  ["H8 keeps proxy secret and requires stealth", () => every(files.instructions, ["[H8]", "Do not transcribe `server`, `username`, `password`, or `bypass`", "`stealth: true`"])],
   ["root points to consolidated helper reference", () => every(files.instructions, ["[D8]", "modes/reference-local-helpers.md", "deterministic local helpers"])],
   ["helper reference covers score/timeline/prioritize/lineage", () => every(files.helpers, ["templates/score.json", "npx job-forge score:*", "templates/timeline.json", "npx job-forge timeline:*", "templates/prioritize.json", "npx job-forge prioritize:*", ".jobforge-lineage.json", "npx job-forge lineage:*"])],
   ["root helper defaults are consolidated", () => !/\[D(?:9|1\d|2[0-9])\]/.test(files.instructions)],

@@ -202,7 +202,7 @@ const consumerPkg = {
     // One command to pull the latest harness and any locally-pinned MCP
     // packages. npm update is a no-op on packages not in package.json, so
     // listing @razroo/gmail-mcp + @geometra/mcp is safe for consumers that
-    // invoke them via `npx -y` without pinning.
+    // invoke them via npx without local package pins.
     'update-harness': 'npm update job-forge @razroo/gmail-mcp @geometra/mcp && job-forge sync && node -e "console.log(\'✅ harness at\', require(\'./package-lock.json\').packages[\'node_modules/job-forge\'].resolved)"',
   },
   dependencies: {
@@ -237,7 +237,7 @@ const opencodeCfg = {
   mcp: {
     geometra: {
       type: 'local',
-      command: ['npx', '-y', '@geometra/mcp'],
+      command: ['npx', '-y', '@geometra/mcp@1.61.3'],
       enabled: true,
     },
     gmail: {

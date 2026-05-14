@@ -2,7 +2,7 @@
   "servers": {
     "geometra": {
       "command": "npx",
-      "args": ["-y", "@geometra/mcp"]
+      "args": ["-y", "@geometra/mcp@1.61.3"]
     },
     "gmail": {
       "command": "npx",

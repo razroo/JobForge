@@ -50,7 +50,7 @@ These blocks come from two distinct root causes and require different responses:
 
 **Rule — do NOT loop retrying a class B block.** One retry with `imeFriendly: true` is the correct test for class A. If the same spam message fires after a clean `imeFriendly` refill, stop, mark Failed, move on. Repeated retries waste subagent time and do not change the outcome.
 
-**Class B fix — BYO residential proxy** (added 2026-04-20 via Geometra MCP v1.59.0). When the candidate has configured `proxy:` in `config/profile.yml`, every `geometra_connect` call threads that proxy through to Chromium, which flips the outbound IP from datacenter to residential/mobile and collapses most class-B failures. See the "BYO Residential Proxy" reference section below. Without a configured proxy, class B stays Failed.
+**Class B fix — BYO residential proxy + stealth Chromium.** When the candidate has configured `proxy:` in `config/profile.yml`, every `geometra_connect` call threads that proxy through to Chromium, which flips the outbound IP from datacenter to residential/mobile. JobForge also passes `stealth: true` so Geometra MCP >=1.61.3 launches CloakBrowser's patched Chromium instead of stock Playwright Chromium. See the "BYO Residential Proxy" reference section below. Without a configured proxy, stealth still helps browser fingerprinting, but the outbound IP remains datacenter.
 
 **Known-block Ashby tenants (2026-04-19 empirical observations).** These tenants fired class B on every attempted submit from a headless datacenter-IP proxy. Orchestrators planning apply dispatches should assume these tenants will Fail in headless — prioritize other portals, or skip same-tenant siblings after a confirmed class B to avoid burning subagent slots:
 
@@ -138,12 +138,12 @@ When running multiple application forms in parallel, each `geometra_connect` MUS
 
 **Correct parallel pattern:**
 ```javascript
-geometra_connect({ pageUrl: "https://...", isolated: true, headless: true, slowMo: 350 })
+geometra_connect({ pageUrl: "https://...", isolated: true, headless: true, slowMo: 350, stealth: true })
 ```
 
 **Wrong:** running `geometra_connect` without `isolated: true` when submitting multiple forms concurrently. The forms may share state and produce incorrect submissions.
 
-**With a configured proxy,** add `proxy: { server, username?, password?, bypass? }` to the same call — see "BYO Residential Proxy" below. The reusable-proxy pool is partitioned by proxy identity, so mixing direct and proxied sessions across parallel rounds is safe.
+**With a configured proxy,** add `proxy: { server, username?, password?, bypass? }` to the same call — see "BYO Residential Proxy" below. The reusable-proxy pool is partitioned by proxy identity, so mixing direct and proxied sessions across parallel rounds is safe. Keep `stealth: true` either way so JobForge uses Geometra's CloakBrowser Chromium path for portal sessions.
 
 ### Session Reuse — When Subagents Cannot Reach Existing Sessions
 
@@ -185,7 +185,7 @@ Every subagent that uses Geometra must run these THREE tool calls as its FIRST t
 ```
 Step 1:  geometra_list_sessions()
 Step 2:  geometra_disconnect({ closeBrowser: true })
-Step 3:  geometra_connect({ pageUrl: "<the URL the orchestrator gave you>", isolated: true, headless: true, slowMo: 350 })
+Step 3:  geometra_connect({ pageUrl: "<the URL the orchestrator gave you>", isolated: true, headless: true, slowMo: 350, stealth: true })
 ```
 
 **If the orchestrator says proxy is configured,** read the top-level
@@ -193,7 +193,7 @@ Step 3:  geometra_connect({ pageUrl: "<the URL the orchestrator gave you>", isol
 
 ```
 Step 3:  geometra_connect({
-           pageUrl: "<URL>", isolated: true, headless: true, slowMo: 350,
+           pageUrl: "<URL>", isolated: true, headless: true, slowMo: 350, stealth: true,
            proxy: { server: "...", username: "...", password: "...", bypass: "..." }
          })
 ```

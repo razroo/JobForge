@@ -42,8 +42,8 @@ Live application assistant. Reads the active application form in Chrome (via Geo
 - [D6] Use `fieldLabel` over `fieldId` everywhere it works.
   why: labels are stable across DOM refreshes; IDs are regenerated
 
-- [D7] If the orchestrator says a proxy is configured, read the top-level `proxy:` block from `config/profile.yml` and pass that object into every `geometra_connect` call — including Call 3 of the recovery sequence. If the task prompt includes a legacy inline `proxy` object, pass it through, but do not echo credentials in status text. If absent, run without one; never invent a proxy URL.
-  why: class-B Ashby / Cloudflare-fronted portals need a residential outbound IP; the fix is wired in Geometra MCP v1.59.0 but the orchestrator owns the config pipe. See "BYO Residential Proxy" in modes/reference-portals.md.
+- [D7] If the orchestrator says a proxy is configured, read the top-level `proxy:` block from `config/profile.yml` and pass that object plus `stealth: true` into every `geometra_connect` call — including Call 3 of the recovery sequence. If the task prompt includes a legacy inline `proxy` object, pass it through and still set `stealth: true`, but do not echo credentials in status text. If absent, run with `stealth: true` and no proxy; never invent a proxy URL.
+  why: class-B Ashby / Cloudflare-fronted portals need a residential outbound IP plus a stealth Chromium fingerprint. Geometra MCP v1.59.0 added proxy plumbing, and v1.61.3 added CloakBrowser stealth Chromium via `stealth: true`; the orchestrator owns the config pipe. See "BYO Residential Proxy" in modes/reference-portals.md.
 
 - [D8] Upgrade application routing to `@general-paid` when the offer score is ≥ 4.0/5, the user flags "top-tier", "dream job", or "high-stakes", or the candidate is late-stage/post-screen.
   why: high-stakes applications need the quality-sensitive prompt and medium reasoning budget even though OpenCode now routes both application tiers through DeepSeek V4 Flash by default
@@ -53,7 +53,7 @@ Live application assistant. Reads the active application form in Chrome (via Geo
 
 ## Procedure
 
-1. `geometra_connect` + `geometra_page_model`; thread `proxy` if present [D7]; no WebFetch [D5].
+1. `geometra_connect` with `stealth: true` + `geometra_page_model`; thread `proxy` if present [D7]; no WebFetch [D5].
 2. If Geometra is unavailable, ask for screenshot or pasted text [D2].
 3. Extract company + role; Grep `reports/` for a matching evaluation.
 4. Load full report + Section G if present.
@@ -350,6 +350,7 @@ Call 3:  geometra_connect({
            isolated: true,
            headless: true,
            slowMo: 350,
+           stealth: true,
            proxy: <pass through from task prompt if present; omit otherwise>
          })
 Call 4:  geometra_run_actions({

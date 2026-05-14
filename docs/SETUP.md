@@ -214,7 +214,7 @@ Use it to identify which sessions or models are consuming the most tokens. The `
 `sync-check` requires `cv.md` and `config/profile.yml` with the fields checked in `cv-sync-check.mjs`. Until you finish the profile and CV steps, that is normal.
 
 **PDF generation fails**  
-The scaffolded `opencode.json` already registers Geometra MCP; if it's not running, check `opencode mcp list` and verify the scaffolded config under the `mcp.geometra` key — its `command` MUST be `["npx", "-y", "@geometra/mcp"]` and `enabled: true`. Geometra manages Chromium via its built-in proxy. For standalone CLI usage (outside opencode), `generate-pdf.mjs` also works with standalone Playwright/Chromium — install with `npx playwright install chromium`.
+The scaffolded `opencode.json` already registers Geometra MCP; if it's not running, check `opencode mcp list` and verify the scaffolded config under the `mcp.geometra` key — its `command` MUST be `["npx", "-y", "@geometra/mcp@1.61.3"]` and `enabled: true`. Geometra manages Chromium via its built-in proxy. JobForge passes `stealth: true` for portal sessions so Geometra launches CloakBrowser's patched Chromium. For standalone CLI usage (outside opencode), `generate-pdf.mjs` also works with standalone Playwright/Chromium — install with `npx playwright install chromium`.
 
 **Symlinks are missing or pointing to a stale path**  
 Run `npx job-forge sync` (or `npm run sync`) to recreate them. This happens if you move the project directory after installing, or if `postinstall` didn't run (rare — check `npm install` output for errors).
